@@ -1,0 +1,49 @@
+{
+   "users":[
+    {
+       "name": "Abhishek Jain",
+       "nickName": "Abhi",
+       "summary": "I am a software engineer",
+       "availability": "Immediate",
+       "workPreference": "Hybrid",
+       "emailId": "abhi.jain@yahoo.com",
+       "mobile": "3839233322"
+    },
+    {
+       "name": "James Collin",
+       "nickName": "James",
+       "summary": "I am a network engineer",
+       "availability": "In 2 months",
+       "workPreference": "Remote",
+       "emailId": "joe.lastname@yahoo.com",
+       "mobile": "3839233322"
+    },
+    {
+        "name": "Patrick Macloughlin",
+        "nickName": "Pat",
+        "summary": "I am a security engineer",
+        "availability": "In 1 months",
+        "workPreference": "Remote",
+        "emailId": "joe.lastname@yahoo.com",
+        "mobile": "3839233322"
+     },
+     {
+        "name": "Brian Walsh",
+        "nickName": "Brian",
+        "summary": "I am a risk controller analyst",
+        "availability": "In 1 months",
+        "workPreference": "Remote",
+        "emailId": "joe.lastname@yahoo.com",
+        "mobile": "3839233322"
+     },
+     {
+        "name": "Ita Sheehan",
+        "nickName": "Ita",
+        "summary": "I am a APEX developer and lead a team to enhance the system",
+        "availability": "In 3 months",
+        "workPreference": "Hybrid",
+        "emailId": "joe.lastname@yahoo.com",
+        "mobile": "3839233322"
+     }
+   ]
+}

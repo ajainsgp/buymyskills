@@ -1,0 +1,73 @@
+.cards {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(440px, 1fr));
+  grid-gap: 20px;
+}
+
+/* Responsive grid for various breakpoints */
+@media (max-width: 1200px) {
+  .cards {
+    grid-template-columns: repeat(auto-fill, minmax(380px, 1fr));
+    grid-gap: 18px;
+  }
+}
+
+@media (max-width: 992px) {
+  .cards {
+    grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
+    grid-gap: 16px;
+  }
+}
+
+@media (max-width: 576px) {
+  .cards {
+    grid-template-columns: 1fr;
+    grid-gap: 12px;
+    padding: 0 8px;
+  }
+}
+
+/* Compact filter bar */
+.filter-bar {
+  padding: 0.5rem 0.75rem;
+  height: 8em;
+  overflow-y: auto;
+}
+
+.filter-bar .form-label {
+  margin-bottom: 0.15rem;
+  font-size: 0.9rem;
+}
+
+.filter-bar .form-control,
+.filter-bar .form-select {
+  min-height: 30px;
+  padding: 0.25rem 0.5rem;
+  line-height: 1.2;
+}
+
+.filter-bar .btn {
+  padding: 0.25rem 0.5rem;
+  line-height: 1.2;
+}
+
+/* Slightly tighter gutters inside the compact filter bar */
+.filter-bar .row.g-1 > [class^="col-"],
+.filter-bar .row.g-1 > [class*=" col-"] {
+  padding-left: 6px;
+  padding-right: 6px;
+}
+
+@media (max-width: 992px) {
+  .filter-bar {
+    height: auto;
+    min-height: 8em;
+    overflow-y: visible;
+  }
+}
+
+@media (max-width: 576px) {
+  .filter-bar {
+    padding: 0.5rem;
+  }
+}

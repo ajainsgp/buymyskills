@@ -1,0 +1,32 @@
+{
+  "addresses": [
+    {
+      "userId": "u_mfn3fgen_9gf8zy",
+      "current": {
+        "addressLine1": "36 Abbots Grove Park",
+        "addressLine2": "",
+        "city": "Knocklyon",
+        "state": "Dublin",
+        "postcode": "D16Y5X5",
+        "country": "Ireland",
+        "from": "2025-09-16T21:57:07.187Z"
+      },
+      "history": [],
+      "updatedAt": "2025-09-16T21:57:07.187Z"
+    },
+    {
+      "userId": "u_mfn41j4w_pkqfcn",
+      "current": {
+        "addressLine1": "11 Simei Street",
+        "addressLine2": "#18-03",
+        "city": "Singapore",
+        "state": "Singapore",
+        "postcode": "S123221",
+        "country": "Singapore",
+        "from": "2025-09-16T22:14:17.159Z"
+      },
+      "history": [],
+      "updatedAt": "2025-09-16T22:14:17.159Z"
+    }
+  ]
+}

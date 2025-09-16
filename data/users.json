@@ -1,0 +1,38 @@
+{
+  "users": [
+    {
+      "id": "u_mfn3fgen_9gf8zy",
+      "name": "Abhishek Jain",
+      "firstName": "Abhishek",
+      "lastName": "Jain",
+      "nickName": "",
+      "gender": "M",
+      "mobile": "0870508714",
+      "emailId": "jabhishek@yahoo.com",
+      "secondaryEmail": "jabhishek@yahoo.com",
+      "passwordHash": "scrypt$e0f052623e4cd90347af8bb76981ef32$5e3e25b5b863b7389ba5134032a71c1747680f3f6dc8f1950b3b22841eb73cf5602254e4dc9345989b115d544a50004ac449591d82dbbcee5f69c4252754b59a",
+      "summary": "Web Development, Data Migration, AI & LLM Development",
+      "workPreference": "Hybrid",
+      "traveling": "25%",
+      "availability": "Immediate",
+      "createdAt": "2025-09-16T21:57:07.185Z"
+    },
+    {
+      "id": "u_mfn41j4w_pkqfcn",
+      "name": "Amit Gupta",
+      "firstName": "Amit",
+      "lastName": "Gupta",
+      "nickName": "Amit",
+      "gender": "M",
+      "mobile": "0659449301",
+      "emailId": "amitkgsg@hotmail.com",
+      "secondaryEmail": "amitkgsg@hotmail.com",
+      "passwordHash": "scrypt$c3a220ce9c441320141ef5da8bf52126$2832e1a6df2e5b6f347c426104f40d790919ebfb18cd270f3abedc64f806bbfb43a2fe467037ead42d4f485001d746f9c39ae1580e110285e1ecc95270a53ecd",
+      "summary": "Project Management, Data Migration, Data Governance",
+      "workPreference": "Remote",
+      "traveling": "No Traveling",
+      "availability": "Immediate",
+      "createdAt": "2025-09-16T22:14:17.158Z"
+    }
+  ]
+}

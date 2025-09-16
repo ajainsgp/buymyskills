@@ -1,0 +1,29 @@
+.img-circle {
+  border-radius: 50%;
+}
+
+.panel {
+    border: 1px solid transparent;
+    border-radius: 4px;
+}
+
+.panel-body {
+  border-color: #3d7be9;
+  margin-bottom: 1rem;
+}
+
+.panel-info {
+    border-color: #BCE8EB;
+}
+
+.panel-heading {
+    color: #31708f;
+    background-color: #d9edf7;
+    border-color: #bce8f1;
+}
+
+.panel-title {
+    background-color: #4066e5;
+    color: aliceblue;
+    margin-bottom: 0.5rem;
+}

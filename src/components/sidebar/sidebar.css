@@ -1,0 +1,34 @@
+.sidebar-dark hr.sidebar-divider {
+  border-top: 1px solid rgb(255 255 255 / 40%);
+}
+
+/* Sidebar filter styles */
+.sidebar-filter {
+  padding: 0.75rem 0.75rem;
+  color: #fff;
+}
+
+.sidebar-filter .section-title {
+  font-weight: 600;
+  color: #fff;
+  margin-bottom: 0.5rem;
+}
+
+.sidebar-filter .form-label {
+  color: rgba(255, 255, 255, 0.85);
+  font-size: 0.875rem;
+  margin-bottom: 0.15rem;
+}
+
+.sidebar-filter .form-control,
+.sidebar-filter .form-select {
+  min-height: 30px;
+  padding: 0.25rem 0.5rem;
+  font-size: 0.875rem;
+  line-height: 1.2;
+}
+
+.sidebar-filter .btn {
+  padding: 0.25rem 0.5rem;
+  line-height: 1.2;
+}

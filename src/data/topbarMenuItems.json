@@ -1,0 +1,29 @@
+{
+    "menuItems": [
+       {
+          "menuItemIcon": "fa-user",
+          "menuItemName": "Profile",
+          "showDivider": false
+       },
+       {
+          "menuItemIcon": "fa-cogs",
+          "menuItemName": "Settings",
+          "showDivider": false
+       },
+       {
+          "menuItemIcon": "fa-list",
+          "menuItemName": "Activity Log",
+          "showDivider": true
+       },
+       {
+          "menuItemIcon": "fa-key",
+          "menuItemName": "Update Password",
+          "showDivider": false
+       },
+       {
+          "menuItemIcon": "fa-sign-out-alt",
+          "menuItemName": "Logout",
+          "showDivider": false
+       }
+    ]
+ }

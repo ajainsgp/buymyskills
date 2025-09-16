@@ -1,0 +1,69 @@
+{
+  "sideMenuDetails": [
+    {
+      "sidebarHeading": "Interface",
+      "sidebarMenu": [
+        {
+          "menuTitle": "Components",
+          "menuTitleIcon": "fas fa-fw fa-cog",
+          "collapseHeader": "Custom Components:",
+          "menuItems": [
+            {
+              "name": "Buttons",
+              "link": "buttons.html"
+            },
+            {
+              "name": "Cards",
+              "link": "cards.html"
+            },
+            {
+              "name": "Others",
+              "link": "others.html"
+            }
+          ]
+        },
+        {
+          "menuTitle": "Utilities",
+          "menuTitleIcon": "fas fa-fw fa-wrench",
+          "collapseHeader": "Custom Utilities:",
+          "menuItems": [
+            {
+              "name": "Colors",
+              "link": "colors.html"
+            },
+            {
+              "name": "Borders",
+              "link": "borders.html"
+            },
+            {
+              "name": "Animation",
+              "link": "animation.html"
+            }
+          ]
+        }
+      ],
+      "addSideBarDivider": true
+    },
+    {
+      "sidebarHeading": "Addons",
+      "sidebarMenu": [
+        {
+          "menuTitle": "Pages",
+          "menuTitleIcon": "fas fa-fw fa-folder",
+          "collapseHeader": "Custom Screens:",
+          "menuItems": [
+            {
+              "name": "Login",
+              "link": "login"
+            },
+            {
+              "name": "Register",
+              "link": "register"
+            }
+          ]
+        }
+      ],
+      "addSideBarDivider": true
+    }
+  ]
+}

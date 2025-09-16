@@ -1,0 +1,14 @@
+{
+    "alertMessages": [
+       {
+          "alertLevel": "bg-primary",
+          "date": "December 12, 2019",
+          "message": "A new monthly report is ready to download!"
+       },
+       {
+          "alertLevel": "bg-success",
+          "date": "January 4, 2020",
+          "message": "A deposit is made into your account"
+       }
+    ]
+ }
