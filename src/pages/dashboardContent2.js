@@ -16,6 +16,7 @@ function DashboardContent2() {
     preferenceFilter,
     cityFilter,
     countryFilter,
+    categoryFilter,
   } = useContext(FilterContext);
 
   useEffect(() => {
@@ -74,6 +75,20 @@ function DashboardContent2() {
     }
   };
 
+  const cu = (() => {
+    try {
+      return JSON.parse(localStorage.getItem("currentUser") || "null");
+    } catch {
+      return null;
+    }
+  })();
+  const isAdmin = !!(
+    cu &&
+    ["administrator", "administrative"].includes(
+      String(cu.roleType || "").toLowerCase(),
+    )
+  );
+
   const filtered = users.filter((u) => {
     const sHay = [u.name, u.nickName, u.summary]
       .filter(Boolean)
@@ -93,8 +108,19 @@ function DashboardContent2() {
       (u.address?.country || "")
         .toLowerCase()
         .includes(countryFilter.toLowerCase());
-    return kwOk && availOk && prefOk && cityOk && countryOk;
+    const categoryOk =
+      !categoryFilter ||
+      (u.category || "").toLowerCase() === categoryFilter.toLowerCase();
+    return kwOk && availOk && prefOk && cityOk && countryOk && categoryOk;
   });
+
+  const displayUsers = isAdmin
+    ? filtered
+    : filtered.filter(
+        (u) =>
+          String(u.roleType || "").toLowerCase() !== "administrator" &&
+          String(u.emailId || "").toLowerCase() !== "admin@buymyskills.local",
+      );
 
   return (
     <div className="container-fluid">
@@ -113,7 +139,7 @@ function DashboardContent2() {
               <div>Loading users...</div>
             ) : (
               <UserProfile
-                userProfiles={filtered}
+                userProfiles={displayUsers}
                 showSensitive={Boolean(localStorage.getItem("currentUser"))}
               />
             )}

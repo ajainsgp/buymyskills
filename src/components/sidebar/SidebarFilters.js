@@ -1,7 +1,8 @@
-import React, { useContext, useMemo } from "react";
+import React, { useContext, useMemo, useEffect, useState } from "react";
 import { useLocation, useNavigate } from "react-router-dom";
 import { FilterContext } from "./FilterContext";
 import countries from "../../data/countries.json";
+import API_BASE from "../../utils/apiBase";
 
 export default function SidebarFilters() {
   const navigate = useNavigate();
@@ -17,6 +18,8 @@ export default function SidebarFilters() {
     setCityFilter,
     countryFilter,
     setCountryFilter,
+    categoryFilter,
+    setCategoryFilter,
     resetFilters,
   } = useContext(FilterContext);
 
@@ -30,26 +33,48 @@ export default function SidebarFilters() {
   );
   const preferenceOptions = useMemo(() => ["Remote", "On Site", "Hybrid"], []);
 
+  const [categories, setCategories] = useState([]);
+  useEffect(() => {
+    let ignore = false;
+    async function loadCategories() {
+      try {
+        const res = await fetch(`${API_BASE}/api/categories`);
+        const data = await res.json().catch(() => ({}));
+        if (!ignore && res.ok && Array.isArray(data.categories)) {
+          setCategories(data.categories);
+        }
+      } catch {
+        // ignore
+      }
+    }
+    loadCategories();
+    return () => {
+      ignore = true;
+    };
+  }, []);
+
   if (!show) return null;
 
   return (
     <div className="sidebar-filter">
       <div className="section-title d-flex justify-content-between align-items-center">
         <span>Filters</span>
-        <button
-          type="button"
-          className="btn btn-sm btn-light"
-          onClick={() => {
-            resetFilters();
-            // ensure we are on dashboard2 to see results filtered
-            if (location.pathname !== "/dashboard2") {
-              navigate("/dashboard2");
-            }
-          }}
-          title="Clear all filters"
+      </div>
+
+      <div className="mb-2">
+        <label className="form-label">Category</label>
+        <select
+          className="form-select form-select-sm"
+          value={categoryFilter}
+          onChange={(e) => setCategoryFilter(e.target.value)}
         >
-          Clear
-        </button>
+          <option value="">All</option>
+          {categories.map((name) => (
+            <option key={name} value={name}>
+              {name}
+            </option>
+          ))}
+        </select>
       </div>
 
       <div className="mb-2">
@@ -124,7 +149,7 @@ export default function SidebarFilters() {
 
       <button
         type="button"
-        className="btn btn-primary btn-sm w-100"
+        className="btn btn-primary btn-sm w-100 mb-2"
         onClick={() => {
           // ensure results are visible on dashboard2
           if (location.pathname !== "/dashboard2") {
@@ -133,6 +158,20 @@ export default function SidebarFilters() {
         }}
       >
         Apply
+      </button>
+      <button
+        type="button"
+        className="btn btn-sm btn-light w-100"
+        onClick={() => {
+          resetFilters();
+          // ensure we are on dashboard2 to see results filtered
+          if (location.pathname !== "/dashboard2") {
+            navigate("/dashboard2");
+          }
+        }}
+        title="Clear all filters"
+      >
+        Clear
       </button>
     </div>
   );

@@ -1,8 +1,17 @@
-import React, { useState, useRef } from "react";
+import React, { useState, useRef, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import "./register.css";
 import API_BASE from "../../utils/apiBase";
 import countries from "../../data/countries.json";
+
+async function sha256Hex(str) {
+  const data = new TextEncoder().encode(str || "");
+  const buf = await (window.crypto && window.crypto.subtle
+    ? window.crypto.subtle.digest("SHA-256", data)
+    : Promise.resolve(new Uint8Array()));
+  const arr = Array.from(new Uint8Array(buf));
+  return arr.map((b) => b.toString(16).padStart(2, "0")).join("");
+}
 
 function RegisterUser() {
   const navigate = useNavigate();
@@ -27,15 +36,41 @@ function RegisterUser() {
     state: "",
     postcode: "",
     country: "",
+    category: "",
+    showInDashboard: true,
+    showPhoto: true,
   });
 
   const [photoDataUrl, setPhotoDataUrl] = useState("");
   const fileInputRef = useRef(null);
   const [photoError, setPhotoError] = useState("");
+  const [categories, setCategories] = useState([]);
+
+  useEffect(() => {
+    let ignore = false;
+    async function loadCategories() {
+      try {
+        const res = await fetch(`${API_BASE}/api/categories`);
+        const data = await res.json().catch(() => ({}));
+        if (res.ok && Array.isArray(data.categories) && !ignore) {
+          setCategories(data.categories);
+        }
+      } catch {
+        // ignore fetch errors
+      }
+    }
+    loadCategories();
+    return () => {
+      ignore = true;
+    };
+  }, []);
 
   const onChange = (e) => {
-    const { name, value } = e.target;
-    setForm((prev) => ({ ...prev, [name]: value }));
+    const { name, value, type, checked } = e.target;
+    setForm((prev) => ({
+      ...prev,
+      [name]: type === "checkbox" ? checked : value,
+    }));
   };
 
   const MAX_IMAGE_BYTES = 150 * 1024;
@@ -88,11 +123,14 @@ function RegisterUser() {
 
     try {
       setSubmitting(true);
+      const { password, ...rest } = form;
+      const passwordDigest = await sha256Hex(password);
+      const payload = { ...rest, passwordDigest };
       // Use relative URL; CRA will proxy to http://localhost:4000 if "proxy" is set in package.json
       const res = await fetch(`${API_BASE}/api/register`, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify(form),
+        body: JSON.stringify(payload),
       });
 
       if (!res.ok) {
@@ -126,6 +164,7 @@ function RegisterUser() {
       setError(err.message || "Something went wrong");
     } finally {
       setSubmitting(false);
+      setForm((prev) => ({ ...prev, password: "" }));
     }
   };
 
@@ -386,6 +425,28 @@ function RegisterUser() {
                         </div>
                       </div>
                     </div>
+
+                    <div className="form-group row">
+                      <div className="col-md-6">
+                        <div className="panel panel-default">
+                          <div className="panel-heading">Category</div>
+                          <select
+                            id="category"
+                            name="category"
+                            className="custom-select"
+                            value={form.category}
+                            onChange={onChange}
+                          >
+                            <option value="">Select...</option>
+                            {categories.map((name) => (
+                              <option key={name} value={name}>
+                                {name}
+                              </option>
+                            ))}
+                          </select>
+                        </div>
+                      </div>
+                    </div>
                   </div>
 
                   <div className="panel panel-body">
@@ -569,6 +630,50 @@ function RegisterUser() {
                       </div>
                     </div>
                   ) : null}
+
+                  <div className="panel panel-body">
+                    <div className="panel panel-title">
+                      <h3>Visibility</h3>
+                    </div>
+                    <div className="form-group row">
+                      <div className="col-md-6">
+                        <div className="panel panel-default">
+                          <div className="panel-heading">
+                            Show my profile on the public dashboard
+                          </div>
+                          <div className="checkbox" style={{ padding: "10px" }}>
+                            <label>
+                              <input
+                                type="checkbox"
+                                name="showInDashboard"
+                                checked={form.showInDashboard}
+                                onChange={onChange}
+                              />{" "}
+                              Allow my profile to appear on the dashboard
+                            </label>
+                          </div>
+                        </div>
+                      </div>
+                      <div className="col-md-6">
+                        <div className="panel panel-default">
+                          <div className="panel-heading">
+                            Show my photo publicly
+                          </div>
+                          <div className="checkbox" style={{ padding: "10px" }}>
+                            <label>
+                              <input
+                                type="checkbox"
+                                name="showPhoto"
+                                checked={form.showPhoto}
+                                onChange={onChange}
+                              />{" "}
+                              Allow my uploaded photo to be shown
+                            </label>
+                          </div>
+                        </div>
+                      </div>
+                    </div>
+                  </div>
 
                   <div className="panel panel-body">
                     <div className="form-group">

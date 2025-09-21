@@ -1,94 +1,199 @@
-/* Minimal Express API for registration and login persisting to data/users.json */
+/* Express API with pluggable persistence: filesystem (default) or MySQL (set PERSISTENCE=mysql) */
 
+require("dotenv").config();
 const express = require("express");
 const cors = require("cors");
 const fs = require("fs").promises;
 const path = require("path");
 const crypto = require("crypto");
+const helmet = require("helmet");
+const rateLimit = require("express-rate-limit");
+const compression = require("compression");
+const morgan = require("morgan");
+
+const USE_DB =
+  String(process.env.PERSISTENCE || "").toLowerCase() === "mysql" ||
+  String(process.env.USE_DB || "").toLowerCase() === "true";
 
 const app = express();
 const PORT = process.env.PORT || 4000;
 
-// Where we'll store users server-side (separate from src/ to allow writes)
+// File-based storage locations (used when not using DB)
 const DATA_DIR = path.resolve(__dirname, "../data");
 const USERS_FILE = path.resolve(DATA_DIR, "users.json");
 const ADDRESSES_FILE = path.resolve(DATA_DIR, "addresses.json");
 const PHOTOS_FILE = path.resolve(DATA_DIR, "photos.json");
+const CATEGORIES_FILE = path.resolve(DATA_DIR, "categories.json");
+
+// Optional MySQL DAL
+const db = USE_DB ? require("./db") : null;
 
 app.use(express.json({ limit: "1mb" }));
+
+// Trust proxy (for X-Forwarded-Proto from Nginx/LB)
+app.set("trust proxy", 1);
+
+// Optional HTTP->HTTPS redirect behind proxy (enable with FORCE_HTTPS=true)
+if (String(process.env.FORCE_HTTPS || "").toLowerCase() === "true") {
+  app.use((req, res, next) => {
+    const xfProto = req.get("x-forwarded-proto");
+    if (xfProto && xfProto !== "https") {
+      return res.redirect(301, "https://" + req.get("host") + req.originalUrl);
+    }
+    next();
+  });
+}
+
+// Security headers and hardening
+app.use(helmet());
+app.use(helmet.frameguard({ action: "deny" })); // X-Frame-Options: DENY
+app.use(helmet.referrerPolicy({ policy: "no-referrer" }));
+if (String(process.env.ENABLE_HSTS || "").toLowerCase() === "true") {
+  app.use(helmet.hsts({ maxAge: 31536000, includeSubDomains: true, preload: true }));
+}
+// Strict CSP: allow images from self and data: (for avatars), scripts/styles default to self
 app.use(
-  cors({
-    // Echo back the Origin header to allow any origin (sufficient for local dev)
-    origin: true,
-    credentials: false,
-    optionsSuccessStatus: 204,
+  helmet.contentSecurityPolicy({
+    useDefaults: true,
+    directives: {
+      "img-src": ["'self'", "data:"],
+    },
   }),
 );
-// Preflight for API routes (Express 5+ requires a valid pattern)
-app.options(/^\/api\/.*$/, cors());
+
+// Response compression
+app.use(compression());
+
+// Access logging (avoid logging bodies/PII)
+app.use(morgan(process.env.NODE_ENV === "production" ? "combined" : "dev"));
+
+// CORS (lock to FRONTEND_ORIGIN if set; otherwise permissive for dev)
+const FRONTEND_ORIGIN = process.env.FRONTEND_ORIGIN;
+const corsOptions = FRONTEND_ORIGIN
+  ? { origin: [FRONTEND_ORIGIN], credentials: false, optionsSuccessStatus: 204 }
+  : { origin: true, credentials: false, optionsSuccessStatus: 204 };
+app.use(cors(corsOptions));
+app.options(/^\/api\/.*$/, cors(corsOptions));
+
+// Rate limiting
+const apiLimiter = rateLimit({
+  windowMs: 15 * 60 * 1000,
+  max: Number(process.env.RATE_LIMIT_MAX || 300),
+  standardHeaders: true,
+  legacyHeaders: false,
+});
+const authLimiter = rateLimit({
+  windowMs: 15 * 60 * 1000,
+  max: Number(process.env.RATE_LIMIT_AUTH_MAX || 20),
+  standardHeaders: true,
+  legacyHeaders: false,
+});
+app.use("/api/", apiLimiter);
+app.use(["/api/login", "/api/password/change", "/api/password/reset"], authLimiter);
+
+// ========== Common Helpers ==========
+
+function normalizeBase64DataUrl(input) {
+  if (!input) return { base64: "", contentType: "" };
+  const m = String(input).match(/^data:(.+);base64,(.*)$/);
+  if (m) return { contentType: m[1], base64: m[2] };
+  return { base64: input, contentType: "" };
+}
+
+function sanitizeUser(user) {
+  const { password, passwordHash, password_hash, ...rest } = user || {};
+  return rest;
+}
+
+function makeId() {
+  return `u_${Date.now().toString(36)}_${Math.random().toString(36).slice(2, 8)}`;
+}
+
+function sha256Hex(s) {
+  return crypto.createHash("sha256").update(String(s), "utf8").digest("hex");
+}
+
+// Password hashing (scrypt)
+function hashPassword(password) {
+  const salt = crypto.randomBytes(16);
+  const hash = crypto.scryptSync(String(password), salt, 64);
+  return `scrypt$${salt.toString("hex")}$${hash.toString("hex")}`;
+}
+function verifyPassword(password, stored) {
+  try {
+    if (!stored) return false;
+    if (stored.startsWith && stored.startsWith("scrypt$")) {
+      const parts = stored.split("$");
+      const saltHex = parts[1];
+      const hashHex = parts[2];
+      if (!saltHex || !hashHex) return false;
+      const salt = Buffer.from(saltHex, "hex");
+      const derived = crypto.scryptSync(String(password), salt, 64);
+      const storedHash = Buffer.from(hashHex, "hex");
+      if (derived.length !== storedHash.length) return false;
+      return crypto.timingSafeEqual(derived, storedHash);
+    }
+    return String(stored) === String(password);
+  } catch {
+    return false;
+  }
+}
+
+// Photos constraints
+const MAX_IMAGE_BYTES = 150 * 1024;
+const ALLOWED_CONTENT_TYPES = new Set(["image/jpeg", "image/png", "image/gif"]);
+
+// ========== Filesystem Implementation (default) ==========
 
 async function ensureDataFile() {
   try {
     await fs.mkdir(DATA_DIR, { recursive: true });
     await fs.access(USERS_FILE);
   } catch {
-    // Seed with default structure
-    const initial = { users: [] };
-    await fs.writeFile(USERS_FILE, JSON.stringify(initial, null, 2), "utf8");
+    await fs.writeFile(USERS_FILE, JSON.stringify({ users: [] }, null, 2), "utf8");
   }
 }
-
-async function readUsers() {
+async function readUsersFS() {
   await ensureDataFile();
   const raw = await fs.readFile(USERS_FILE, "utf8");
   try {
     const parsed = JSON.parse(raw);
-    if (!parsed || typeof parsed !== "object" || !Array.isArray(parsed.users)) {
-      return { users: [] };
-    }
-    return parsed;
+    return parsed && Array.isArray(parsed.users) ? parsed : { users: [] };
   } catch {
-    // Reset file if corrupted
     const fallback = { users: [] };
     await fs.writeFile(USERS_FILE, JSON.stringify(fallback, null, 2), "utf8");
     return fallback;
   }
 }
-
-async function writeUsers(data) {
+async function writeUsersFS(data) {
   await fs.writeFile(USERS_FILE, JSON.stringify(data, null, 2), "utf8");
 }
 
-/** Addresses store (normalized into separate file) */
 async function ensureAddressesFile() {
   try {
     await fs.mkdir(DATA_DIR, { recursive: true });
     await fs.access(ADDRESSES_FILE);
   } catch {
-    const initial = { addresses: [] };
-    await fs.writeFile(ADDRESSES_FILE, JSON.stringify(initial, null, 2), "utf8");
+    await fs.writeFile(ADDRESSES_FILE, JSON.stringify({ addresses: [] }, null, 2), "utf8");
   }
 }
-async function readAddresses() {
+async function readAddressesFS() {
   await ensureAddressesFile();
   const raw = await fs.readFile(ADDRESSES_FILE, "utf8");
   try {
     const parsed = JSON.parse(raw);
-    if (!parsed || typeof parsed !== "object" || !Array.isArray(parsed.addresses)) {
-      return { addresses: [] };
-    }
-    return parsed;
+    return parsed && Array.isArray(parsed.addresses) ? parsed : { addresses: [] };
   } catch {
     const fallback = { addresses: [] };
     await fs.writeFile(ADDRESSES_FILE, JSON.stringify(fallback, null, 2), "utf8");
     return fallback;
   }
 }
-async function writeAddresses(data) {
+async function writeAddressesFS(data) {
   await fs.writeFile(ADDRESSES_FILE, JSON.stringify(data, null, 2), "utf8");
 }
-async function setAddressForUser(userId, newAddress) {
-  const store = await readAddresses();
+async function setAddressForUserFS(userId, newAddress) {
+  const store = await readAddressesFS();
   const now = new Date().toISOString();
   const idx = store.addresses.findIndex((a) => a.userId === userId);
   if (idx === -1) {
@@ -115,115 +220,121 @@ async function setAddressForUser(userId, newAddress) {
     if (changed) {
       if (old && Object.keys(old).length) {
         const { from, ...restOld } = old;
-        store.addresses[idx].history.push({
-          ...restOld,
-          from: from || now,
-          to: now,
-        });
+        store.addresses[idx].history.push({ ...restOld, from: from || now, to: now });
       }
       store.addresses[idx].current = {
-        addressLine1: (newAddress.addressLine1 || ""),
-        addressLine2: (newAddress.addressLine2 || ""),
-        city: (newAddress.city || ""),
-        state: (newAddress.state || ""),
-        postcode: (newAddress.postcode || ""),
-        country: (newAddress.country || ""),
+        addressLine1: newAddress.addressLine1 || "",
+        addressLine2: newAddress.addressLine2 || "",
+        city: newAddress.city || "",
+        state: newAddress.state || "",
+        postcode: newAddress.postcode || "",
+        country: newAddress.country || "",
         from: now,
       };
       store.addresses[idx].updatedAt = now;
     }
   }
-  await writeAddresses(store);
+  await writeAddressesFS(store);
 }
-async function getAddressForUser(userId) {
-  const store = await readAddresses();
+async function getAddressForUserFS(userId) {
+  const store = await readAddressesFS();
   const rec = store.addresses.find((a) => a.userId === userId);
   return rec ? rec.current : null;
 }
 
-/** Photos store (separate file) */
 async function ensurePhotosFile() {
   try {
     await fs.mkdir(DATA_DIR, { recursive: true });
     await fs.access(PHOTOS_FILE);
   } catch {
-    const initial = { photos: [] };
-    await fs.writeFile(PHOTOS_FILE, JSON.stringify(initial, null, 2), "utf8");
+    await fs.writeFile(PHOTOS_FILE, JSON.stringify({ photos: [] }, null, 2), "utf8");
   }
 }
-async function readPhotos() {
+async function readPhotosFS() {
   await ensurePhotosFile();
   const raw = await fs.readFile(PHOTOS_FILE, "utf8");
   try {
     const parsed = JSON.parse(raw);
-    if (!parsed || typeof parsed !== "object" || !Array.isArray(parsed.photos)) {
-      return { photos: [] };
-    }
-    return parsed;
+    return parsed && Array.isArray(parsed.photos) ? parsed : { photos: [] };
   } catch {
     const fallback = { photos: [] };
     await fs.writeFile(PHOTOS_FILE, JSON.stringify(fallback, null, 2), "utf8");
     return fallback;
   }
 }
-async function writePhotos(data) {
+async function writePhotosFS(data) {
   await fs.writeFile(PHOTOS_FILE, JSON.stringify(data, null, 2), "utf8");
 }
-function normalizeBase64DataUrl(input) {
-  if (!input) return { base64: "", contentType: "" };
-  // data:[mime];base64,<data>
-  const m = String(input).match(/^data:(.+);base64,(.*)$/);
-  if (m) {
-    return { contentType: m[1], base64: m[2] };
-  }
-  return { base64: input, contentType: "" };
-}
 
-function sanitizeUser(user) {
-  const { password, passwordHash, ...rest } = user;
-  return rest;
-}
-
-function makeId() {
-  return `u_${Date.now().toString(36)}_${Math.random().toString(36).slice(2, 8)}`;
-}
-
-// Password hashing utilities using Node's crypto.scrypt for demo (no external deps)
-function hashPassword(password) {
-  const salt = crypto.randomBytes(16);
-  const hash = crypto.scryptSync(String(password), salt, 64);
-  // store as: scrypt$<saltHex>$<hashHex>
-  return `scrypt$${salt.toString("hex")}$${hash.toString("hex")}`;
-}
-
-function verifyPassword(password, stored) {
+async function ensureCategoriesFile() {
   try {
-    if (!stored) return false;
-    if (stored.startsWith("scrypt$")) {
-      const parts = stored.split("$");
-      // parts: ["scrypt", "<saltHex>", "<hashHex>"]
-      const saltHex = parts[1];
-      const hashHex = parts[2];
-      if (!saltHex || !hashHex) return false;
-      const salt = Buffer.from(saltHex, "hex");
-      const derived = crypto.scryptSync(String(password), salt, 64);
-      const storedHash = Buffer.from(hashHex, "hex");
-      if (derived.length !== storedHash.length) return false;
-      return crypto.timingSafeEqual(derived, storedHash);
-    }
-    // Backward compatibility: if stored isn't marked scrypt, treat as plaintext
-    return String(stored) === String(password);
+    await fs.mkdir(DATA_DIR, { recursive: true });
+    await fs.access(CATEGORIES_FILE);
   } catch {
-    return false;
+    const defaults = [
+      "Software Engineer",
+      "Frontend Engineer",
+      "Backend Engineer",
+      "Fullstack Engineer",
+      "Data Analyst",
+      "Data Scientist",
+      "DevOps Engineer",
+      "QA Engineer",
+      "Product Manager",
+      "UI/UX Designer",
+      "Project Manager",
+    ];
+    const now = new Date().toISOString();
+    const categories = defaults.map((name, idx) => ({
+      id: `cat_${Date.now().toString(36)}_${idx}`,
+      name,
+      enabled: 1,
+      sortOrder: idx,
+      createdAt: now,
+    }));
+    await fs.writeFile(CATEGORIES_FILE, JSON.stringify({ categories }, null, 2), "utf8");
   }
 }
+async function readAllCategoriesFS() {
+  await ensureCategoriesFile();
+  const raw = await fs.readFile(CATEGORIES_FILE, "utf8");
+  try {
+    const parsed = JSON.parse(raw);
+    let arr = Array.isArray(parsed.categories) ? parsed.categories : [];
+    // migrate from simple string list to object list if needed
+    if (arr.length && typeof arr[0] === "string") {
+      const now = new Date().toISOString();
+      arr = arr.map((name, idx) => ({
+        id: `cat_${Date.now().toString(36)}_${idx}`,
+        name,
+        enabled: 1,
+        sortOrder: idx,
+        createdAt: now,
+      }));
+      await fs.writeFile(CATEGORIES_FILE, JSON.stringify({ categories: arr }, null, 2), "utf8");
+    }
+    return arr;
+  } catch {
+    return [];
+  }
+}
+async function writeAllCategoriesFS(categories) {
+  await fs.writeFile(CATEGORIES_FILE, JSON.stringify({ categories }, null, 2), "utf8");
+}
+async function readCategoriesFS() {
+  const all = await readAllCategoriesFS();
+  return all
+    .filter((c) => c && (c.enabled === 1 || c.enabled === true))
+    .sort((a, b) => (a.sortOrder || 0) - (b.sortOrder || 0) || String(a.name).localeCompare(String(b.name)))
+    .map((c) => c.name);
+}
 
-async function ensureHashedPasswordsOnStart() {
-  const store = await readUsers();
+async function ensureHashedPasswordsOnStartFS() {
+  const store = await readUsersFS();
   let changed = false;
   for (const u of store.users) {
     if (u && !u.passwordHash && typeof u.password === "string" && u.password) {
-      u.passwordHash = hashPassword(u.password);
+      u.passwordHash = hashPassword(sha256Hex(u.password));
       delete u.password;
       changed = true;
     }
@@ -231,25 +342,164 @@ async function ensureHashedPasswordsOnStart() {
       delete u.password;
       changed = true;
     }
-    // Normalize: ensure no address stored in users.json
     if (u && u.address) {
       delete u.address;
       changed = true;
     }
   }
-  if (changed) {
-    await writeUsers(store);
-  }
+  if (changed) await writeUsersFS(store);
 }
+
+// ========== MySQL Helpers (when USE_DB) ==========
+
+function mapDbUserRowToApiUser(row) {
+  if (!row) return null;
+  const createdAt =
+    row.created_at instanceof Date
+      ? row.created_at.toISOString()
+      : row.created_at || new Date().toISOString();
+  return {
+    id: row.id,
+    name: row.name || "",
+    firstName: row.first_name || "",
+    lastName: row.last_name || "",
+    nickName: row.nick_name || "",
+    gender: row.gender || "",
+    mobile: row.mobile || "",
+    emailId: row.email_id || "",
+    secondaryEmail: row.secondary_email || row.email_id || "",
+    summary: row.summary || "",
+    workPreference: row.work_preference || "",
+    traveling: row.traveling || "",
+    availability: row.availability || "",
+    roleType: row.role_type || "user",
+    createdAt,
+  };
+}
+
+ // ========== Routes ==========
+
+/**
+ * GET /api/categories
+ * - DB mode: list active categories from DB
+ * - FS mode: list from categories.json (created if missing) with sensible defaults
+ */
+app.get("/api/categories", async (_req, res) => {
+  try {
+    if (USE_DB) {
+      const names = await db.listCategories();
+      return res.json({ categories: names });
+    }
+    const names = await readCategoriesFS();
+    return res.json({ categories: names });
+  } catch (err) {
+    console.error("Categories error:", err);
+    return res.status(500).json({ error: "Internal server error" });
+  }
+});
+
+/**
+ * Admin: Categories CRUD
+ * - GET    /api/admin/categories
+ * - POST   /api/admin/categories         { name, enabled?, sortOrder? }
+ * - PUT    /api/admin/categories/:id     { name?, enabled?, sortOrder? }
+ * - DELETE /api/admin/categories/:id
+ * Secured via x-admin-key header matching ADMIN_API_KEY (dev hardening).
+ */
+app.get("/api/admin/categories", async (_req, res) => {
+  try {
+    if (USE_DB) {
+      const rows = await db.listAllCategories();
+      return res.json({ categories: rows });
+    }
+    const cats = await readAllCategoriesFS();
+    return res.json({ categories: cats });
+  } catch (err) {
+    console.error("Admin list categories error:", err);
+    return res.status(500).json({ error: "Internal server error" });
+  }
+});
+
+app.post("/api/admin/categories", async (req, res) => {
+  try {
+    const { name, enabled = true, sortOrder = 0 } = req.body || {};
+    if (!name || !String(name).trim()) {
+      return res.status(400).json({ error: "name is required" });
+    }
+    if (USE_DB) {
+      await db.createCategory({ name: String(name).trim(), enabled: !!enabled, sortOrder });
+      return res.status(201).json({ ok: true });
+    }
+    const cats = await readAllCategoriesFS();
+    const now = new Date().toISOString();
+    const newCat = {
+      id: `cat_${Date.now().toString(36)}_${Math.random().toString(36).slice(2, 6)}`,
+      name: String(name).trim(),
+      enabled: enabled ? 1 : 0,
+      sortOrder: Number(sortOrder) || 0,
+      createdAt: now,
+    };
+    cats.push(newCat);
+    await writeAllCategoriesFS(cats);
+    return res.status(201).json({ category: newCat });
+  } catch (err) {
+    console.error("Admin create category error:", err);
+    return res.status(500).json({ error: "Internal server error" });
+  }
+});
+
+app.put("/api/admin/categories/:id", async (req, res) => {
+  try {
+    const { id } = req.params || {};
+    const patch = req.body || {};
+    if (USE_DB) {
+      await db.updateCategory(id, {
+        name: patch.name,
+        enabled: patch.enabled,
+        sortOrder: patch.sortOrder,
+      });
+      return res.json({ ok: true });
+    }
+    const cats = await readAllCategoriesFS();
+    const idx = cats.findIndex((c) => c.id === id);
+    if (idx === -1) return res.status(404).json({ error: "Not found" });
+    const cur = cats[idx];
+    const updated = { ...cur };
+    if (Object.prototype.hasOwnProperty.call(patch, "name")) updated.name = String(patch.name || "");
+    if (Object.prototype.hasOwnProperty.call(patch, "enabled"))
+      updated.enabled = patch.enabled ? 1 : 0;
+    if (Object.prototype.hasOwnProperty.call(patch, "sortOrder"))
+      updated.sortOrder = Number(patch.sortOrder) || 0;
+    cats[idx] = updated;
+    await writeAllCategoriesFS(cats);
+    return res.json({ category: updated });
+  } catch (err) {
+    console.error("Admin update category error:", err);
+    return res.status(500).json({ error: "Internal server error" });
+  }
+});
+
+app.delete("/api/admin/categories/:id", async (req, res) => {
+  try {
+    const { id } = req.params || {};
+    if (USE_DB) {
+      await db.deleteCategory(id);
+      return res.json({ ok: true });
+    }
+    const cats = await readAllCategoriesFS();
+    const idx = cats.findIndex((c) => c.id === id);
+    if (idx === -1) return res.status(404).json({ error: "Not found" });
+    cats.splice(idx, 1);
+    await writeAllCategoriesFS(cats);
+    return res.json({ ok: true });
+  } catch (err) {
+    console.error("Admin delete category error:", err);
+    return res.status(500).json({ error: "Internal server error" });
+  }
+});
 
 /**
  * POST /api/register
- * Body: {
- *   firstName, lastName, nickName, gender,
- *   mobileNo, emailId, password,
- *   keywords, workPreference, traveling, available,
- *   addressLine1, addressLine2, city, state, postcode, country
- * }
  */
 app.post("/api/register", async (req, res) => {
   try {
@@ -272,24 +522,66 @@ app.post("/api/register", async (req, res) => {
       state,
       postcode,
       country,
+      category,
+      showInDashboard,
+      showPhoto,
+      passwordDigest,
     } = req.body || {};
 
-    if (!emailId || !password || !firstName) {
-      return res
-        .status(400)
-        .json({ error: "firstName, emailId and password are required" });
+    if (!emailId || !(password || passwordDigest) || !firstName) {
+      return res.status(400).json({ error: "firstName, emailId and password are required" });
     }
 
-    const store = await readUsers();
+    if (USE_DB) {
+      const exists = await db.getUserByEmail(emailId);
+      if (exists) return res.status(409).json({ error: "User with this email already exists" });
+
+      const secret = String(passwordDigest || sha256Hex(String(password || "")));
+      const newUser = {
+        id: makeId(),
+        name: [firstName, lastName].filter(Boolean).join(" ").trim(),
+        firstName: firstName || "",
+        lastName: lastName || "",
+        nickName: nickName || "",
+        gender: gender || "",
+        mobile: mobileNo || "",
+        emailId,
+        secondaryEmail: secondaryEmail || emailId,
+        passwordHash: hashPassword(secret),
+        summary: keywords || "",
+        workPreference: workPreference || "",
+        traveling: traveling || "",
+        availability: available || "",
+        roleType: "user",
+        createdAt: new Date(),
+        category: category || "",
+        showInDashboard: !!showInDashboard,
+        showPhoto: !!showPhoto,
+      };
+      await db.createUser(newUser);
+      await db.setAddressForUser(newUser.id, {
+        addressLine1,
+        addressLine2,
+        city,
+        state,
+        postcode,
+        country,
+      });
+      const apiUser = sanitizeUser({
+        ...newUser,
+        createdAt: new Date(newUser.createdAt).toISOString(),
+      });
+      return res.status(201).json({ user: apiUser, message: "Registered successfully" });
+    }
+
+    // FS flow
+    const store = await readUsersFS();
     const exists = store.users.find(
       (u) => (u.emailId || "").toLowerCase() === String(emailId).toLowerCase(),
     );
-    if (exists) {
-      return res
-        .status(409)
-        .json({ error: "User with this email already exists" });
-    }
+    if (exists) return res.status(409).json({ error: "User with this email already exists" });
 
+    const secret = String(passwordDigest || sha256Hex(String(password || "")));
     const newUser = {
       id: makeId(),
       name: [firstName, lastName].filter(Boolean).join(" ").trim(),
@@ -300,29 +592,21 @@ app.post("/api/register", async (req, res) => {
       mobile: mobileNo || "",
       emailId: emailId,
       secondaryEmail: secondaryEmail || emailId,
-      passwordHash: hashPassword(String(password)),
+      passwordHash: hashPassword(secret),
       summary: keywords || "",
       workPreference: workPreference || "",
       traveling: traveling || "",
       availability: available || "",
+      roleType: "user",
       createdAt: new Date().toISOString(),
+      category: category || "",
+      showInDashboard: !!showInDashboard,
+      showPhoto: !!showPhoto,
     };
-
     store.users.push(newUser);
-    await writeUsers(store);
-    await setAddressForUser(newUser.id, {
-      addressLine1,
-      addressLine2,
-      city,
-      state,
-      postcode,
-      country,
-    });
-
-    return res.status(201).json({
-      user: sanitizeUser(newUser),
-      message: "Registered successfully",
-    });
+    await writeUsersFS(store);
+    await setAddressForUserFS(newUser.id, { addressLine1, addressLine2, city, state, postcode, country });
+    return res.status(201).json({ user: sanitizeUser(newUser), message: "Registered successfully" });
   } catch (err) {
     console.error("Register error:", err);
     return res.status(500).json({ error: "Internal server error" });
@@ -331,34 +615,35 @@ app.post("/api/register", async (req, res) => {
 
 /**
  * POST /api/login
- * Body: { emailId, password }
  */
 app.post("/api/login", async (req, res) => {
   try {
-    const { emailId, password } = req.body || {};
-    if (!emailId || !password) {
-      return res
-        .status(400)
-        .json({ error: "emailId and password are required" });
+    const { emailId, password, passwordDigest } = req.body || {};
+    if (!emailId || !(password || passwordDigest)) {
+      return res.status(400).json({ error: "emailId and password are required" });
     }
-    const store = await readUsers();
+
+    if (USE_DB) {
+      const row = await db.getUserByEmail(emailId);
+      if (!row) return res.status(401).json({ error: "Invalid credentials" });
+      const secret = String(passwordDigest || sha256Hex(String(password || "")));
+      const ok = verifyPassword(secret, row.password_hash);
+      if (!ok) return res.status(401).json({ error: "Invalid credentials" });
+      const apiUser = mapDbUserRowToApiUser(row);
+      return res.json({ user: sanitizeUser(apiUser), message: "Login successful" });
+    }
+
+    // FS flow
+    const store = await readUsersFS();
     const user = store.users.find(
-      (u) =>
-        (u.emailId || "").toLowerCase() === String(emailId).toLowerCase(),
+      (u) => (u.emailId || "").toLowerCase() === String(emailId).toLowerCase(),
     );
-    if (!user) {
-      return res.status(401).json({ error: "Invalid credentials" });
-    }
-    // Verify password against hash if present, else fallback to legacy plaintext
+    if (!user) return res.status(401).json({ error: "Invalid credentials" });
     let ok = false;
-    if (user.passwordHash) {
-      ok = verifyPassword(password, user.passwordHash);
-    } else if (user.password) {
-      ok = String(user.password) === String(password);
-    }
-    if (!ok) {
-      return res.status(401).json({ error: "Invalid credentials" });
-    }
+    const secret = String(passwordDigest || sha256Hex(String(password || "")));
+    if (user.passwordHash) ok = verifyPassword(secret, user.passwordHash);
+    else if (user.password) ok = String(user.password) === String(secret);
+    if (!ok) return res.status(401).json({ error: "Invalid credentials" });
     return res.json({ user: sanitizeUser(user), message: "Login successful" });
   } catch (err) {
     console.error("Login error:", err);
@@ -366,106 +651,159 @@ app.post("/api/login", async (req, res) => {
   }
 });
 
+/**
+ * GET /api/users
+ */
 app.get("/api/users", async (_req, res) => {
   try {
-    const store = await readUsers();
-    const addrStore = await readAddresses();
+    if (USE_DB) {
+      const rows = await db.listUsers();
+      const users = rows.map((r) => {
+        const u = mapDbUserRowToApiUser(r);
+        const addr =
+          r.address_line1 || r.address_line2 || r.city || r.state || r.postcode || r.country
+            ? {
+                addressLine1: r.address_line1 || "",
+                addressLine2: r.address_line2 || "",
+                city: r.city || "",
+                state: r.state || "",
+                postcode: r.postcode || "",
+                country: r.country || "",
+              }
+            : {};
+        return { ...sanitizeUser(u), address: addr, category: r.category || "" };
+      });
+      return res.json({ users });
+    }
+
+    // FS flow
+    const store = await readUsersFS();
+    const addrStore = await readAddressesFS();
     const users = store.users.map((u) => {
       const au = sanitizeUser(u);
       const addrRec = addrStore.addresses.find((a) => a.userId === u.id);
       au.address = addrRec ? { ...addrRec.current } : {};
       if (au.address && au.address.from) {
-        // hide internal timestamp in API response
         const { from, ...rest } = au.address;
         au.address = rest;
       }
       return au;
     });
-    res.json({ users });
+    return res.json({ users });
   } catch (err) {
     console.error("Users list error:", err);
     res.status(500).json({ error: "Internal server error" });
   }
 });
 
-// Get a single user by id
+/**
+ * GET /api/users/:id
+ */
 app.get("/api/users/:id", async (req, res) => {
   try {
     const { id } = req.params || {};
-    const store = await readUsers();
+    if (USE_DB) {
+      const row = await db.getUserById(id);
+      if (!row) return res.status(404).json({ error: "User not found" });
+      const u = mapDbUserRowToApiUser(row);
+      const ac = await db.getAddressCurrent(id);
+      let address = {};
+      if (ac) {
+        address = {
+          addressLine1: ac.address_line1 || "",
+          addressLine2: ac.address_line2 || "",
+          city: ac.city || "",
+          state: ac.state || "",
+          postcode: ac.postcode || "",
+          country: ac.country || "",
+        };
+      }
+      return res.json({ user: { ...sanitizeUser(u), address } });
+    }
+
+    // FS flow
+    const store = await readUsersFS();
     const user = store.users.find((u) => u.id === id);
-    if (!user) {
-      return res.status(404).json({ error: "User not found" });
+    if (!user) return res.status(404).json({ error: "User not found" });
+    const addr = await getAddressForUserFS(id);
+    const apiUser = sanitizeUser(user);
+    apiUser.address = addr ? { ...addr } : {};
+    if (apiUser.address && apiUser.address.from) {
+      const { from, ...rest } = apiUser.address;
+      apiUser.address = rest;
     }
-    const addr = await getAddressForUser(id);
-    const u = sanitizeUser(user);
-    u.address = addr ? { ...addr } : {};
-    if (u.address && u.address.from) {
-      const { from, ...rest } = u.address;
-      u.address = rest;
-    }
-    return res.json({ user: u });
+    return res.json({ user: apiUser });
   } catch (err) {
     console.error("User get error:", err);
     res.status(500).json({ error: "Internal server error" });
   }
 });
 
-// Update a user by id
+/**
+ * PUT /api/users/:id
+ */
 app.put("/api/users/:id", async (req, res) => {
   try {
     const { id } = req.params || {};
     const updates = req.body || {};
-    // Enforce immutability of primary login email on the backend
+
+    // emailId immutable for login identity
     if (Object.prototype.hasOwnProperty.call(updates, "emailId")) {
       delete updates.emailId;
     }
-    const store = await readUsers();
-    const idx = store.users.findIndex((u) => u.id === id);
-    if (idx === -1) {
-      return res.status(404).json({ error: "User not found" });
-    }
-    const current = store.users[idx];
 
-    // Prevent email collision with other users
-    if (updates.emailId && updates.emailId !== current.emailId) {
-      const exists = store.users.find(
-        (u) =>
-          u.id !== id &&
-          (u.emailId || "").toLowerCase() ===
-            String(updates.emailId).toLowerCase(),
-      );
-      if (exists) {
-        return res
-          .status(409)
-          .json({ error: "Another user with this email already exists" });
+    if (USE_DB) {
+      // Split address
+      const incomingAddress = updates.address || null;
+      const updatesWithoutAddress = { ...updates };
+      delete updatesWithoutAddress.address;
+
+      // Allowed fields map handled in db.updateUserFields
+      await db.updateUserFields(id, updatesWithoutAddress);
+
+      if (incomingAddress && typeof incomingAddress === "object") {
+        await db.setAddressForUser(id, incomingAddress);
       }
+
+      // Return latest
+      const row = await db.getUserById(id);
+      if (!row) return res.status(404).json({ error: "User not found" });
+      const u = mapDbUserRowToApiUser(row);
+      const ac = await db.getAddressCurrent(id);
+      let address = {};
+      if (ac) {
+        address = {
+          addressLine1: ac.address_line1 || "",
+          addressLine2: ac.address_line2 || "",
+          city: ac.city || "",
+          state: ac.state || "",
+          postcode: ac.postcode || "",
+          country: ac.country || "",
+        };
+      }
+      return res.json({ user: { ...sanitizeUser(u), address }, message: "Profile updated" });
     }
 
-    // Split address updates (normalized to separate file)
+    // FS flow
+    const store = await readUsersFS();
+    const idx = store.users.findIndex((u) => u.id === id);
+    if (idx === -1) return res.status(404).json({ error: "User not found" });
+
     const incomingAddress = updates.address || null;
     const updatesWithoutAddress = { ...updates };
     delete updatesWithoutAddress.address;
 
     if (incomingAddress && typeof incomingAddress === "object") {
-      await setAddressForUser(id, incomingAddress);
+      await setAddressForUserFS(id, incomingAddress);
     }
 
-    // Merge allowed fields
-    const merged = {
-      ...current,
-      ...updatesWithoutAddress,
-      id, // ensure id unchanged
-    };
-    // Ensure address is never stored inside users.json
-    if (merged.address) {
-      delete merged.address;
-    }
+    const current = store.users[idx];
+    const merged = { ...current, ...updatesWithoutAddress, id };
+    if (merged.address) delete merged.address;
     store.users[idx] = merged;
-    await writeUsers(store);
+    await writeUsersFS(store);
 
-    // Attach address from normalized store in response
-    const addr = await getAddressForUser(id);
+    const addr = await getAddressForUserFS(id);
     const responseUser = sanitizeUser(merged);
     responseUser.address = addr ? { ...addr } : (responseUser.address || {});
     if (responseUser.address && responseUser.address.from) {
@@ -481,42 +819,39 @@ app.put("/api/users/:id", async (req, res) => {
 
 /**
  * POST /api/password/change
- * Body: { id, currentPassword, newPassword }
- * Changes password for a logged-in user after verifying current password.
  */
 app.post("/api/password/change", async (req, res) => {
   try {
     const { id, currentPassword, newPassword } = req.body || {};
     if (!id || !currentPassword || !newPassword) {
-      return res
-        .status(400)
-        .json({ error: "id, currentPassword and newPassword are required" });
+      return res.status(400).json({ error: "id, currentPassword and newPassword are required" });
     }
     if (String(newPassword).length < 6) {
-      return res
-        .status(400)
-        .json({ error: "New password must be at least 6 characters" });
+      return res.status(400).json({ error: "New password must be at least 6 characters" });
     }
-    const store = await readUsers();
+
+    if (USE_DB) {
+      const row = await db.getUserById(id);
+      if (!row) return res.status(404).json({ error: "User not found" });
+      const ok = verifyPassword(sha256Hex(String(currentPassword)), row.password_hash);
+      if (!ok) return res.status(401).json({ error: "Current password is incorrect" });
+      await db.updatePasswordHash(id, hashPassword(sha256Hex(String(newPassword))));
+      return res.json({ message: "Password changed successfully" });
+    }
+
+    // FS flow
+    const store = await readUsersFS();
     const idx = store.users.findIndex((u) => u.id === id);
-    if (idx === -1) {
-      return res.status(404).json({ error: "User not found" });
-    }
+    if (idx === -1) return res.status(404).json({ error: "User not found" });
     const user = store.users[idx];
-    // Verify current password (supports hashed or legacy plaintext)
     let ok = false;
-    if (user.passwordHash) {
-      ok = verifyPassword(currentPassword, user.passwordHash);
-    } else if (user.password) {
-      ok = String(user.password) === String(currentPassword);
-    }
-    if (!ok) {
-      return res.status(401).json({ error: "Current password is incorrect" });
-    }
-    const updated = { ...user, passwordHash: hashPassword(String(newPassword)) };
+    if (user.passwordHash) ok = verifyPassword(sha256Hex(String(currentPassword)), user.passwordHash);
+    else if (user.password) ok = String(user.password) === String(currentPassword);
+    if (!ok) return res.status(401).json({ error: "Current password is incorrect" });
+    const updated = { ...user, passwordHash: hashPassword(sha256Hex(String(newPassword))) };
     delete updated.password;
     store.users[idx] = updated;
-    await writeUsers(store);
+    await writeUsersFS(store);
     return res.json({ message: "Password changed successfully" });
   } catch (err) {
     console.error("Password change error:", err);
@@ -526,34 +861,35 @@ app.post("/api/password/change", async (req, res) => {
 
 /**
  * POST /api/password/reset
- * Body: { emailId, newPassword }
- * Resets password using email (for forgot password flow).
  */
 app.post("/api/password/reset", async (req, res) => {
   try {
     const { emailId, newPassword } = req.body || {};
     if (!emailId || !newPassword) {
-      return res
-        .status(400)
-        .json({ error: "emailId and newPassword are required" });
+      return res.status(400).json({ error: "emailId and newPassword are required" });
     }
     if (String(newPassword).length < 6) {
-      return res
-        .status(400)
-        .json({ error: "New password must be at least 6 characters" });
+      return res.status(400).json({ error: "New password must be at least 6 characters" });
     }
-    const store = await readUsers();
+
+    if (USE_DB) {
+      const row = await db.getUserByEmail(emailId);
+      if (!row) return res.status(404).json({ error: "User not found" });
+      await db.updatePasswordHash(row.id, hashPassword(sha256Hex(String(newPassword))));
+      return res.json({ message: "Password reset successfully" });
+    }
+
+    // FS flow
+    const store = await readUsersFS();
     const idx = store.users.findIndex(
       (u) => (u.emailId || "").toLowerCase() === String(emailId).toLowerCase(),
     );
-    if (idx === -1) {
-      return res.status(404).json({ error: "User not found" });
-    }
+    if (idx === -1) return res.status(404).json({ error: "User not found" });
     const user = store.users[idx];
-    const updated = { ...user, passwordHash: hashPassword(String(newPassword)) };
+    const updated = { ...user, passwordHash: hashPassword(sha256Hex(String(newPassword))) };
     delete updated.password;
     store.users[idx] = updated;
-    await writeUsers(store);
+    await writeUsersFS(store);
     return res.json({ message: "Password reset successfully" });
   } catch (err) {
     console.error("Password reset error:", err);
@@ -562,13 +898,10 @@ app.post("/api/password/reset", async (req, res) => {
 });
 
 /**
- * Photos endpoints
+ * Photos
  * - POST /api/users/:id/photo  { base64, contentType }
  * - GET  /api/users/:id/photo  -> { contentType, base64 } or 404
  */
-const MAX_IMAGE_BYTES = 150 * 1024;
-const ALLOWED_CONTENT_TYPES = new Set(["image/jpeg", "image/png", "image/gif"]);
-
 app.post("/api/users/:id/photo", async (req, res) => {
   try {
     const { id } = req.params || {};
@@ -576,34 +909,36 @@ app.post("/api/users/:id/photo", async (req, res) => {
     if (!id) return res.status(400).json({ error: "Missing user id" });
     if (!rawBase64) return res.status(400).json({ error: "Missing base64" });
 
-    // Normalize possible data URL
     let { base64, contentType } = normalizeBase64DataUrl(rawBase64);
     if (!contentType && rawContentType) contentType = String(rawContentType);
     if (!contentType || !ALLOWED_CONTENT_TYPES.has(contentType)) {
-      return res
-        .status(400)
-        .json({ error: "Invalid content type. Allowed: image/jpeg, image/png, image/gif" });
+      return res.status(400).json({ error: "Invalid content type. Allowed: image/jpeg, image/png, image/gif" });
     }
-
-    // Size check
     const sizeBytes = Math.floor((base64.length * 3) / 4);
     if (sizeBytes > MAX_IMAGE_BYTES) {
       return res.status(400).json({ error: "Image too large. Max 150KB" });
     }
 
-    // Ensure user exists
-    const store = await readUsers();
+    if (USE_DB) {
+      const row = await db.getUserById(id);
+      if (!row) return res.status(404).json({ error: "User not found" });
+      const buf = Buffer.from(base64, "base64");
+      await db.upsertPhoto(id, contentType, buf);
+      return res.json({ ok: true, uploadedAt: new Date().toISOString() });
+    }
+
+    // FS flow
+    const store = await readUsersFS();
     const user = store.users.find((u) => u.id === id);
     if (!user) return res.status(404).json({ error: "User not found" });
 
-    const photos = await readPhotos();
+    const photos = await readPhotosFS();
     const idx = photos.photos.findIndex((p) => p.userId === id);
     const now = new Date().toISOString();
     const record = { userId: id, contentType, base64, uploadedAt: now };
     if (idx === -1) photos.photos.push(record);
     else photos.photos[idx] = record;
-    await writePhotos(photos);
-
+    await writePhotosFS(photos);
     return res.json({ ok: true, uploadedAt: now });
   } catch (err) {
     console.error("Upload photo error:", err);
@@ -611,13 +946,122 @@ app.post("/api/users/:id/photo", async (req, res) => {
   }
 });
 
+/**
+ * GET /api/users/public?category=Software%20Engineer
+ * Returns only users who consented to be shown in the dashboard (and optional category filter)
+ */
+app.get("/api/users/public", async (req, res) => {
+  try {
+    const category = (req.query.category || "").toString().trim();
+    if (USE_DB) {
+      const rows = await db.listPublicUsers(category || null);
+      const users = rows.map((r) => {
+        const u = mapDbUserRowToApiUser(r);
+        const addr =
+          r.address_line1 || r.address_line2 || r.city || r.state || r.postcode || r.country
+            ? {
+                addressLine1: r.address_line1 || "",
+                addressLine2: r.address_line2 || "",
+                city: r.city || "",
+                state: r.state || "",
+                postcode: r.postcode || "",
+                country: r.country || "",
+              }
+            : {};
+        return {
+          ...sanitizeUser(u),
+          category: r.category || "",
+          showInDashboard: r.show_in_dashboard === 1,
+          showPhoto: r.show_photo === 1,
+          address: addr,
+          photoPresent: !!r.photo_present,
+        };
+      });
+      return res.json({ users });
+    }
+
+    // FS flow
+    const store = await readUsersFS();
+    const addrStore = await readAddressesFS();
+    const photos = await readPhotosFS();
+    const users = store.users
+      .filter((u) => !!u.showInDashboard)
+      .filter((u) => (category ? String(u.category || "").toLowerCase() === category.toLowerCase() : true))
+      .map((u) => {
+        const addrRec = addrStore.addresses.find((a) => a.userId === u.id);
+        const addr = addrRec
+          ? {
+              addressLine1: addrRec.current.addressLine1 || "",
+              addressLine2: addrRec.current.addressLine2 || "",
+              city: addrRec.current.city || "",
+              state: addrRec.current.state || "",
+              postcode: addrRec.current.postcode || "",
+              country: addrRec.current.country || "",
+            }
+          : {};
+        const hasPhoto = photos.photos.some((p) => p.userId === u.id);
+        return {
+          ...sanitizeUser(u),
+          address: addr,
+          category: u.category || "",
+          showInDashboard: !!u.showInDashboard,
+          showPhoto: !!u.showPhoto,
+          photoPresent: hasPhoto,
+        };
+      });
+    return res.json({ users });
+  } catch (err) {
+    console.error("Public users error:", err);
+    return res.status(500).json({ error: "Internal server error" });
+  }
+});
+
+/**
+ * DELETE /api/users/:id/photo - clear/remove user's photo
+ */
+app.delete("/api/users/:id/photo", async (req, res) => {
+  try {
+    const { id } = req.params || {};
+    if (!id) return res.status(400).json({ error: "Missing user id" });
+
+    if (USE_DB) {
+      await db.deletePhoto(id);
+      return res.json({ ok: true });
+    }
+
+    const photos = await readPhotosFS();
+    const idx = photos.photos.findIndex((p) => p.userId === id);
+    if (idx !== -1) {
+      photos.photos.splice(idx, 1);
+      await writePhotosFS(photos);
+    }
+    return res.json({ ok: true });
+  } catch (err) {
+    console.error("Delete photo error:", err);
+    return res.status(500).json({ error: "Internal server error" });
+  }
+});
+
 app.get("/api/users/:id/photo", async (req, res) => {
   try {
     const { id } = req.params || {};
-    const photos = await readPhotos();
-    const rec = photos.photos.find((p) => p.userId === id);
-    if (!rec) return res.status(404).json({ error: "Not found" });
-    return res.json({ contentType: rec.contentType, base64: rec.base64, uploadedAt: rec.uploadedAt });
+    if (USE_DB) {
+      const rec = await db.getPhoto(id);
+      if (!rec) return res.status(404).json({ error: "Not found" });
+      const base64 = Buffer.isBuffer(rec.data) ? rec.data.toString("base64") : "";
+      return res.json({
+        contentType: rec.content_type,
+        base64,
+        uploadedAt:
+          rec.uploaded_at instanceof Date ? rec.uploaded_at.toISOString() : rec.uploaded_at,
+      });
+    }
+
+    // FS flow
+    const photos = await readPhotosFS();
+    const r = photos.photos.find((p) => p.userId === id);
+    if (!r) return res.status(404).json({ error: "Not found" });
+    return res.json({ contentType: r.contentType, base64: r.base64, uploadedAt: r.uploadedAt });
   } catch (err) {
     console.error("Get photo error:", err);
     return res.status(500).json({ error: "Internal server error" });
@@ -625,12 +1069,91 @@ app.get("/api/users/:id/photo", async (req, res) => {
 });
 
 app.get("/api/health", (_req, res) => {
-  res.json({ ok: true });
+  res.json({ ok: true, mode: USE_DB ? "mysql" : "fs" });
 });
 
+// ========== Startup ==========
+
 async function start() {
-  await ensureDataFile();
-  await ensureHashedPasswordsOnStart();
+  if (USE_DB) {
+    await db.initSchema();
+    console.log("MySQL schema ensured. Running in MySQL mode.");
+
+    // Bootstrap admin user if missing (uses client-side digest convention)
+    try {
+      const adminEmail = process.env.ADMIN_BOOTSTRAP_EMAIL || "admin@buymyskills.local";
+      const adminPass = process.env.ADMIN_BOOTSTRAP_PASSWORD || "Welcome1234!";
+      const existing = await db.getUserByEmail(adminEmail);
+      if (!existing) {
+        const now = new Date();
+        const adminUser = {
+          id: makeId(),
+          name: "Administrator",
+          firstName: "Admin",
+          lastName: "",
+          nickName: "admin",
+          gender: "",
+          mobile: "",
+          emailId: adminEmail,
+          secondaryEmail: adminEmail,
+          // Store scrypt(SHA-256(plain)) so that clients can send passwordDigest
+          passwordHash: hashPassword(sha256Hex(adminPass)),
+          summary: "",
+          workPreference: "",
+          traveling: "",
+          availability: "",
+          roleType: "administrator",
+          createdAt: now,
+          category: "",
+          showInDashboard: 0,
+          showPhoto: 0,
+        };
+        await db.createUser(adminUser);
+      }
+    } catch (e) {
+      console.warn("Admin bootstrap warning:", e.message);
+    }
+  } else {
+    await ensureDataFile();
+    await ensureHashedPasswordsOnStartFS();
+    // Bootstrap admin user for FS mode
+    try {
+      const adminEmail = process.env.ADMIN_BOOTSTRAP_EMAIL || "admin@buymyskills.local";
+      const adminPass = process.env.ADMIN_BOOTSTRAP_PASSWORD || "Welcome1234!";
+      const store = await readUsersFS();
+      const exists = store.users.find(
+        (u) => (u.emailId || "").toLowerCase() === adminEmail.toLowerCase(),
+      );
+      if (!exists) {
+        const u = {
+          id: makeId(),
+          name: "Administrator",
+          firstName: "Admin",
+          lastName: "",
+          nickName: "admin",
+          gender: "",
+          mobile: "",
+          emailId: adminEmail,
+          secondaryEmail: adminEmail,
+          passwordHash: hashPassword(sha256Hex(adminPass)),
+          summary: "",
+          workPreference: "",
+          traveling: "",
+          availability: "",
+          roleType: "administrator",
+          createdAt: new Date().toISOString(),
+          category: "",
+          showInDashboard: 0,
+          showPhoto: 0,
+        };
+        store.users.push(u);
+        await writeUsersFS(store);
+      }
+    } catch (e) {
+      console.warn("FS admin bootstrap warning:", e.message);
+    }
+    console.log("Filesystem stores ensured. Running in FS mode.");
+  }
   app.listen(PORT, () => {
     console.log(`API server running on http://localhost:${PORT}`);
   });

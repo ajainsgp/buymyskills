@@ -1,4 +1,5 @@
 import React, { useEffect, useRef, useState } from "react";
+import API_BASE from "../../utils/apiBase";
 
 function NavItemsDropdownMenu({ userInfo, menuItems, onSelectMenu }) {
   const [isToggled, setToggle] = useState(false);
@@ -24,6 +25,33 @@ function NavItemsDropdownMenu({ userInfo, menuItems, onSelectMenu }) {
   const showMenuItems = () => {
     setToggle(!isToggled);
   };
+
+  const [photoUrl, setPhotoUrl] = useState(
+    "http://ssl.gstatic.com/accounts/ui/avatar_2x.png",
+  );
+
+  useEffect(() => {
+    let ignore = false;
+    async function loadPhoto() {
+      try {
+        const cu = JSON.parse(localStorage.getItem("currentUser") || "null");
+        if (!cu || !cu.id) return;
+        // Try to fetch user's photo; fall back to default if not present
+        const res = await fetch(`${API_BASE}/api/users/${cu.id}/photo`);
+        if (!res.ok) return;
+        const data = await res.json().catch(() => ({}));
+        if (!ignore && data && data.contentType && data.base64) {
+          setPhotoUrl(`data:${data.contentType};base64,${data.base64}`);
+        }
+      } catch {
+        // ignore
+      }
+    }
+    loadPhoto();
+    return () => {
+      ignore = true;
+    };
+  }, []);
 
   const displayMenu = menuItems.map((item, index) => (
     <a
@@ -62,8 +90,8 @@ function NavItemsDropdownMenu({ userInfo, menuItems, onSelectMenu }) {
         </span>
         <img
           className="img-profile rounded-circle"
-          src="img/undraw_profile.svg"
-          alt="userInfo"
+          src={photoUrl}
+          alt={userInfo}
         />
       </a>
       {/* <!-- Dropdown - Menu Items --> */}

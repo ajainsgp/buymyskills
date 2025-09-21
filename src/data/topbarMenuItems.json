@@ -6,8 +6,8 @@
           "showDivider": false
        },
        {
-          "menuItemIcon": "fa-cogs",
-          "menuItemName": "Settings",
+          "menuItemIcon": "fa-list",
+          "menuItemName": "Categories",
           "showDivider": false
        },
        {

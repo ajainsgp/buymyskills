@@ -11,6 +11,8 @@ export const FilterContext = createContext({
   setCityFilter: () => {},
   countryFilter: "",
   setCountryFilter: () => {},
+  categoryFilter: "",
+  setCategoryFilter: () => {},
   resetFilters: () => {},
 });
 
@@ -20,6 +22,7 @@ export function FilterProvider({ children }) {
   const [preferenceFilter, setPreferenceFilter] = useState("");
   const [cityFilter, setCityFilter] = useState("");
   const [countryFilter, setCountryFilter] = useState("");
+  const [categoryFilter, setCategoryFilter] = useState("");
 
   const resetFilters = () => {
     setKw("");
@@ -27,6 +30,7 @@ export function FilterProvider({ children }) {
     setPreferenceFilter("");
     setCityFilter("");
     setCountryFilter("");
+    setCategoryFilter("");
   };
 
   const value = useMemo(
@@ -41,9 +45,18 @@ export function FilterProvider({ children }) {
       setCityFilter,
       countryFilter,
       setCountryFilter,
+      categoryFilter,
+      setCategoryFilter,
       resetFilters,
     }),
-    [kw, availabilityFilter, preferenceFilter, cityFilter, countryFilter],
+    [
+      kw,
+      availabilityFilter,
+      preferenceFilter,
+      cityFilter,
+      countryFilter,
+      categoryFilter,
+    ],
   );
 
   return (

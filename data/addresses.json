@@ -27,6 +27,20 @@
       },
       "history": [],
       "updatedAt": "2025-09-16T22:14:17.159Z"
+    },
+    {
+      "userId": "u_mfsyjp1l_puhfyi",
+      "current": {
+        "addressLine1": "",
+        "addressLine2": "",
+        "city": "",
+        "state": "",
+        "postcode": "",
+        "country": "",
+        "from": "2025-09-21T00:27:03.964Z"
+      },
+      "history": [],
+      "updatedAt": "2025-09-21T00:27:03.964Z"
     }
   ]
 }

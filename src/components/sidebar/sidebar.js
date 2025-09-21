@@ -17,7 +17,7 @@ function Sidebar() {
     >
       {/* <!-- Sidebar - Brand --> */}
       <a
-        href="home"
+        href="/home"
         className="sidebar-brand d-flex align-items-center justify-content-center"
       >
         <div className="sidebar-brand-icon rotate-n-15">
@@ -30,7 +30,7 @@ function Sidebar() {
 
       {/* <!-- Nav Item - Dashboard --> */}
       <li key="dashboard" className="nav-item active">
-        <a className="nav-link" href="home">
+        <a className="nav-link" href="/home">
           <i className="fas fa-fw fa-tachometer-alt"></i>
           <span>Dashboard</span>
         </a>

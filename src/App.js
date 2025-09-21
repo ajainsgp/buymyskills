@@ -6,6 +6,7 @@ import RegisterUser from "./components/register/register";
 import LoginApps from "./components/login/login";
 import Profile from "./pages/profile";
 import UpdatePassword from "./components/auth/UpdatePassword";
+import AdminCategories from "./pages/AdminCategories";
 
 function App() {
   return (
@@ -20,6 +21,7 @@ function App() {
             <Route path="/login" element={<LoginApps />} />
             <Route path="/profile" element={<Profile />} />
             <Route path="/update-password" element={<UpdatePassword />} />
+            <Route path="/admin/categories" element={<AdminCategories />} />
           </Routes>
         </div>
       </div>

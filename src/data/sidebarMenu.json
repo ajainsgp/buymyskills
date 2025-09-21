@@ -48,17 +48,21 @@
       "sidebarHeading": "Addons",
       "sidebarMenu": [
         {
-          "menuTitle": "Pages",
+          "menuTitle": "Menu",
           "menuTitleIcon": "fas fa-fw fa-folder",
           "collapseHeader": "Custom Screens:",
           "menuItems": [
             {
               "name": "Login",
-              "link": "login"
+              "link": "/login"
             },
             {
               "name": "Register",
-              "link": "register"
+              "link": "/register"
+            },
+            {
+              "name": "Categories",
+              "link": "/admin/categories"
             }
           ]
         }

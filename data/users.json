@@ -33,6 +33,48 @@
       "traveling": "No Traveling",
       "availability": "Immediate",
       "createdAt": "2025-09-16T22:14:17.158Z"
+    },
+    {
+      "id": "u_mfsxzcoq_0mjou1",
+      "name": "Administrator",
+      "firstName": "Admin",
+      "lastName": "",
+      "nickName": "admin",
+      "gender": "",
+      "mobile": "",
+      "emailId": "admin@buymyskills.local",
+      "secondaryEmail": "admin@buymyskills.local",
+      "passwordHash": "scrypt$f10ed36e325715f05120d13e8a038183$8a31ee055702e32b8c2a8ed7825803bdfe893cf21458e78491db5dae0e508049d04e6f5d5e0728d8cd3d736f653b6adb37678567e4e081cda9d1e7d01cd617a2",
+      "summary": "",
+      "workPreference": "",
+      "traveling": "",
+      "availability": "",
+      "roleType": "administrator",
+      "createdAt": "2025-09-21T00:11:14.828Z",
+      "category": "",
+      "showInDashboard": 0,
+      "showPhoto": 0
+    },
+    {
+      "id": "u_mfsyjp1l_puhfyi",
+      "name": "Test",
+      "firstName": "Test",
+      "lastName": "",
+      "nickName": "",
+      "gender": "",
+      "mobile": "",
+      "emailId": "user1758414423@example.com",
+      "secondaryEmail": "user1758414423@example.com",
+      "passwordHash": "scrypt$d807b1796e2e5ab2ae6f2bd8a6781f15$dea97415a10b31a6f0dc93eb4b82864c0eb84b807e0d1ebb93ea1e816fba633a7b05d241af0d3855167bcbf757ac8655a8a5b797c6ba7eb3411845eceafc38de",
+      "summary": "",
+      "workPreference": "",
+      "traveling": "",
+      "availability": "",
+      "roleType": "user",
+      "createdAt": "2025-09-21T00:27:03.963Z",
+      "category": "",
+      "showInDashboard": true,
+      "showPhoto": false
     }
   ]
 }

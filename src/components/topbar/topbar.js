@@ -24,7 +24,7 @@ function Topbar() {
   const navigate = useNavigate();
   const [userName, setUserName] = useState("Guest");
   const [isAuthed, setIsAuthed] = useState(false);
-  const itemsToUse = isAuthed ? menuItems : guestMenuItems;
+  const [isAdmin, setIsAdmin] = useState(false);
   const location = useLocation();
 
   const sync = () => {
@@ -36,15 +36,19 @@ function Topbar() {
           [cu.firstName, cu.lastName].filter(Boolean).join(" ").trim() ||
           cu.emailId ||
           "User";
+        const role = String(cu.roleType || "").toLowerCase();
         setUserName(name);
         setIsAuthed(true);
+        setIsAdmin(role === "administrator" || role === "administrative");
       } else {
         setUserName("Guest");
         setIsAuthed(false);
+        setIsAdmin(false);
       }
     } catch {
       setUserName("Guest");
       setIsAuthed(false);
+      setIsAdmin(false);
     }
   };
 
@@ -81,6 +85,10 @@ function Topbar() {
       navigate("/profile");
       return;
     }
+    if (menuName === "Categories") {
+      if (isAdmin) navigate("/admin/categories");
+      return;
+    }
     if (menuName === "Update Password") {
       navigate("/update-password");
       return;
@@ -94,6 +102,12 @@ function Topbar() {
       return;
     }
   };
+
+  const itemsToUse = isAuthed
+    ? isAdmin
+      ? menuItems
+      : menuItems.filter((i) => i.menuItemName !== "Categories")
+    : guestMenuItems;
 
   return (
     <div>

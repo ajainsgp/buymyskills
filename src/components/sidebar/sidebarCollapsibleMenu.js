@@ -1,4 +1,4 @@
-import React, { useState } from "react";
+import React, { useEffect, useState } from "react";
 import menuData from "../../data/sidebarMenu.json";
 
 function SidebarCollapsibleMenu() {
@@ -14,6 +14,27 @@ function SidebarCollapsibleMenu() {
     });
     return init;
   });
+
+  const [isAdmin, setIsAdmin] = useState(false);
+
+  useEffect(() => {
+    function sync() {
+      try {
+        const cu = JSON.parse(localStorage.getItem("currentUser") || "null");
+        const role = cu ? String(cu.roleType || "").toLowerCase() : "";
+        setIsAdmin(role === "administrator" || role === "administrative");
+      } catch {
+        setIsAdmin(false);
+      }
+    }
+    sync();
+    window.addEventListener("storage", sync);
+    window.addEventListener("auth-changed", sync);
+    return () => {
+      window.removeEventListener("storage", sync);
+      window.removeEventListener("auth-changed", sync);
+    };
+  }, []);
 
   const toggleCollapse = (menuId) => {
     setCollapsedMap((prev) => ({ ...prev, [menuId]: !prev[menuId] }));
@@ -50,7 +71,12 @@ function SidebarCollapsibleMenu() {
                 <h6 className="collapse-header">
                   {sidebarMenu.collapseHeader}
                 </h6>
-                {sidebarMenu.menuItems.map((menuItem) => (
+                {(isAdmin
+                  ? sidebarMenu.menuItems
+                  : sidebarMenu.menuItems.filter(
+                      (menuItem) => menuItem.name !== "Categories",
+                    )
+                ).map((menuItem) => (
                   <a
                     className="collapse-item"
                     key={`${sidebarMenu.menuTitle}-${menuItem.name}`}

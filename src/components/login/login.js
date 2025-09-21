@@ -3,6 +3,15 @@ import { useNavigate } from "react-router-dom";
 import "./login.css";
 import API_BASE from "../../utils/apiBase";
 
+async function sha256Hex(str) {
+  const data = new TextEncoder().encode(str || "");
+  const buf = await (window.crypto && window.crypto.subtle
+    ? window.crypto.subtle.digest("SHA-256", data)
+    : Promise.resolve(new Uint8Array()));
+  const arr = Array.from(new Uint8Array(buf));
+  return arr.map((b) => b.toString(16).padStart(2, "0")).join("");
+}
+
 function LoginApps() {
   const navigate = useNavigate();
   const [form, setForm] = useState({ emailId: "", password: "" });
@@ -26,10 +35,13 @@ function LoginApps() {
     try {
       setSubmitting(true);
       // Relative URL, proxied by CRA to http://localhost:4000 via package.json "proxy"
+      const { password, ...rest } = form;
+      const passwordDigest = await sha256Hex(password);
+      const payload = { ...rest, passwordDigest };
       const res = await fetch(`${API_BASE}/api/login`, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify(form),
+        body: JSON.stringify(payload),
       });
       const data = await res.json().catch(() => ({}));
       if (!res.ok) {
@@ -48,6 +60,7 @@ function LoginApps() {
       setError(err.message || "Something went wrong");
     } finally {
       setSubmitting(false);
+      setForm((p) => ({ ...p, password: "" }));
     }
   };
 

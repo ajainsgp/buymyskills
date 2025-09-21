@@ -37,6 +37,20 @@ function DashboardContent() {
     };
   }, []);
 
+  const cu = (() => {
+    try {
+      return JSON.parse(localStorage.getItem("currentUser") || "null");
+    } catch {
+      return null;
+    }
+  })();
+  const isAdmin = !!(
+    cu &&
+    ["administrator", "administrative"].includes(
+      String(cu.roleType || "").toLowerCase(),
+    )
+  );
+
   return (
     <div className="container-fluid">
       <div style={{ paddingBottom: "1.5rem" }}>
@@ -55,7 +69,17 @@ function DashboardContent() {
               <div>Loading users...</div>
             ) : (
               <UserProfile
-                userProfiles={users}
+                userProfiles={
+                  isAdmin
+                    ? users
+                    : users.filter(
+                        (u) =>
+                          String(u.roleType || "").toLowerCase() !==
+                            "administrator" &&
+                          String(u.emailId || "").toLowerCase() !==
+                            "admin@buymyskills.local",
+                      )
+                }
                 showSensitive={Boolean(localStorage.getItem("currentUser"))}
               />
             )}
