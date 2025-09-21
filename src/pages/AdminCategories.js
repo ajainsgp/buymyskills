@@ -22,7 +22,9 @@ function AdminCategories() {
     function sync() {
       try {
         const cu = JSON.parse(localStorage.getItem("currentUser") || "null");
-        const admin = !!(cu && String(cu.roleType).toLowerCase() === "administrative");
+        const admin = !!(
+          cu && String(cu.roleType).toLowerCase() === "administrative"
+        );
         setIsAdmin(admin);
       } catch {
         setIsAdmin(false);
@@ -213,10 +215,7 @@ function AdminCategories() {
                       }
                       disabled={disabled || adding}
                     />
-                    <label
-                      className="form-check-label"
-                      htmlFor="new-enabled"
-                    >
+                    <label className="form-check-label" htmlFor="new-enabled">
                       Yes
                     </label>
                   </div>
@@ -355,7 +354,8 @@ function AdminCategories() {
               </div>
             )}
             <div style={{ fontSize: 12, color: "#555", marginTop: 8 }}>
-              Note: Only Enabled categories are returned by GET /api/categories and shown in dropdowns.
+              Note: Only Enabled categories are returned by GET /api/categories
+              and shown in dropdowns.
             </div>
           </div>
         </div>
