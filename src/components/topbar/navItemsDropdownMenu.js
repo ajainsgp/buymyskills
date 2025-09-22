@@ -26,30 +26,75 @@ function NavItemsDropdownMenu({ userInfo, menuItems, onSelectMenu }) {
     setToggle(!isToggled);
   };
 
-  const [photoUrl, setPhotoUrl] = useState(
-    "http://ssl.gstatic.com/accounts/ui/avatar_2x.png",
-  );
+  const DEFAULT_AVATAR = "http://ssl.gstatic.com/accounts/ui/avatar_2x.png";
+  const [photoUrl, setPhotoUrl] = useState(DEFAULT_AVATAR);
 
   useEffect(() => {
     let ignore = false;
+
+    function getCurrentUser() {
+      const s = sessionStorage.getItem("currentUser");
+      if (s) {
+        try {
+          return JSON.parse(s);
+        } catch (_e) {
+          /* ignore */
+        }
+      }
+      if (localStorage.getItem("rememberMe") === "true") {
+        const l = localStorage.getItem("currentUser");
+        if (l) {
+          try {
+            return JSON.parse(l);
+          } catch (_e) {
+            /* ignore */
+          }
+        }
+      }
+      return null;
+    }
+
     async function loadPhoto() {
       try {
-        const cu = JSON.parse(localStorage.getItem("currentUser") || "null");
-        if (!cu || !cu.id) return;
-        // Try to fetch user's photo; fall back to default if not present
+        const cu = getCurrentUser();
+        if (!cu || !cu.id) {
+          if (!ignore) setPhotoUrl(DEFAULT_AVATAR);
+          return;
+        }
         const res = await fetch(`${API_BASE}/api/users/${cu.id}/photo`);
-        if (!res.ok) return;
+        if (!res.ok) {
+          if (!ignore) setPhotoUrl(DEFAULT_AVATAR);
+          return;
+        }
         const data = await res.json().catch(() => ({}));
         if (!ignore && data && data.contentType && data.base64) {
           setPhotoUrl(`data:${data.contentType};base64,${data.base64}`);
+        } else if (!ignore) {
+          setPhotoUrl(DEFAULT_AVATAR);
         }
       } catch {
-        // ignore
+        if (!ignore) setPhotoUrl(DEFAULT_AVATAR);
       }
     }
+
     loadPhoto();
+
+    function onAuthChanged() {
+      loadPhoto();
+    }
+    function onStorage(e) {
+      if (!e || e.key === "currentUser" || e.key === "rememberMe") {
+        loadPhoto();
+      }
+    }
+
+    window.addEventListener("auth-changed", onAuthChanged);
+    window.addEventListener("storage", onStorage);
+
     return () => {
       ignore = true;
+      window.removeEventListener("auth-changed", onAuthChanged);
+      window.removeEventListener("storage", onStorage);
     };
   }, []);
 

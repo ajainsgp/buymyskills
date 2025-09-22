@@ -4,15 +4,6 @@ import "./register.css";
 import API_BASE from "../../utils/apiBase";
 import countries from "../../data/countries.json";
 
-async function sha256Hex(str) {
-  const data = new TextEncoder().encode(str || "");
-  const buf = await (window.crypto && window.crypto.subtle
-    ? window.crypto.subtle.digest("SHA-256", data)
-    : Promise.resolve(new Uint8Array()));
-  const arr = Array.from(new Uint8Array(buf));
-  return arr.map((b) => b.toString(16).padStart(2, "0")).join("");
-}
-
 function RegisterUser() {
   const navigate = useNavigate();
   const [submitting, setSubmitting] = useState(false);
@@ -123,9 +114,7 @@ function RegisterUser() {
 
     try {
       setSubmitting(true);
-      const { password, ...rest } = form;
-      const passwordDigest = await sha256Hex(password);
-      const payload = { ...rest, passwordDigest };
+      const payload = { ...form };
       // Use relative URL; CRA will proxy to http://localhost:4000 if "proxy" is set in package.json
       const res = await fetch(`${API_BASE}/api/register`, {
         method: "POST",
@@ -159,7 +148,7 @@ function RegisterUser() {
           // ignore upload errors
         }
       }
-      navigate("/dashboard2");
+      navigate("/home");
     } catch (err) {
       setError(err.message || "Something went wrong");
     } finally {

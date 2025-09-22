@@ -18,11 +18,35 @@ function SidebarCollapsibleMenu() {
   const [isAdmin, setIsAdmin] = useState(false);
 
   useEffect(() => {
+    function getCurrentUser() {
+      const s = sessionStorage.getItem("currentUser");
+      if (s) {
+        try {
+          return JSON.parse(s);
+        } catch (_e) {
+          /* ignore */
+        }
+      }
+      if (localStorage.getItem("rememberMe") === "true") {
+        const l = localStorage.getItem("currentUser");
+        if (l) {
+          try {
+            return JSON.parse(l);
+          } catch (_e) {
+            /* ignore */
+          }
+        }
+      }
+      return null;
+    }
     function sync() {
       try {
-        const cu = JSON.parse(localStorage.getItem("currentUser") || "null");
+        const cu = getCurrentUser();
         const role = cu ? String(cu.roleType || "").toLowerCase() : "";
-        setIsAdmin(role === "administrator" || role === "administrative");
+        const emailLower = cu ? String(cu.emailId || "").toLowerCase() : "";
+        setIsAdmin(
+          role.includes("admin") || emailLower === "admin@buymyskills.local",
+        );
       } catch {
         setIsAdmin(false);
       }

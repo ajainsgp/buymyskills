@@ -3,20 +3,12 @@ import { useNavigate } from "react-router-dom";
 import "./login.css";
 import API_BASE from "../../utils/apiBase";
 
-async function sha256Hex(str) {
-  const data = new TextEncoder().encode(str || "");
-  const buf = await (window.crypto && window.crypto.subtle
-    ? window.crypto.subtle.digest("SHA-256", data)
-    : Promise.resolve(new Uint8Array()));
-  const arr = Array.from(new Uint8Array(buf));
-  return arr.map((b) => b.toString(16).padStart(2, "0")).join("");
-}
-
 function LoginApps() {
   const navigate = useNavigate();
   const [form, setForm] = useState({ emailId: "", password: "" });
   const [submitting, setSubmitting] = useState(false);
   const [error, setError] = useState("");
+  const [remember, setRemember] = useState(false);
 
   const onChange = (e) => {
     const { name, value } = e.target;
@@ -34,10 +26,8 @@ function LoginApps() {
 
     try {
       setSubmitting(true);
-      // Relative URL, proxied by CRA to http://localhost:4000 via package.json "proxy"
-      const { password, ...rest } = form;
-      const passwordDigest = await sha256Hex(password);
-      const payload = { ...rest, passwordDigest };
+      // Send plaintext password to API; server hashes/verifies with bcrypt
+      const payload = { emailId: form.emailId, password: form.password };
       const res = await fetch(`${API_BASE}/api/login`, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
@@ -48,14 +38,22 @@ function LoginApps() {
         throw new Error(data?.error || `Login failed (${res.status})`);
       }
       try {
-        localStorage.setItem("currentUser", JSON.stringify(data.user));
+        if (remember) {
+          localStorage.setItem("currentUser", JSON.stringify(data.user));
+          localStorage.setItem("rememberMe", "true");
+          sessionStorage.removeItem("currentUser");
+        } else {
+          sessionStorage.setItem("currentUser", JSON.stringify(data.user));
+          localStorage.removeItem("currentUser");
+          localStorage.removeItem("rememberMe");
+        }
       } catch {
         // ignore
       }
       if (typeof window !== "undefined" && window.dispatchEvent) {
         window.dispatchEvent(new Event("auth-changed"));
       }
-      navigate("/dashboard2");
+      navigate("/home");
     } catch (err) {
       setError(err.message || "Something went wrong");
     } finally {
@@ -115,7 +113,12 @@ function LoginApps() {
                       {submitting ? "Logging in..." : "Login"}
                     </button>
                     <div className="remember-me">
-                      <input type="checkbox" className="checkbox" />
+                      <input
+                        type="checkbox"
+                        className="checkbox"
+                        checked={remember}
+                        onChange={(e) => setRemember(e.target.checked)}
+                      />
                       <span className="check-label">Remember Me</span>
                     </div>
                     <a

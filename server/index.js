@@ -10,6 +10,7 @@ const helmet = require("helmet");
 const rateLimit = require("express-rate-limit");
 const compression = require("compression");
 const morgan = require("morgan");
+const bcrypt = require("bcrypt");
 
 const USE_DB =
   String(process.env.PERSISTENCE || "").toLowerCase() === "mysql" ||
@@ -17,6 +18,7 @@ const USE_DB =
 
 const app = express();
 const PORT = process.env.PORT || 4000;
+const ADMIN_EMAIL = process.env.ADMIN_BOOTSTRAP_EMAIL || "admin@buymyskills.local";
 
 // File-based storage locations (used when not using DB)
 const DATA_DIR = path.resolve(__dirname, "../data");
@@ -113,26 +115,30 @@ function sha256Hex(s) {
   return crypto.createHash("sha256").update(String(s), "utf8").digest("hex");
 }
 
-// Password hashing (scrypt)
-function hashPassword(password) {
-  const salt = crypto.randomBytes(16);
-  const hash = crypto.scryptSync(String(password), salt, 64);
-  return `scrypt$${salt.toString("hex")}$${hash.toString("hex")}`;
+// Password hashing (bcrypt primary; scrypt legacy fallback supported for verify)
+async function hashPassword(password) {
+  return await bcrypt.hash(String(password), 12);
 }
-function verifyPassword(password, stored) {
+async function verifyPassword(password, stored) {
   try {
     if (!stored) return false;
+    // bcrypt hashed
+    if (stored.startsWith && stored.startsWith("$2")) {
+      return await bcrypt.compare(String(password), stored);
+    }
+    // legacy scrypt(SHA-256(plain))
     if (stored.startsWith && stored.startsWith("scrypt$")) {
       const parts = stored.split("$");
       const saltHex = parts[1];
       const hashHex = parts[2];
       if (!saltHex || !hashHex) return false;
       const salt = Buffer.from(saltHex, "hex");
-      const derived = crypto.scryptSync(String(password), salt, 64);
+      const derived = crypto.scryptSync(sha256Hex(String(password)), salt, 64);
       const storedHash = Buffer.from(hashHex, "hex");
       if (derived.length !== storedHash.length) return false;
       return crypto.timingSafeEqual(derived, storedHash);
     }
+    // last resort (plaintext legacy)
     return String(stored) === String(password);
   } catch {
     return false;
@@ -334,7 +340,7 @@ async function ensureHashedPasswordsOnStartFS() {
   let changed = false;
   for (const u of store.users) {
     if (u && !u.passwordHash && typeof u.password === "string" && u.password) {
-      u.passwordHash = hashPassword(sha256Hex(u.password));
+      u.passwordHash = await hashPassword(u.password);
       delete u.password;
       changed = true;
     }
@@ -358,6 +364,12 @@ function mapDbUserRowToApiUser(row) {
     row.created_at instanceof Date
       ? row.created_at.toISOString()
       : row.created_at || new Date().toISOString();
+  const rt =
+    row.role_type
+      ? String(row.role_type).toLowerCase()
+      : (String(row.email_id || "").toLowerCase() === String(ADMIN_EMAIL).toLowerCase()
+          ? "administrator"
+          : "user");
   return {
     id: row.id,
     name: row.name || "",
@@ -372,7 +384,7 @@ function mapDbUserRowToApiUser(row) {
     workPreference: row.work_preference || "",
     traveling: row.traveling || "",
     availability: row.availability || "",
-    roleType: row.role_type || "user",
+    roleType: rt,
     createdAt,
   };
 }
@@ -528,7 +540,7 @@ app.post("/api/register", async (req, res) => {
       passwordDigest,
     } = req.body || {};
 
-    if (!emailId || !(password || passwordDigest) || !firstName) {
+    if (!emailId || !password || !firstName) {
       return res.status(400).json({ error: "firstName, emailId and password are required" });
     }
 
@@ -536,7 +548,7 @@ app.post("/api/register", async (req, res) => {
       const exists = await db.getUserByEmail(emailId);
       if (exists) return res.status(409).json({ error: "User with this email already exists" });
 
-      const secret = String(passwordDigest || sha256Hex(String(password || "")));
+      const passwordHash = await hashPassword(String(password || ""));
       const newUser = {
         id: makeId(),
         name: [firstName, lastName].filter(Boolean).join(" ").trim(),
@@ -547,7 +559,7 @@ app.post("/api/register", async (req, res) => {
         mobile: mobileNo || "",
         emailId,
         secondaryEmail: secondaryEmail || emailId,
-        passwordHash: hashPassword(secret),
+        passwordHash: passwordHash,
         summary: keywords || "",
         workPreference: workPreference || "",
         traveling: traveling || "",
@@ -581,7 +593,7 @@ app.post("/api/register", async (req, res) => {
     );
     if (exists) return res.status(409).json({ error: "User with this email already exists" });
 
-    const secret = String(passwordDigest || sha256Hex(String(password || "")));
+    const passwordHash = await hashPassword(String(password || ""));
     const newUser = {
       id: makeId(),
       name: [firstName, lastName].filter(Boolean).join(" ").trim(),
@@ -592,7 +604,7 @@ app.post("/api/register", async (req, res) => {
       mobile: mobileNo || "",
       emailId: emailId,
       secondaryEmail: secondaryEmail || emailId,
-      passwordHash: hashPassword(secret),
+      passwordHash: passwordHash,
       summary: keywords || "",
       workPreference: workPreference || "",
       traveling: traveling || "",
@@ -618,18 +630,42 @@ app.post("/api/register", async (req, res) => {
  */
 app.post("/api/login", async (req, res) => {
   try {
-    const { emailId, password, passwordDigest } = req.body || {};
-    if (!emailId || !(password || passwordDigest)) {
+    const { emailId, password } = req.body || {};
+    if (!emailId || !password) {
       return res.status(400).json({ error: "emailId and password are required" });
     }
 
     if (USE_DB) {
       const row = await db.getUserByEmail(emailId);
       if (!row) return res.status(401).json({ error: "Invalid credentials" });
-      const secret = String(passwordDigest || sha256Hex(String(password || "")));
-      const ok = verifyPassword(secret, row.password_hash);
+      const ok = await verifyPassword(String(password || ""), row.password_hash);
       if (!ok) return res.status(401).json({ error: "Invalid credentials" });
-      const apiUser = mapDbUserRowToApiUser(row);
+
+      // Ensure correct roleType on login (backfill if missing)
+      const adminEmailLower = String(ADMIN_EMAIL).toLowerCase();
+      const additionalAdmins = String(process.env.ADMIN_ADDITIONAL_EMAILS || "")
+        .toLowerCase()
+        .split(",")
+        .map((s) => s.trim())
+        .filter(Boolean);
+      const emailLower = String(row.email_id || "").toLowerCase();
+      let rt = String(row.role_type || "").toLowerCase();
+      // Force admin role by email regardless of existing role_type
+      if (emailLower === adminEmailLower || additionalAdmins.includes(emailLower)) {
+        if (rt !== "administrator") {
+          try {
+            await db.updateUserFields(row.id, { roleType: "administrator" });
+          } catch (e) {
+            // non-fatal
+          }
+        }
+        rt = "administrator";
+      } else if (!rt) {
+        rt = "user";
+      }
+
+      const mapped = mapDbUserRowToApiUser(row);
+      const apiUser = { ...mapped, roleType: rt };
       return res.json({ user: sanitizeUser(apiUser), message: "Login successful" });
     }
 
@@ -640,11 +676,23 @@ app.post("/api/login", async (req, res) => {
     );
     if (!user) return res.status(401).json({ error: "Invalid credentials" });
     let ok = false;
-    const secret = String(passwordDigest || sha256Hex(String(password || "")));
-    if (user.passwordHash) ok = verifyPassword(secret, user.passwordHash);
-    else if (user.password) ok = String(user.password) === String(secret);
+    if (user.passwordHash) ok = await verifyPassword(String(password || ""), user.passwordHash);
+    else if (user.password) ok = String(user.password) === String(password);
     if (!ok) return res.status(401).json({ error: "Invalid credentials" });
-    return res.json({ user: sanitizeUser(user), message: "Login successful" });
+    // FS mode: ensure admin email is treated as administrator in response
+    const adminEmailLower = String(ADMIN_EMAIL).toLowerCase();
+    const additionalAdmins = String(process.env.ADMIN_ADDITIONAL_EMAILS || "")
+      .toLowerCase()
+      .split(",")
+      .map((s) => s.trim())
+      .filter(Boolean);
+    const emailLower = String(user.emailId || "").toLowerCase();
+    const rt =
+      emailLower === adminEmailLower || additionalAdmins.includes(emailLower)
+        ? "administrator"
+        : String(user.roleType || "user").toLowerCase();
+    const apiUser = { ...sanitizeUser(user), roleType: rt };
+    return res.json({ user: apiUser, message: "Login successful" });
   } catch (err) {
     console.error("Login error:", err);
     return res.status(500).json({ error: "Internal server error" });
@@ -657,7 +705,19 @@ app.post("/api/login", async (req, res) => {
 app.get("/api/users", async (_req, res) => {
   try {
     if (USE_DB) {
-      const rows = await db.listUsers();
+      const roleParamRaw = String(((_req.query && _req.query.roleType) || "user")).toLowerCase();
+      const roleParam = roleParamRaw === "administrative" ? "administrator" : roleParamRaw;
+      const adminEmailLower = String(ADMIN_EMAIL).toLowerCase();
+
+      const rows = (await db.listUsers()).filter((r) => {
+        const rt = String(r.role_type || "user").toLowerCase();
+        const emailLower = String(r.email_id || "").toLowerCase();
+        if (roleParam === "administrator") {
+          return rt === "administrator" || rt === "administrative" || emailLower === adminEmailLower;
+        }
+        // Non-admin view explicitly excludes the bootstrap admin email
+        return rt === roleParam && emailLower !== adminEmailLower;
+      });
       const users = rows.map((r) => {
         const u = mapDbUserRowToApiUser(r);
         const addr =
@@ -679,7 +739,21 @@ app.get("/api/users", async (_req, res) => {
     // FS flow
     const store = await readUsersFS();
     const addrStore = await readAddressesFS();
-    const users = store.users.map((u) => {
+
+    const roleParamRaw = String(((_req.query && _req.query.roleType) || "user")).toLowerCase();
+    const roleParam = roleParamRaw === "administrative" ? "administrator" : roleParamRaw;
+    const adminEmailLower = String(ADMIN_EMAIL).toLowerCase();
+
+    const users = store.users
+      .filter((u) => {
+        const rt = String(u.roleType || "user").toLowerCase();
+        const emailLower = String(u.emailId || "").toLowerCase();
+        if (roleParam === "administrator") {
+          return rt === "administrator" || rt === "administrative" || emailLower === adminEmailLower;
+        }
+        return rt === roleParam && emailLower !== adminEmailLower;
+      })
+      .map((u) => {
       const au = sanitizeUser(u);
       const addrRec = addrStore.addresses.find((a) => a.userId === u.id);
       au.address = addrRec ? { ...addrRec.current } : {};
@@ -833,9 +907,9 @@ app.post("/api/password/change", async (req, res) => {
     if (USE_DB) {
       const row = await db.getUserById(id);
       if (!row) return res.status(404).json({ error: "User not found" });
-      const ok = verifyPassword(sha256Hex(String(currentPassword)), row.password_hash);
+      const ok = await verifyPassword(String(currentPassword || ""), row.password_hash);
       if (!ok) return res.status(401).json({ error: "Current password is incorrect" });
-      await db.updatePasswordHash(id, hashPassword(sha256Hex(String(newPassword))));
+      await db.updatePasswordHash(id, await hashPassword(String(newPassword || "")));
       return res.json({ message: "Password changed successfully" });
     }
 
@@ -845,10 +919,10 @@ app.post("/api/password/change", async (req, res) => {
     if (idx === -1) return res.status(404).json({ error: "User not found" });
     const user = store.users[idx];
     let ok = false;
-    if (user.passwordHash) ok = verifyPassword(sha256Hex(String(currentPassword)), user.passwordHash);
+    if (user.passwordHash) ok = await verifyPassword(String(currentPassword || ""), user.passwordHash);
     else if (user.password) ok = String(user.password) === String(currentPassword);
     if (!ok) return res.status(401).json({ error: "Current password is incorrect" });
-    const updated = { ...user, passwordHash: hashPassword(sha256Hex(String(newPassword))) };
+    const updated = { ...user, passwordHash: await hashPassword(String(newPassword || "")) };
     delete updated.password;
     store.users[idx] = updated;
     await writeUsersFS(store);
@@ -875,7 +949,7 @@ app.post("/api/password/reset", async (req, res) => {
     if (USE_DB) {
       const row = await db.getUserByEmail(emailId);
       if (!row) return res.status(404).json({ error: "User not found" });
-      await db.updatePasswordHash(row.id, hashPassword(sha256Hex(String(newPassword))));
+      await db.updatePasswordHash(row.id, await hashPassword(String(newPassword || "")));
       return res.json({ message: "Password reset successfully" });
     }
 
@@ -886,7 +960,7 @@ app.post("/api/password/reset", async (req, res) => {
     );
     if (idx === -1) return res.status(404).json({ error: "User not found" });
     const user = store.users[idx];
-    const updated = { ...user, passwordHash: hashPassword(sha256Hex(String(newPassword))) };
+    const updated = { ...user, passwordHash: await hashPassword(String(newPassword || "")) };
     delete updated.password;
     store.users[idx] = updated;
     await writeUsersFS(store);
@@ -1097,7 +1171,7 @@ async function start() {
           emailId: adminEmail,
           secondaryEmail: adminEmail,
           // Store scrypt(SHA-256(plain)) so that clients can send passwordDigest
-          passwordHash: hashPassword(sha256Hex(adminPass)),
+          passwordHash: await hashPassword(String(adminPass)),
           summary: "",
           workPreference: "",
           traveling: "",
@@ -1135,7 +1209,7 @@ async function start() {
           mobile: "",
           emailId: adminEmail,
           secondaryEmail: adminEmail,
-          passwordHash: hashPassword(sha256Hex(adminPass)),
+          passwordHash: await hashPassword(String(adminPass)),
           summary: "",
           workPreference: "",
           traveling: "",

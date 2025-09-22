@@ -29,7 +29,28 @@ function Topbar() {
 
   const sync = () => {
     try {
-      const cu = JSON.parse(localStorage.getItem("currentUser") || "null");
+      const getCurrentUser = () => {
+        const s = sessionStorage.getItem("currentUser");
+        if (s) {
+          try {
+            return JSON.parse(s);
+          } catch (_e) {
+            /* ignore */
+          }
+        }
+        if (localStorage.getItem("rememberMe") === "true") {
+          const l = localStorage.getItem("currentUser");
+          if (l) {
+            try {
+              return JSON.parse(l);
+            } catch (_e) {
+              /* ignore */
+            }
+          }
+        }
+        return null;
+      };
+      const cu = getCurrentUser();
       if (cu) {
         const name =
           cu.name ||
@@ -37,9 +58,12 @@ function Topbar() {
           cu.emailId ||
           "User";
         const role = String(cu.roleType || "").toLowerCase();
+        const emailLower = String(cu.emailId || "").toLowerCase();
+        const admin =
+          role.includes("admin") || emailLower === "admin@buymyskills.local";
         setUserName(name);
         setIsAuthed(true);
-        setIsAdmin(role === "administrator" || role === "administrative");
+        setIsAdmin(admin);
       } else {
         setUserName("Guest");
         setIsAuthed(false);
@@ -71,7 +95,9 @@ function Topbar() {
   const handleMenuSelect = (menuName) => {
     if (menuName === "Logout") {
       try {
+        sessionStorage.removeItem("currentUser");
         localStorage.removeItem("currentUser");
+        localStorage.removeItem("rememberMe");
       } catch (e) {
         // ignore
       }
