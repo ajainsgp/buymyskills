@@ -9,6 +9,7 @@
     transform-style: preserve-3d;
     transition: transform 450ms ease-in-out;
     transform: perspective(1100px) rotateY(var(--rotate-y, 0)) translateY(var(--translate-y, 0));
+    height: 10rem !important;
   }
 
   .headerContent {
@@ -24,7 +25,7 @@
 
   .body-front,
   .body-back {
-   height: 9rem;
+   height: 7.5rem;
   }
 
   .card-body {
@@ -78,7 +79,6 @@
   /* Footer two-column grid for availability and location */
   .card-footer-grid {
     display: grid;
-    grid-template-columns: 1fr 1fr;
     column-gap: 1rem;
     row-gap: 0.25rem;
     align-items: center;

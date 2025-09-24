@@ -4,7 +4,6 @@ import ReactDOM from "react-dom/client";
 import "./index.css";
 import App from "./App";
 import reportWebVitals from "./reportWebVitals";
-import Sidebar from "./components/sidebar/sidebar";
 import { BrowserRouter } from "react-router-dom";
 import { FilterProvider } from "./components/sidebar/FilterContext";
 
@@ -13,10 +12,7 @@ root.render(
   <React.StrictMode>
     <BrowserRouter>
       <FilterProvider>
-        <div id="wrapper">
-          <Sidebar />
-          <App />
-        </div>
+        <App />
       </FilterProvider>
     </BrowserRouter>
   </React.StrictMode>,

@@ -53,7 +53,10 @@ function LoginApps() {
       if (typeof window !== "undefined" && window.dispatchEvent) {
         window.dispatchEvent(new Event("auth-changed"));
       }
-      navigate("/home");
+      const isAdmin =
+        String(data.user.roleType || "").toLowerCase() === "administrative" ||
+        String(data.user.roleType || "").toLowerCase() === "administrator";
+      navigate(isAdmin ? "/browse" : "/home");
     } catch (err) {
       setError(err.message || "Something went wrong");
     } finally {

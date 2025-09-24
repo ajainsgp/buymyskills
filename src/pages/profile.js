@@ -43,7 +43,10 @@ function Profile() {
       setError("");
       setNotice("");
       try {
-        const cuRaw = localStorage.getItem("currentUser");
+        let cuRaw = localStorage.getItem("currentUser");
+        if (!cuRaw && localStorage.getItem("rememberMe") !== "true") {
+          cuRaw = sessionStorage.getItem("currentUser");
+        }
         if (!cuRaw) {
           navigate("/login");
           return;
