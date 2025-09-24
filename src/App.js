@@ -8,6 +8,8 @@ import Profile from "./pages/profile";
 import UpdatePassword from "./components/auth/UpdatePassword";
 import AdminCategories from "./pages/AdminCategories";
 import ReadMe from "./pages/ReadMe";
+import LandingPage from "./pages/LandingPage";
+import BrowsePage from "./pages/BrowsePage";
 
 function App() {
   // On initial load, ensure no auto-login unless user explicitly chose "Remember Me"
@@ -22,25 +24,136 @@ function App() {
   }, []);
 
   return (
-    <>
-      <div id="content-wrapper" className="d-flex flex-column">
-        <div id="content">
-          <Topbar />
-          <Routes>
-            <Route path="/" element={<Navigate to="/home" replace />} />
-            <Route path="*" element={<Navigate to="/home" replace />} />
-            <Route path="/home" element={<DashboardContent2 />} />
-            <Route path="/dashboard2" element={<DashboardContent2 />} />
-            <Route path="/register" element={<RegisterUser />} />
-            <Route path="/login" element={<LoginApps />} />
-            <Route path="/profile" element={<Profile />} />
-            <Route path="/update-password" element={<UpdatePassword />} />
-            <Route path="/admin/categories" element={<AdminCategories />} />
-            <Route path="/readme" element={<ReadMe />} />
-          </Routes>
-        </div>
-      </div>
-    </>
+    <Routes>
+      <Route path="/" element={<Navigate to="/home" replace />} />
+      <Route path="*" element={<Navigate to="/home" replace />} />
+      <Route
+        path="/home"
+        element={
+          <>
+            <Topbar />
+            <LandingPage />
+          </>
+        }
+      />
+      <Route
+        path="/browse"
+        element={
+          <div id="wrapper">
+            <div id="content-wrapper" className="d-flex flex-column">
+              <div id="content">
+                <Topbar />
+                <BrowsePage />
+              </div>
+            </div>
+          </div>
+        }
+      />
+      <Route
+        path="/dashboard"
+        element={
+          <div id="wrapper">
+            <div id="content-wrapper" className="d-flex flex-column">
+              <div id="content">
+                <Topbar />
+                <DashboardContent2 />
+              </div>
+            </div>
+          </div>
+        }
+      />
+      <Route
+        path="/dashboard2"
+        element={
+          <div id="wrapper">
+            <div id="content-wrapper" className="d-flex flex-column">
+              <div id="content">
+                <Topbar />
+                <DashboardContent2 />
+              </div>
+            </div>
+          </div>
+        }
+      />
+      <Route
+        path="/register"
+        element={
+          <div id="wrapper">
+            <div id="content-wrapper" className="d-flex flex-column">
+              <div id="content">
+                <Topbar />
+                <RegisterUser />
+              </div>
+            </div>
+          </div>
+        }
+      />
+      <Route
+        path="/login"
+        element={
+          <div id="wrapper">
+            <div id="content-wrapper" className="d-flex flex-column">
+              <div id="content">
+                <Topbar />
+                <LoginApps />
+              </div>
+            </div>
+          </div>
+        }
+      />
+      <Route
+        path="/profile"
+        element={
+          <div id="wrapper">
+            <div id="content-wrapper" className="d-flex flex-column">
+              <div id="content">
+                <Topbar />
+                <Profile />
+              </div>
+            </div>
+          </div>
+        }
+      />
+      <Route
+        path="/update-password"
+        element={
+          <div id="wrapper">
+            <div id="content-wrapper" className="d-flex flex-column">
+              <div id="content">
+                <Topbar />
+                <UpdatePassword />
+              </div>
+            </div>
+          </div>
+        }
+      />
+      <Route
+        path="/admin/categories"
+        element={
+          <div id="wrapper">
+            <div id="content-wrapper" className="d-flex flex-column">
+              <div id="content">
+                <Topbar />
+                <AdminCategories />
+              </div>
+            </div>
+          </div>
+        }
+      />
+      <Route
+        path="/readme"
+        element={
+          <div id="wrapper">
+            <div id="content-wrapper" className="d-flex flex-column">
+              <div id="content">
+                <Topbar />
+                <ReadMe />
+              </div>
+            </div>
+          </div>
+        }
+      />
+    </Routes>
   );
 }
 

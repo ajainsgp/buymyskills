@@ -36,3 +36,57 @@
     transform: rotate(360deg);
   }
 }
+
+/* Modern theme overrides */
+:root {
+  --blue: #0c26e6;
+  --primary: #0c26e6;
+  --secondary: #6c757d;
+  --success: #28a745;
+  --info: #17a2b8;
+  --warning: #ffc107;
+  --danger: #dc3545;
+  --light: #f8f9fc;
+  --dark: #343a40;
+}
+
+.sidebar-dark {
+  background: linear-gradient(180deg, #0c26e6 10%, #0721a3 100%);
+  background-size: cover;
+}
+
+.bg-gradient-primary {
+  background: linear-gradient(180deg, #0c26e6 10%, #0721a3 100%);
+  background-size: cover;
+}
+
+.navbar-light {
+  background-color: #ffffff !important;
+  box-shadow: 0 2px 4px rgba(0,0,0,.1);
+}
+
+.card {
+  border: none;
+  box-shadow: 0 4px 6px rgba(0,0,0,.1);
+  border-radius: 8px;
+}
+
+.btn-primary {
+  background-color: #0c26e6;
+  border-color: #0c26e6;
+  border-radius: 6px;
+}
+
+.btn-primary:hover {
+  background-color: #0721a3;
+  border-color: #0721a3;
+}
+
+/* Landing page styles */
+.landing-fullscreen .navbar {
+  display: none !important;
+}
+
+.landing-page {
+  min-height: 100vh;
+}

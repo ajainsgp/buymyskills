@@ -1,226 +1,171 @@
-import React, { useEffect, useState } from "react";
-import { useNavigate, useLocation } from "react-router-dom";
-import NavItemsDropdownAlert from "./navItemsDropdownAlert";
-import NavItemsDropdownMenu from "./navItemsDropdownMenu";
-import topbarMenuItemsData from "../../data/topbarMenuItems.json";
-import alertMessageData from "../../data/alertMessages.json";
+/* eslint-disable prettier/prettier */
+import React, { useState, useEffect } from "react";
 
 function Topbar() {
-  const alertMessages = alertMessageData.alertMessages;
-  const menuItems = topbarMenuItemsData.menuItems;
-  const guestMenuItems = [
-    {
-      menuItemIcon: "fa-sign-in-alt",
-      menuItemName: "Login",
-      showDivider: false,
-    },
-    {
-      menuItemIcon: "fa-user-plus",
-      menuItemName: "Register",
-      showDivider: false,
-    },
-  ];
+  const [currentUser, setCurrentUser] = useState(null);
+  const [dropdownOpen, setDropdownOpen] = useState(false);
 
-  const navigate = useNavigate();
-  const [userName, setUserName] = useState("Guest");
-  const [isAuthed, setIsAuthed] = useState(false);
-  const [isAdmin, setIsAdmin] = useState(false);
-  const location = useLocation();
-
-  const sync = () => {
-    try {
-      const getCurrentUser = () => {
+  useEffect(() => {
+    const getCurrentUser = () => {
+      try {
         const s = sessionStorage.getItem("currentUser");
         if (s) {
-          try {
-            return JSON.parse(s);
-          } catch (_e) {
-            /* ignore */
-          }
+          return JSON.parse(s);
         }
         if (localStorage.getItem("rememberMe") === "true") {
           const l = localStorage.getItem("currentUser");
           if (l) {
-            try {
-              return JSON.parse(l);
-            } catch (_e) {
-              /* ignore */
-            }
+            return JSON.parse(l);
           }
         }
-        return null;
-      };
-      const cu = getCurrentUser();
-      if (cu) {
-        const name =
-          cu.name ||
-          [cu.firstName, cu.lastName].filter(Boolean).join(" ").trim() ||
-          cu.emailId ||
-          "User";
-        const role = String(cu.roleType || "").toLowerCase();
-        const emailLower = String(cu.emailId || "").toLowerCase();
-        const admin =
-          role.includes("admin") || emailLower === "admin@buymyskills.local";
-        setUserName(name);
-        setIsAuthed(true);
-        setIsAdmin(admin);
-      } else {
-        setUserName("Guest");
-        setIsAuthed(false);
-        setIsAdmin(false);
+      } catch {
+        // ignore
       }
-    } catch {
-      setUserName("Guest");
-      setIsAuthed(false);
-      setIsAdmin(false);
-    }
-  };
+      return null;
+    };
+    setCurrentUser(getCurrentUser());
 
-  useEffect(() => {
-    // initial sync and cross-tab sync
-    sync();
-    window.addEventListener("storage", sync);
-    window.addEventListener("auth-changed", sync);
+    const handleAuth = () => {
+      setCurrentUser(getCurrentUser());
+    };
+    const handleStorage = (e) => {
+      if (!e || e.key === "currentUser") {
+        setCurrentUser(getCurrentUser());
+      }
+    };
+    if (typeof window !== "undefined") {
+      window.addEventListener("auth-changed", handleAuth);
+      window.addEventListener("storage", handleStorage);
+    }
     return () => {
-      window.removeEventListener("storage", sync);
-      window.removeEventListener("auth-changed", sync);
+      if (typeof window !== "undefined") {
+        window.removeEventListener("auth-changed", handleAuth);
+        window.removeEventListener("storage", handleStorage);
+      }
     };
   }, []);
 
-  useEffect(() => {
-    // when route changes after login/logout, resync in this tab
-    sync();
-  }, [location.pathname]);
-
-  const handleMenuSelect = (menuName) => {
-    if (menuName === "Logout") {
-      try {
-        sessionStorage.removeItem("currentUser");
-        localStorage.removeItem("currentUser");
-        localStorage.removeItem("rememberMe");
-      } catch (e) {
-        // ignore
-      }
-      if (typeof window !== "undefined" && window.dispatchEvent) {
-        window.dispatchEvent(new Event("auth-changed"));
-      }
-      navigate("/login");
-      return;
+  const handleLogout = () => {
+    sessionStorage.removeItem("currentUser");
+    localStorage.removeItem("currentUser");
+    localStorage.removeItem("rememberMe");
+    if (typeof window !== "undefined" && window.dispatchEvent) {
+      window.dispatchEvent(new Event("auth-changed"));
     }
-    if (menuName === "Profile") {
-      navigate("/profile");
-      return;
-    }
-    if (menuName === "Categories") {
-      if (isAdmin) navigate("/admin/categories");
-      return;
-    }
-    if (menuName === "Update Password") {
-      navigate("/update-password");
-      return;
-    }
-    if (menuName === "Read Me") {
-      navigate("/readme");
-      return;
-    }
-    if (menuName === "Login") {
-      navigate("/login");
-      return;
-    }
-    if (menuName === "Register") {
-      navigate("/register");
-      return;
-    }
+    setCurrentUser(null);
   };
 
-  const itemsToUse = isAuthed
-    ? isAdmin
-      ? menuItems
-      : menuItems.filter(
-          (i) =>
-            i.menuItemName !== "Categories" && i.menuItemName !== "Read Me",
-        )
-    : guestMenuItems;
+  const isAdmin = currentUser && (String(currentUser.roleType || "").toLowerCase() === "administrative" ||
+                  String(currentUser.roleType || "").toLowerCase() === "administrator");
 
   return (
     <div>
-      <nav className="navbar navbar-expand navbar-light bg-white topbar mb-4 static-top shadow">
-        {/* <!-- Sidebar Toggle (Topbar) --> */}
-        {/* <button id="sidebarToggleTop" className="btn btn-link d-md-none rounded-circle mr-3">
-                  <i className="fa fa-bars"></i>
-              </button> */}
+      <nav className="navbar navbar-expand-lg navbar-light bg-white topbar mb-4 static-top shadow">
+        {/* Brand */}
+        <a className="navbar-brand" href="/">
+          <strong>BuyMySkills</strong>
+          <br />
+          <small>Connecting people, powering possibilities</small>
+        </a>
 
-        {/* <!-- Topbar Search --> */}
-        <form className="d-none d-sm-inline-block form-inline mr-auto ml-md-3 my-2 my-md-0 mw-100 navbar-search">
-          <div className="input-group">
-            <input
-              type="text"
-              className="form-control bg-light border-0 small"
-              placeholder="Search for..."
-              aria-label="Search"
-              aria-describedby="basic-addon2"
-            />
-            <div className="input-group-append">
-              <button className="btn btn-primary" type="button">
-                <i className="fas fa-search fa-sm"></i>
-              </button>
+        {/* Navbar Toggler for mobile */}
+        <button
+          className="navbar-toggler"
+          type="button"
+          data-toggle="collapse"
+          data-target="#navbarNav"
+          aria-controls="navbarNav"
+          aria-expanded="false"
+          aria-label="Toggle navigation"
+        >
+          <span className="navbar-toggler-icon"></span>
+        </button>
+
+        {/* Navbar Links */}
+        <div className="collapse navbar-collapse" id="navbarNav">
+          <ul className="navbar-nav">
+            <li className="nav-item">
+              <a className="nav-link text-dark" href={isAdmin ? "/admin/categories" : "/browse"}>
+                {isAdmin ? "Categories" : "Browse Skills"}
+              </a>
+            </li>
+            <li className="nav-item">
+              <a className="nav-link text-dark" href="#how-it-works">
+                How it Works
+              </a>
+            </li>
+            <li className="nav-item">
+              <a className="nav-link text-dark" href="#about">
+                About
+              </a>
+            </li>
+            <li className="nav-item">
+              <a className="nav-link text-dark" href="#feedback">
+                Feedback
+              </a>
+            </li>
+          </ul>
+
+          {/* Search Form */}
+          <form className="d-none d-lg-inline-block form-inline mx-auto my-2 my-md-0 mw-100 navbar-search">
+            <div className="input-group">
+              <input
+                type="text"
+                className="form-control bg-light border-0 small"
+                placeholder="Search for any skill..."
+                aria-label="Search"
+                aria-describedby="basic-addon2"
+              />
+              <div className="input-group-append">
+                <button className="btn btn-primary" type="button">
+                  <i className="fas fa-search fa-sm"></i>
+                </button>
+              </div>
             </div>
-          </div>
-        </form>
+          </form>
 
-        {/* <!-- Topbar Navbar --> */}
-        <ul className="navbar-nav ml-auto">
-          {/* <!-- Nav Item - Search Dropdown (Visible Only XS) --> */}
-          <li className="nav-item dropdown no-arrow d-sm-none">
-            <a
-              className="nav-link dropdown-toggle"
-              href="#"
-              id="searchDropdown"
-              role="button"
-              data-toggle="dropdown"
-              aria-haspopup="true"
-              aria-expanded="false"
-            >
-              <i className="fas fa-search fa-fw"></i>
-            </a>
-            {/* <!-- Dropdown - Messages --> */}
-            <div
-              className="dropdown-menu dropdown-menu-right p-3 shadow animated--grow-in"
-              aria-label="searchDropdown"
-            >
-              <form className="form-inline mr-auto w-100 navbar-search">
-                <div className="input-group">
-                  <input
-                    type="text"
-                    className="form-control bg-light border-0 small"
-                    placeholder="Search for..."
-                    aria-label="Search"
-                    aria-describedby="basic-addon2"
-                  />
-                  <div className="input-group-append">
-                    <button className="btn btn-primary" type="button">
-                      <i className="fas fa-search fa-sm"></i>
-                    </button>
-                  </div>
+          {/* Right side buttons */}
+          {currentUser ? (
+            <ul className="navbar-nav ml-auto">
+              <li className="nav-item dropdown">
+                <a
+                  className="nav-link dropdown-toggle text-dark"
+                  href="#"
+                  role="button"
+                  onClick={() => setDropdownOpen(!dropdownOpen)}
+                  style={{ cursor: 'pointer' }}
+                >
+                  {currentUser.name || currentUser.nickName || "User"}
+                </a>
+                <div className="dropdown-menu dropdown-menu-right" style={{ display: dropdownOpen ? 'block' : 'none' }}>
+                  <a className="dropdown-item" href="/profile" onClick={() => setDropdownOpen(false)}>
+                    View Profile
+                  </a>
+                  <a className="dropdown-item" href="/update-password" onClick={() => setDropdownOpen(false)}>
+                    Update Password
+                  </a>
+                  <div className="dropdown-divider"></div>
+                  <a className="dropdown-item" href="#" onClick={() => { handleLogout(); setDropdownOpen(false); }}>
+                    Sign Out
+                  </a>
                 </div>
-              </form>
-            </div>
-          </li>
-
-          {/* <!-- Nav Item - Alerts --> */}
-          <NavItemsDropdownAlert
-            dropdownTitle="Alerts Center"
-            alertMessages={alertMessages}
-          />
-
-          <div className="topbar-divider d-none d-sm-block"></div>
-
-          <NavItemsDropdownMenu
-            userInfo={userName}
-            menuItems={itemsToUse}
-            onSelectMenu={handleMenuSelect}
-          />
-        </ul>
+              </li>
+            </ul>
+          ) : (
+            <ul className="navbar-nav ml-auto">
+              <li className="nav-item">
+                <a className="btn btn-outline-primary mr-2" href="/login">
+                  Sign In
+                </a>
+              </li>
+              <li className="nav-item">
+                <a className="btn btn-primary" href="/register">
+                  Become a Seller
+                </a>
+              </li>
+            </ul>
+          )}
+        </div>
       </nav>
     </div>
   );

@@ -227,7 +227,7 @@ function UpdatePassword() {
                     <button
                       type="button"
                       className="btn btn-primary"
-                      onClick={() => navigate("/dashboard2")}
+                      onClick={() => navigate("/home")}
                     >
                       Close
                     </button>
