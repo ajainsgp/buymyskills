@@ -2,11 +2,13 @@
   "sideMenuDetails": [
     {
       "sidebarHeading": "Interface",
+      "display": "hide",
       "sidebarMenu": [
         {
           "menuTitle": "Components",
           "menuTitleIcon": "fas fa-fw fa-cog",
           "collapseHeader": "Custom Components:",
+          "display": "hide",
           "menuItems": [
             {
               "name": "Buttons",
@@ -26,6 +28,7 @@
           "menuTitle": "Utilities",
           "menuTitleIcon": "fas fa-fw fa-wrench",
           "collapseHeader": "Custom Utilities:",
+          "display": "hide",
           "menuItems": [
             {
               "name": "Colors",
@@ -46,15 +49,21 @@
     },
     {
       "sidebarHeading": "Addons",
+      "display": "show",
       "sidebarMenu": [
         {
           "menuTitle": "Menu",
           "menuTitleIcon": "fas fa-fw fa-folder",
           "collapseHeader": "Custom Screens:",
+          "display": "show",
           "menuItems": [
             {
               "name": "Login",
               "link": "/login"
+            },
+            {
+              "name": "Logout",
+              "link": "/logout"
             },
             {
               "name": "Register",
@@ -63,6 +72,10 @@
             {
               "name": "Categories",
               "link": "/admin/categories"
+            },
+            {
+              "name": "Read Me",
+              "link": "/readme"
             }
           ]
         }

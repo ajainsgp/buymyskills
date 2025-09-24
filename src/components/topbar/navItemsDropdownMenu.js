@@ -112,7 +112,7 @@ function NavItemsDropdownMenu({ userInfo, menuItems, onSelectMenu }) {
       }}
     >
       <i
-        className={`fas ${item.menuItemIcon} fa-sm fa-fw mr-2 text-gray-400`}
+        className={`fas ${item.menuItemIcon} fa-sm fa-fw mr-2 text-blue-400`}
       ></i>
       {item.menuItemName}
       {item.showDivider && <div className="dropdown-divider"></div>}
@@ -130,7 +130,7 @@ function NavItemsDropdownMenu({ userInfo, menuItems, onSelectMenu }) {
         data-toggle="dropdown"
         aria-expanded={isToggled}
       >
-        <span className="mr-2 d-none d-lg-inline text-gray-600 small">
+        <span className="mr-2 d-none d-lg-inline text-blue-600 small">
           {userInfo}
         </span>
         <img

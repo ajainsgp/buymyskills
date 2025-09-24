@@ -13,6 +13,11 @@
        {
           "menuItemIcon": "fa-list",
           "menuItemName": "Activity Log",
+          "showDivider": false
+       },
+       {
+          "menuItemIcon": "fa-book",
+          "menuItemName": "Read Me",
           "showDivider": true
        },
        {

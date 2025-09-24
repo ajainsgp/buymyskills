@@ -119,6 +119,10 @@ function Topbar() {
       navigate("/update-password");
       return;
     }
+    if (menuName === "Read Me") {
+      navigate("/readme");
+      return;
+    }
     if (menuName === "Login") {
       navigate("/login");
       return;
@@ -132,7 +136,10 @@ function Topbar() {
   const itemsToUse = isAuthed
     ? isAdmin
       ? menuItems
-      : menuItems.filter((i) => i.menuItemName !== "Categories")
+      : menuItems.filter(
+          (i) =>
+            i.menuItemName !== "Categories" && i.menuItemName !== "Read Me",
+        )
     : guestMenuItems;
 
   return (

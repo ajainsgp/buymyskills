@@ -13,7 +13,7 @@
 
   .headerContent {
     display: grid;
-    grid-template-columns: 3fr 1fr;
+    grid-template-columns: 4fr 1fr;
   }
 
   .header-front,
@@ -71,7 +71,7 @@
     }
     .body-front,
     .body-back {
-      height: 8rem;
+      height: auto;
     }
   }
 
@@ -88,5 +88,9 @@
     .card-footer-grid {
       grid-template-columns: 1fr;
       row-gap: 0.5rem;
+    }
+    .body-front,
+    .body-back {
+      height: auto;
     }
   }
