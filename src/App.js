@@ -7,6 +7,7 @@ import LoginApps from "./components/login/login";
 import Profile from "./pages/profile";
 import UpdatePassword from "./components/auth/UpdatePassword";
 import AdminCategories from "./pages/AdminCategories";
+import ReadMe from "./pages/ReadMe";
 
 function App() {
   // On initial load, ensure no auto-login unless user explicitly chose "Remember Me"
@@ -35,6 +36,7 @@ function App() {
             <Route path="/profile" element={<Profile />} />
             <Route path="/update-password" element={<UpdatePassword />} />
             <Route path="/admin/categories" element={<AdminCategories />} />
+            <Route path="/readme" element={<ReadMe />} />
           </Routes>
         </div>
       </div>

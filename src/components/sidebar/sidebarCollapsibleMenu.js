@@ -5,17 +5,23 @@ function SidebarCollapsibleMenu() {
   const sideMenuData = menuData.sideMenuDetails;
 
   // Initialize collapsed state once from data (no mutation during render)
+  // Only include menus that should be displayed
   const [collapsedMap, setCollapsedMap] = useState(() => {
     const init = {};
     sideMenuData.forEach((section) => {
-      section.sidebarMenu.forEach((menu) => {
-        init[menu.menuTitle] = true;
-      });
+      if (section.display === "show") {
+        section.sidebarMenu.forEach((menu) => {
+          if (menu.display === "show") {
+            init[menu.menuTitle] = true;
+          }
+        });
+      }
     });
     return init;
   });
 
   const [isAdmin, setIsAdmin] = useState(false);
+  const [isAuthed, setIsAuthed] = useState(false);
 
   useEffect(() => {
     function getCurrentUser() {
@@ -42,12 +48,14 @@ function SidebarCollapsibleMenu() {
     function sync() {
       try {
         const cu = getCurrentUser();
+        setIsAuthed(!!cu);
         const role = cu ? String(cu.roleType || "").toLowerCase() : "";
         const emailLower = cu ? String(cu.emailId || "").toLowerCase() : "";
         setIsAdmin(
           role.includes("admin") || emailLower === "admin@buymyskills.local",
         );
       } catch {
+        setIsAuthed(false);
         setIsAdmin(false);
       }
     }
@@ -64,7 +72,61 @@ function SidebarCollapsibleMenu() {
     setCollapsedMap((prev) => ({ ...prev, [menuId]: !prev[menuId] }));
   };
 
-  return sideMenuData.map((item) => (
+  const handleMenuItemClick = (menuItem, e) => {
+    if (menuItem.name === "Logout") {
+      e.preventDefault();
+      try {
+        sessionStorage.removeItem("currentUser");
+        localStorage.removeItem("currentUser");
+        localStorage.removeItem("rememberMe");
+      } catch (error) {
+        // ignore
+      }
+      if (typeof window !== "undefined" && window.dispatchEvent) {
+        window.dispatchEvent(new Event("auth-changed"));
+      }
+      // Navigate to login, but since it's sidebar, perhaps use window.location
+      window.location.href = "/login";
+      return;
+    }
+    // For others, let the href handle it
+  };
+
+  const getFilteredMenuItems = (sidebarMenu) => {
+    if (sidebarMenu.menuTitle === "Menu") {
+      return sidebarMenu.menuItems.filter((item) => {
+        if (item.name === "Login") return !isAuthed;
+        if (item.name === "Logout") return isAuthed;
+        if (item.name === "Register") return !isAuthed;
+        if (item.name === "Categories") return isAdmin;
+        if (item.name === "Read Me") return isAdmin;
+        return true;
+      });
+    } else {
+      // For other menus, same logic
+      return isAdmin
+        ? sidebarMenu.menuItems
+        : sidebarMenu.menuItems.filter(
+            (menuItem) => menuItem.name !== "Categories",
+          );
+    }
+  };
+
+  // Filter sections and menus based on display attribute
+  const visibleSections = sideMenuData.filter(
+    (item) => item.display === "show",
+  );
+  const visibleMenus = visibleSections.reduce((acc, item) => {
+    const visibleMenuItems = item.sidebarMenu.filter(
+      (menu) => menu.display === "show",
+    );
+    if (visibleMenuItems.length > 0) {
+      acc.push({ ...item, sidebarMenu: visibleMenuItems });
+    }
+    return acc;
+  }, []);
+
+  return visibleMenus.map((item) => (
     <React.Fragment key={item.sidebarHeading}>
       <div className="sidebar-heading">{item.sidebarHeading}</div>
       {item.sidebarMenu.map((sidebarMenu) => {
@@ -95,16 +157,12 @@ function SidebarCollapsibleMenu() {
                 <h6 className="collapse-header">
                   {sidebarMenu.collapseHeader}
                 </h6>
-                {(isAdmin
-                  ? sidebarMenu.menuItems
-                  : sidebarMenu.menuItems.filter(
-                      (menuItem) => menuItem.name !== "Categories",
-                    )
-                ).map((menuItem) => (
+                {getFilteredMenuItems(sidebarMenu).map((menuItem) => (
                   <a
                     className="collapse-item"
                     key={`${sidebarMenu.menuTitle}-${menuItem.name}`}
                     href={menuItem.link}
+                    onClick={(e) => handleMenuItemClick(menuItem, e)}
                   >
                     {menuItem.name}
                   </a>
