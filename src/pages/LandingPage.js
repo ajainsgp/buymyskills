@@ -50,7 +50,7 @@ function LandingPage() {
           </div>
           <div className="row">
             <div className="col-md-4 mb-4">
-              <div className="card h-100 border-0 shadow-sm">
+              <div className="card h-100 border-0 shadow-sm features-card">
                 <div className="card-body text-center py-2">
                   <i className="fas fa-users fa-2x text-primary mb-1"></i>
                   <h5 className="card-title h6">Connect with Experts</h5>
@@ -61,7 +61,7 @@ function LandingPage() {
               </div>
             </div>
             <div className="col-md-4 mb-4">
-              <div className="card h-100 border-0 shadow-sm">
+              <div className="card h-100 border-0 shadow-sm features-card">
                 <div className="card-body text-center py-2">
                   <i className="fas fa-search fa-2x text-primary mb-1"></i>
                   <h5 className="card-title h6">Easy Discovery</h5>
@@ -73,7 +73,7 @@ function LandingPage() {
               </div>
             </div>
             <div className="col-md-4 mb-4">
-              <div className="card h-100 border-0 shadow-sm">
+              <div className="card h-100 border-0 shadow-sm features-card">
                 <div className="card-body text-center py-2">
                   <i className="fas fa-shield-alt fa-2x text-primary mb-1"></i>
                   <h5 className="card-title h6">Secure Platform</h5>
@@ -98,27 +98,59 @@ function LandingPage() {
           </div>
           <div className="row">
             <div className="col-md-3 mb-4">
-              <div className="card border-0 shadow-sm text-center p-2">
-                <i className="fas fa-code fa-2x text-primary mb-1"></i>
-                <h5 className="card-title">Development</h5>
+              <div className="card border-0 shadow-sm text-center p-1 category-tile">
+                <i className="fas fa-code fa-lg text-primary mb-1"></i>
+                <h5 className="card-title mb-0">Development</h5>
+                <small className="text-muted">245 skills</small>
               </div>
             </div>
             <div className="col-md-3 mb-4">
-              <div className="card border-0 shadow-sm text-center p-2">
-                <i className="fas fa-paint-brush fa-2x text-primary mb-1"></i>
-                <h5 className="card-title">Design</h5>
+              <div className="card border-0 shadow-sm text-center p-1 category-tile">
+                <i className="fas fa-paint-brush fa-lg text-primary mb-1"></i>
+                <h5 className="card-title mb-0">Design</h5>
+                <small className="text-muted">189 skills</small>
               </div>
             </div>
             <div className="col-md-3 mb-4">
-              <div className="card border-0 shadow-sm text-center p-2">
-                <i className="fas fa-chart-line fa-2x text-primary mb-1"></i>
-                <h5 className="card-title">Marketing</h5>
+              <div className="card border-0 shadow-sm text-center p-1 category-tile">
+                <i className="fas fa-chart-line fa-lg text-primary mb-1"></i>
+                <h5 className="card-title mb-0">Marketing</h5>
+                <small className="text-muted">156 skills</small>
               </div>
             </div>
             <div className="col-md-3 mb-4">
-              <div className="card border-0 shadow-sm text-center p-2">
-                <i className="fas fa-language fa-2x text-primary mb-1"></i>
-                <h5 className="card-title">Languages</h5>
+              <div className="card border-0 shadow-sm text-center p-1 category-tile">
+                <i className="fas fa-language fa-lg text-primary mb-1"></i>
+                <h5 className="card-title mb-0">Languages</h5>
+                <small className="text-muted">134 skills</small>
+              </div>
+            </div>
+            <div className="col-md-3 mb-4">
+              <div className="card border-0 shadow-sm text-center p-1 category-tile">
+                <i className="fas fa-camera fa-lg text-primary mb-1"></i>
+                <h5 className="card-title mb-0">Photography</h5>
+                <small className="text-muted">98 skills</small>
+              </div>
+            </div>
+            <div className="col-md-3 mb-4">
+              <div className="card border-0 shadow-sm text-center p-1 category-tile">
+                <i className="fas fa-music fa-lg text-primary mb-1"></i>
+                <h5 className="card-title mb-0">Music</h5>
+                <small className="text-muted">87 skills</small>
+              </div>
+            </div>
+            <div className="col-md-3 mb-4">
+              <div className="card border-0 shadow-sm text-center p-1 category-tile">
+                <i className="fas fa-utensils fa-lg text-primary mb-1"></i>
+                <h5 className="card-title mb-0">Cooking</h5>
+                <small className="text-muted">76 skills</small>
+              </div>
+            </div>
+            <div className="col-md-3 mb-4">
+              <div className="card border-0 shadow-sm text-center p-1 category-tile">
+                <i className="fas fa-pen fa-lg text-primary mb-1"></i>
+                <h5 className="card-title mb-0">Writing</h5>
+                <small className="text-muted">112 skills</small>
               </div>
             </div>
           </div>
@@ -136,7 +168,7 @@ function LandingPage() {
           </div>
           <div className="row">
             <div className="col-md-4 mb-4">
-              <div className="card border-0 shadow-sm">
+              <div className="card border-0 shadow-sm section-card">
                 <div className="card-body text-center py-3">
                   <i className="fab fa-react fa-2x text-primary mb-2"></i>
                   <h5 className="card-title">React Development</h5>
@@ -144,7 +176,7 @@ function LandingPage() {
               </div>
             </div>
             <div className="col-md-4 mb-4">
-              <div className="card border-0 shadow-sm">
+              <div className="card border-0 shadow-sm section-card">
                 <div className="card-body text-center py-3">
                   <i className="fab fa-python fa-2x text-primary mb-2"></i>
                   <h5 className="card-title">Python Programming</h5>
@@ -152,7 +184,7 @@ function LandingPage() {
               </div>
             </div>
             <div className="col-md-4 mb-4">
-              <div className="card border-0 shadow-sm">
+              <div className="card border-0 shadow-sm section-card">
                 <div className="card-body text-center py-3">
                   <i className="fas fa-camera fa-2x text-primary mb-2"></i>
                   <h5 className="card-title">Photography</h5>

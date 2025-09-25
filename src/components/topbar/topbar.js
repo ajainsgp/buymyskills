@@ -59,8 +59,8 @@ function Topbar() {
                   String(currentUser.roleType || "").toLowerCase() === "administrator");
 
   return (
-    <div className="topbar mb-4">
-      <nav className="navbar navbar-expand-lg navbar-light bg-white topbar mb-4 static-top shadow position-relative">
+    <div className="topbar mb-4 sticky-top" style={{ zIndex: 1020 }}>
+      <nav className="navbar navbar-expand-lg navbar-light bg-white shadow position-relative">
         {/* Brand */}
         <a className="navbar-brand" href="/">
           <strong>BuyMySkills</strong>
@@ -95,7 +95,7 @@ function Topbar() {
               </a>
             </li>
             <li className="nav-item">
-              <a className="nav-link text-dark" href="#about">
+              <a className="nav-link text-dark" href="/about-us">
                 About
               </a>
             </li>

@@ -48,7 +48,17 @@ PORT=4000
 ## Additional Notes
 - Ensure SSL is enabled for production.
 - Monitor resource usage.
-- Set up backups for the database.`;
+- Set up backups for the database.
+
+## Mini runbook (post-pull deploy)
+cd /home/ubuntu/buymyskills && git pull
+export npm_config_registry=https://registry.npmjs.org/ && npm ci || npm install
+npm run build
+sudo rsync -a --delete build/ /var/www/buymyskills/
+pkill -f 'node .*server/index.js' || true
+sudo systemctl restart buymyskills
+sudo nginx -t && sudo systemctl reload nginx
+Verify: curl -sS https://www.buymyskills.com/api/health`;
 
 function ReadMe() {
   return (
