@@ -9,7 +9,6 @@
     transform-style: preserve-3d;
     transition: transform 450ms ease-in-out;
     transform: perspective(1100px) rotateY(var(--rotate-y, 0)) translateY(var(--translate-y, 0));
-    height: 10rem !important;
   }
 
   .headerContent {

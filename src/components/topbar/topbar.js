@@ -59,8 +59,8 @@ function Topbar() {
                   String(currentUser.roleType || "").toLowerCase() === "administrator");
 
   return (
-    <div>
-      <nav className="navbar navbar-expand-lg navbar-light bg-white topbar mb-4 static-top shadow">
+    <div className="topbar mb-4">
+      <nav className="navbar navbar-expand-lg navbar-light bg-white topbar mb-4 static-top shadow position-relative">
         {/* Brand */}
         <a className="navbar-brand" href="/">
           <strong>BuyMySkills</strong>
@@ -82,7 +82,7 @@ function Topbar() {
         </button>
 
         {/* Navbar Links */}
-        <div className="collapse navbar-collapse" id="navbarNav">
+        <div className="collapse navbar-collapse bg-white" id="navbarNav" style={{ zIndex: 1060 }}>
           <ul className="navbar-nav">
             <li className="nav-item">
               <a className="nav-link text-dark" href={isAdmin ? "/admin/categories" : "/browse"}>
@@ -108,7 +108,7 @@ function Topbar() {
 
           {/* Search Form */}
           <form className="d-none d-lg-inline-block form-inline mx-auto my-2 my-md-0 mw-100 navbar-search">
-            <div className="input-group">
+            <div className="input-group" style={{ maxWidth: '300px' }}>
               <input
                 type="text"
                 className="form-control bg-light border-0 small"
@@ -152,18 +152,32 @@ function Topbar() {
               </li>
             </ul>
           ) : (
-            <ul className="navbar-nav ml-auto">
-              <li className="nav-item">
-                <a className="btn btn-outline-primary mr-2" href="/login">
-                  Sign In
-                </a>
-              </li>
-              <li className="nav-item">
-                <a className="btn btn-primary" href="/register">
-                  Become a Seller
-                </a>
-              </li>
-            </ul>
+            <>
+              <ul className="navbar-nav ml-auto d-none d-lg-flex">
+                <li className="nav-item">
+                  <a className="btn btn-outline-primary mr-2 text-nowrap" href="/login">
+                    Sign In
+                  </a>
+                </li>
+                <li className="nav-item">
+                  <a className="btn btn-primary text-nowrap" href="/register">
+                    Become a Seller
+                  </a>
+                </li>
+              </ul>
+              <ul className="navbar-nav ml-auto d-lg-none">
+                <li className="nav-item">
+                  <a className="nav-link text-dark" href="/login">
+                    Sign In
+                  </a>
+                </li>
+                <li className="nav-item">
+                  <a className="nav-link text-dark" href="/register">
+                    Become a Seller
+                  </a>
+                </li>
+              </ul>
+            </>
           )}
         </div>
       </nav>

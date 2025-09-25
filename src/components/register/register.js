@@ -170,17 +170,14 @@ function RegisterUser() {
             <div className="col-lg-3 col-md-3 hidden-sm hidden-xs">
               <div className="panel panel-default">
                 <div className="panel-body">
-                  <h1
-                    className="panel-title pull-left"
-                    style={{ fontSize: "30px" }}
-                  >
+                  <h2 className="panel-title pull-left">
                     <i className="fa fa-cogs" aria-hidden="true"></i> Register
-                  </h1>
+                  </h2>
                 </div>
               </div>
 
               <div className="panel panel-body">
-                <div className="col-md-12">
+                <div className="col-md-12 no-left-right-padding">
                   <h3 className="panel-title">Your photo</h3>
                   <div>
                     <div className="col-lg-12 col-md-12">
@@ -232,7 +229,7 @@ function RegisterUser() {
             <div className="col-lg-9 col-md-9 col-sm-12 col-xs-12">
               <form onSubmit={handleSubmit}>
                 <div className="row">
-                  <div className="panel panel-body">
+                  <div className="panel panel-body no-left-right-padding">
                     <div className="panel panel-title">
                       <h3>My basic profile</h3>
                     </div>
@@ -247,7 +244,6 @@ function RegisterUser() {
                             id="first_name"
                             className="form-control input-lg"
                             placeholder="First Name"
-                            tabIndex="1"
                             value={form.firstName}
                             onChange={onChange}
                           />
@@ -262,7 +258,6 @@ function RegisterUser() {
                             id="last_name"
                             className="form-control input-lg"
                             placeholder="Last Name"
-                            tabIndex="2"
                             value={form.lastName}
                             onChange={onChange}
                           />
@@ -280,7 +275,6 @@ function RegisterUser() {
                             id="nick_name"
                             className="form-control input-lg"
                             placeholder="Nick Name to display as"
-                            tabIndex="3"
                             value={form.nickName}
                             onChange={onChange}
                           />
@@ -308,7 +302,7 @@ function RegisterUser() {
                     </div>
                   </div>
 
-                  <div className="panel panel-body">
+                  <div className="panel panel-body no-left-right-padding">
                     <div className="panel panel-title">
                       <h3>My Contact Details</h3>
                     </div>
@@ -325,7 +319,6 @@ function RegisterUser() {
                             id="emailId"
                             className="form-control input-lg"
                             placeholder="you@example.com"
-                            tabIndex="5"
                             value={form.emailId}
                             onChange={onChange}
                           />
@@ -344,7 +337,6 @@ function RegisterUser() {
                             id="mobileNo"
                             className="form-control input-lg"
                             placeholder="Mobile Number"
-                            tabIndex="4"
                             value={form.mobileNo}
                             onChange={onChange}
                           />
@@ -362,7 +354,6 @@ function RegisterUser() {
                             id="password"
                             className="form-control input-lg"
                             placeholder="Password"
-                            tabIndex="6"
                             value={form.password}
                             onChange={onChange}
                           />
@@ -391,7 +382,7 @@ function RegisterUser() {
                     </div>
                   </div>
 
-                  <div className="panel panel-body">
+                  <div className="panel panel-body no-left-right-padding">
                     <div className="panel panel-title">
                       <h3>My Skills</h3>
                     </div>
@@ -438,7 +429,7 @@ function RegisterUser() {
                     </div>
                   </div>
 
-                  <div className="panel panel-body">
+                  <div className="panel panel-body no-left-right-padding">
                     <div className="panel panel-title">
                       <h3>My Availability</h3>
                     </div>
@@ -499,7 +490,7 @@ function RegisterUser() {
                     </div>
                   </div>
 
-                  <div className="panel panel-body">
+                  <div className="panel panel-body no-left-right-padding">
                     <div className="panel panel-title">
                       <h3>My Location</h3>
                     </div>
@@ -514,7 +505,6 @@ function RegisterUser() {
                             id="addressLine1"
                             className="form-control input-lg"
                             placeholder="Address Line1"
-                            tabIndex="7"
                             value={form.addressLine1}
                             onChange={onChange}
                           />
@@ -529,7 +519,6 @@ function RegisterUser() {
                             id="addressLine2"
                             className="form-control input-lg"
                             placeholder="Address Line 2"
-                            tabIndex="8"
                             value={form.addressLine2}
                             onChange={onChange}
                           />
@@ -547,7 +536,6 @@ function RegisterUser() {
                             id="city"
                             className="form-control input-lg"
                             placeholder="City"
-                            tabIndex="9"
                             value={form.city}
                             onChange={onChange}
                           />
@@ -562,7 +550,6 @@ function RegisterUser() {
                             id="state"
                             className="form-control input-lg"
                             placeholder="State"
-                            tabIndex="10"
                             value={form.state}
                             onChange={onChange}
                           />
@@ -580,7 +567,6 @@ function RegisterUser() {
                             id="postcode"
                             className="form-control input-lg"
                             placeholder="PostCode"
-                            tabIndex="11"
                             value={form.postcode}
                             onChange={onChange}
                           />
@@ -609,7 +595,7 @@ function RegisterUser() {
                   </div>
 
                   {error ? (
-                    <div className="panel panel-body">
+                    <div className="panel panel-body no-left-right-padding">
                       <div
                         className="alert alert-danger"
                         role="alert"
@@ -620,7 +606,7 @@ function RegisterUser() {
                     </div>
                   ) : null}
 
-                  <div className="panel panel-body">
+                  <div className="panel panel-body no-left-right-padding">
                     <div className="panel panel-title">
                       <h3>Visibility</h3>
                     </div>
@@ -664,8 +650,8 @@ function RegisterUser() {
                     </div>
                   </div>
 
-                  <div className="panel panel-body">
-                    <div className="form-group">
+                  <div className="panel panel-body no-left-right-padding set-padding-top">
+                    <div className="form-group panel-body">
                       <button
                         className="btn btn-default"
                         onClick={handleCancel}
@@ -693,6 +679,22 @@ function RegisterUser() {
           </div>
         </div>
       </div>
+
+      {/* Footer */}
+      <footer className="bg-primary text-white py-4">
+        <div className="container">
+          <hr className="border-white" />
+          <div className="row">
+            <div className="col-md-6">
+              <p>Connecting talent with opportunity.</p>
+              <h5>BuyMySkills</h5>
+            </div>
+            <div className="col-md-6 text-md-right">
+              <p>&copy; 2024 BuyMySkills. All rights reserved.</p>
+            </div>
+          </div>
+        </div>
+      </footer>
     </div>
   );
 }

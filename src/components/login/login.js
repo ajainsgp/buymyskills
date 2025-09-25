@@ -71,14 +71,14 @@ function LoginApps() {
         <div className="container">
           <div className="row">
             <div className="col-md-offset-4 col-md-12 col-sm-offset-3 col-sm-12">
-              <div className="form-container">
-                <div className="left-content">
+              <div className="form-container row">
+                <div className="left-content col-6">
                   <h3 className="title">Buy My Skills</h3>
                   <h4 className="sub-title">
                     Welcome to the world of opportunities
                   </h4>
                 </div>
-                <div className="right-content">
+                <div className="right-content col-6">
                   <h3 className="form-title">Login</h3>
                   <form className="form-horizontal" onSubmit={onSubmit}>
                     <div className="form-group">
@@ -159,6 +159,22 @@ function LoginApps() {
           </div>
         </div>
       </div>
+
+      {/* Footer */}
+      <footer className="bg-primary text-white py-4">
+        <div className="container">
+          <hr className="border-white" />
+          <div className="row">
+            <div className="col-md-6">
+              <p>Connecting talent with opportunity.</p>
+              <h5>BuyMySkills</h5>
+            </div>
+            <div className="col-md-6 text-md-right">
+              <p>&copy; 2024 BuyMySkills. All rights reserved.</p>
+            </div>
+          </div>
+        </div>
+      </footer>
     </>
   );
 }
