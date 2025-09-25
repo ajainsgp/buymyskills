@@ -10,6 +10,7 @@ import AdminCategories from "./pages/AdminCategories";
 import ReadMe from "./pages/ReadMe";
 import LandingPage from "./pages/LandingPage";
 import BrowsePage from "./pages/BrowsePage";
+import AboutUs from "./pages/AboutUs";
 
 function App() {
   // On initial load, ensure no auto-login unless user explicitly chose "Remember Me"
@@ -33,6 +34,15 @@ function App() {
           <>
             <Topbar />
             <LandingPage />
+          </>
+        }
+      />
+      <Route
+        path="/about-us"
+        element={
+          <>
+            <Topbar />
+            <AboutUs />
           </>
         }
       />

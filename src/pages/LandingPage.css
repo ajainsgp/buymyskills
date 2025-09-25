@@ -1,3 +1,19 @@
 .landing-page-img-padding-top {
   padding-top: .75rem;
 }
+
+.category-tile {
+  height: 100px;
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  align-items: center;
+}
+
+.section-card {
+  height: 100px;
+}
+
+.features-card {
+  height: 150px !important;
+}

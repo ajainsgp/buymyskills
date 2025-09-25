@@ -39,8 +39,8 @@
 
 /* Modern theme overrides */
 :root {
-  --blue: #0c26e6;
-  --primary: #0c26e6;
+  --blue: #042c76;
+  --primary: #042c76;
   --secondary: #6c757d;
   --success: #28a745;
   --info: #17a2b8;
@@ -51,12 +51,12 @@
 }
 
 .sidebar-dark {
-  background: linear-gradient(180deg, #0c26e6 10%, #0721a3 100%);
+  background: linear-gradient(180deg, #042c76 10%, #032050 100%);
   background-size: cover;
 }
 
 .bg-gradient-primary {
-  background: linear-gradient(180deg, #0c26e6 10%, #0721a3 100%);
+  background: linear-gradient(180deg, #042c76 10%, #032050 100%);
   background-size: cover;
 }
 
@@ -72,14 +72,14 @@
 }
 
 .btn-primary {
-  background-color: #0c26e6;
-  border-color: #0c26e6;
+  background-color: #042c76;
+  border-color: #042c76;
   border-radius: 6px;
 }
 
 .btn-primary:hover {
-  background-color: #0721a3;
-  border-color: #0721a3;
+  background-color: #032050;
+  border-color: #032050;
 }
 
 /* Landing page styles */

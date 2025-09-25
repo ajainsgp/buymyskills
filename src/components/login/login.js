@@ -72,13 +72,13 @@ function LoginApps() {
           <div className="row">
             <div className="col-md-offset-4 col-md-12 col-sm-offset-3 col-sm-12">
               <div className="form-container row">
-                <div className="left-content col-6">
+                <div className="left-content col-lg-6">
                   <h3 className="title">Buy My Skills</h3>
                   <h4 className="sub-title">
                     Welcome to the world of opportunities
                   </h4>
                 </div>
-                <div className="right-content col-6">
+                <div className="right-content col-lg-6">
                   <h3 className="form-title">Login</h3>
                   <form className="form-horizontal" onSubmit={onSubmit}>
                     <div className="form-group">
