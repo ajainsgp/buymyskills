@@ -1,5 +1,6 @@
 /* eslint-disable prettier/prettier */
 import React from "react";
+import "./LandingPage.css";
 
 function LandingPage() {
   return (
@@ -26,7 +27,7 @@ function LandingPage() {
                 </a>
               </div>
             </div>
-            <div className="col-lg-6">
+            <div className="col-lg-6 landing-page-img-padding-top">
               <img
                 src="/hero-marketplace-CWH2jcok.jpg"
                 alt="Skilled professionals collaborating"
