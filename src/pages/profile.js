@@ -1,6 +1,8 @@
 import React, { useEffect, useState, useRef } from "react";
 import { useNavigate } from "react-router-dom";
 import API_BASE from "../utils/apiBase";
+import countryCodes from "../data/countryCodes.json";
+import { validateMobile, validateSummary } from "../utils/validation";
 /* eslint-disable prettier/prettier */
 
 function Profile() {
@@ -16,7 +18,9 @@ function Profile() {
     nickName: "",
     emailId: "",
     secondaryEmail: "",
+    countryCode: "+1",
     mobile: "",
+    category: "",
     summary: "",
     workPreference: "",
     availability: "",
@@ -36,6 +40,8 @@ function Profile() {
   const fileInputRef = useRef(null);
   const MAX_IMAGE_BYTES = 150 * 1024;
   const ALLOWED_TYPES = new Set(["image/jpeg", "image/png", "image/gif"]);
+  const [categories, setCategories] = useState([]);
+  const [fieldErrors, setFieldErrors] = useState({});
 
   // Load current user (from localStorage first, then refresh from API)
   useEffect(() => {
@@ -78,6 +84,7 @@ function Profile() {
           emailId: cu.emailId || "",
           secondaryEmail: cu.secondaryEmail || "",
           mobile: cu.mobile || "",
+          category: cu.category || "",
           summary: cu.summary || "",
           workPreference:
             cu.workPreference === "R"
@@ -119,6 +126,7 @@ function Profile() {
             emailId: u.emailId || "",
             secondaryEmail: u.secondaryEmail || "",
             mobile: u.mobile || "",
+            category: u.category || "",
             summary: u.summary || "",
             workPreference:
               u.workPreference === "R"
@@ -155,6 +163,20 @@ function Profile() {
       }
     }
     init();
+
+    // Load categories
+    async function loadCategories() {
+      try {
+        const res = await fetch(`${API_BASE}/api/categories`);
+        const data = await res.json().catch(() => ({}));
+        if (res.ok && Array.isArray(data.categories)) {
+          setCategories(data.categories);
+        }
+      } catch {
+        // ignore
+      }
+    }
+    loadCategories();
   }, [navigate]);
 
   const onChange = (e) => {
@@ -167,6 +189,21 @@ function Profile() {
       }));
     } else {
       setForm((prev) => ({ ...prev, [name]: value }));
+
+      // Real-time validation
+      if (name === "mobile") {
+        const validation = validateMobile(value);
+        setFieldErrors((prev) => ({
+          ...prev,
+          mobile: validation.message,
+        }));
+      } else if (name === "summary") {
+        const validation = validateSummary(value);
+        setFieldErrors((prev) => ({
+          ...prev,
+          summary: validation.message,
+        }));
+      }
     }
   };
 
@@ -229,6 +266,17 @@ function Profile() {
       setError("Missing user id");
       return;
     }
+
+    // Validation
+    if (form.summary && form.summary.length > 100) {
+      setError("Summary must be 100 characters or less");
+      return;
+    }
+    if (form.mobile && !/^\d{10}$/.test(form.mobile.replace(/\s+/g, ''))) {
+      setError("Mobile number must be 10 digits");
+      return;
+    }
+
     try {
       setSaving(true);
       const payload = {
@@ -236,7 +284,9 @@ function Profile() {
         lastName: form.lastName,
         nickName: form.nickName,
         secondaryEmail: form.secondaryEmail,
+        countryCode: form.countryCode,
         mobile: form.mobile,
+        category: form.category,
         summary: form.summary,
         workPreference: form.workPreference,
         availability: form.availability,
@@ -387,14 +437,37 @@ function Profile() {
                   <div className="col-sm-6">
                     <div className="panel panel-info">
                       <div className="panel-heading">Mobile</div>
-                      <input
-                        type="text"
-                        name="mobile"
-                        className="form-control input-lg"
-                        placeholder="Mobile"
-                        value={form.mobile}
-                        onChange={onChange}
-                      />
+                      <div className="row">
+                        <div className="col-4">
+                          <select
+                            name="countryCode"
+                            className="form-control"
+                            value={form.countryCode || "+1"}
+                            onChange={onChange}
+                          >
+                            {countryCodes.map((country) => (
+                              <option key={country.iso} value={country.code}>
+                                {country.code} ({country.name})
+                              </option>
+                            ))}
+                          </select>
+                        </div>
+                        <div className="col-8">
+                          <input
+                            type="text"
+                            name="mobile"
+                            className="form-control"
+                            placeholder="Mobile Number"
+                            value={form.mobile}
+                            onChange={onChange}
+                          />
+                        </div>
+                      </div>
+                      {fieldErrors.mobile && (
+                        <small className="form-text text-danger">
+                          {fieldErrors.mobile}
+                        </small>
+                      )}
                     </div>
                   </div>
                 </div>
@@ -422,17 +495,42 @@ function Profile() {
                 </div>
 
                 <div className="form-group row">
+                  <div className="col-sm-6">
+                    <div className="panel panel-info">
+                      <div className="panel-heading">Category</div>
+                      <select
+                        name="category"
+                        className="custom-select"
+                        value={form.category || ""}
+                        onChange={onChange}
+                      >
+                        <option value="">Select...</option>
+                        {categories.map((name) => (
+                          <option key={name} value={name}>
+                            {name}
+                          </option>
+                        ))}
+                      </select>
+                    </div>
+                  </div>
+                </div>
+
+                <div className="form-group row">
                   <div className="col-md-12">
                     <div className="panel panel-default">
-                      <div className="panel-heading">Summary</div>
+                      <div className="panel-heading">Summary of your skills</div>
                       <textarea
                         name="summary"
                         className="form-control"
-                        placeholder="Tell us about yourself"
+                        placeholder="Briefly describe your key skills and expertise (max 100 characters)"
                         value={form.summary}
                         onChange={onChange}
-                        rows={3}
+                        maxLength={100}
+                        rows={2}
                       />
+                      <small className="form-text text-muted">
+                        {form.summary.length}/100 characters
+                      </small>
                     </div>
                   </div>
                 </div>
@@ -564,7 +662,7 @@ function Profile() {
                 </div>
 
                 <div className="panel panel-body">
-                  <div className="form-group">
+                  <div className="form-group set-padding-top">
                     <button
                       className="btn btn-default"
                       onClick={onCancel}

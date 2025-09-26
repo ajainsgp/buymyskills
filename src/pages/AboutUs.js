@@ -42,21 +42,7 @@ function AboutUs() {
         </div>
       </section>
 
-      {/* Footer */}
-      <footer className="bg-primary text-white py-4" style={{ paddingLeft: 0, paddingRight: 0 }}>
-        <div className="container-fluid">
-          <hr className="border-white" />
-          <div className="row">
-            <div className="col-md-6">
-              <p>Connecting talent with opportunity.</p>
-              <h5>BuyMySkills</h5>
-            </div>
-            <div className="col-md-6 text-md-right">
-              <p>&copy; 2024 BuyMySkills. All rights reserved.</p>
-            </div>
-          </div>
-        </div>
-      </footer>
+
     </div>
   );
 }

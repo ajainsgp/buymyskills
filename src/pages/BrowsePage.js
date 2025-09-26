@@ -3,6 +3,7 @@ import React, { useEffect, useState, useRef } from "react";
 import API_BASE from "../utils/apiBase";
 import UserProfile from "../components/UserProfile";
 import { useLocation } from "react-router-dom";
+import countriesData from "../data/countries.json";
 
 function BrowsePage() {
   const [users, setUsers] = useState([]);
@@ -10,16 +11,23 @@ function BrowsePage() {
   const [error, setError] = useState("");
   const location = useLocation();
   const reqSeqRef = useRef(0);
+  const countrySetRef = useRef(false);
+
+
 
   const [currentUser, setCurrentUser] = useState(null);
 
   // Simple filters for now
   const [kw, setKw] = useState("");
   const [categoryFilter, setCategoryFilter] = useState("");
+  const [countryFilter, setCountryFilter] = useState("");
   const [searchKw, setSearchKw] = useState("");
 
   const [selectedCategory, setSelectedCategory] = useState("all");
+  const [selectedCountry, setSelectedCountry] = useState("all");
   const [categories, setCategories] = useState([]);
+  const [countries, setCountries] = useState([]);
+  const [locationDetected, setLocationDetected] = useState(false);
 
   useEffect(() => {
     const getCurrentUser = () => {
@@ -67,12 +75,21 @@ function BrowsePage() {
       .then(res => res.json())
       .then(data => setCategories(data.categories || []))
       .catch(err => console.error("Error fetching categories:", err));
+
+    // Load countries from imported data
+    setCountries(countriesData.map(c => c.name).sort());
   }, []);
 
   const handleCategoryChange = (e) => {
     const value = e.target.value;
     setSelectedCategory(value);
     setCategoryFilter(value === "all" ? "" : value);
+  };
+
+  const handleCountryChange = (e) => {
+    const value = e.target.value;
+    setSelectedCountry(value);
+    setCountryFilter(value === "all" ? "" : value);
   };
 
   const handleSearch = () => {
@@ -171,18 +188,52 @@ function BrowsePage() {
     }
   }, [location.pathname]);
 
-  // Filtered data
+  // Set default country based on user profile (only for logged-in users)
+  useEffect(() => {
+    if (currentUser && !locationDetected && !countrySetRef.current) {
+      // Logged-in user: fetch their profile to get country
+      fetch(`${API_BASE}/api/users/${currentUser.id}`)
+        .then(res => res.json())
+        .then(data => {
+          if (data.user && data.user.address?.country && selectedCountry === "all") {
+            setSelectedCountry(data.user.address.country);
+            setCountryFilter(data.user.address.country);
+            countrySetRef.current = true;
+          }
+          setLocationDetected(true);
+        })
+        .catch(() => {
+          setLocationDetected(true);
+        });
+    } else if (!currentUser) {
+      // Not logged in: keep default as "all"
+      setLocationDetected(true);
+    }
+  }, [currentUser, locationDetected]);
 
+  // Filtered data with fuzzy search
   const filtered = users.filter((u) => {
-    const sHay = [u.name, u.nickName, u.summary]
+    // Fuzzy search implementation
+    const searchTerm = kw.toLowerCase().trim();
+    const searchFields = [u.name, u.nickName, u.summary, u.category]
       .filter(Boolean)
       .join(" ")
       .toLowerCase();
-    const kwOk = !kw || sHay.includes(kw.toLowerCase());
+
+    // Simple fuzzy search - check if all search terms are present
+    const kwOk = !searchTerm || searchTerm.split(' ').every(term =>
+      searchFields.includes(term)
+    );
+
     const categoryOk =
       !categoryFilter ||
       (u.category || "").toLowerCase() === categoryFilter.toLowerCase();
-    return kwOk && categoryOk;
+
+    const countryOk =
+      !countryFilter ||
+      (u.address?.country || "").toLowerCase() === countryFilter.toLowerCase();
+
+    return kwOk && categoryOk && countryOk;
   });
 
   const displayUsers = filtered;
@@ -220,13 +271,24 @@ function BrowsePage() {
                 <i className="fas fa-star"></i> Popular Skills
               </button>
               <select
-                className="form-control form-control-lg d-inline-block w-auto"
+                className="form-control form-control-lg d-inline-block w-auto mr-3"
                 value={selectedCategory}
                 onChange={handleCategoryChange}
                 style={{ maxWidth: '200px' }}
               >
                 <option value="all">All Categories</option>
                 {categories.map(name => (
+                  <option key={name} value={name}>{name}</option>
+                ))}
+              </select>
+              <select
+                className="form-control form-control-lg d-inline-block w-auto"
+                value={selectedCountry}
+                onChange={handleCountryChange}
+                style={{ maxWidth: '200px' }}
+              >
+                <option value="all">All Countries</option>
+                {countries.map(name => (
                   <option key={name} value={name}>{name}</option>
                 ))}
               </select>
@@ -262,21 +324,7 @@ function BrowsePage() {
         </div>
       </section>
 
-      {/* Footer */}
-      <footer className="bg-primary text-white py-4">
-        <div className="container-fluid">
-          <hr className="border-white" />
-          <div className="row">
-            <div className="col-md-6">
-              <p>Connecting talent with opportunity.</p>
-              <h5>BuyMySkills</h5>
-            </div>
-            <div className="col-md-6 text-md-right">
-              <p>&copy; 2024 BuyMySkills. All rights reserved.</p>
-            </div>
-          </div>
-        </div>
-      </footer>
+
     </>
   );
 }

@@ -53,6 +53,10 @@ function Topbar() {
       window.dispatchEvent(new Event("auth-changed"));
     }
     setCurrentUser(null);
+    // Navigate to home page after logout
+    if (typeof window !== "undefined" && window.location) {
+      window.location.href = "/home";
+    }
   };
 
   const isAdmin = currentUser && (String(currentUser.roleType || "").toLowerCase() === "administrative" ||
@@ -144,6 +148,17 @@ function Topbar() {
                   <a className="dropdown-item" href="/update-password" onClick={() => setDropdownOpen(false)}>
                     Update Password
                   </a>
+                  {isAdmin && (
+                    <>
+                      <div className="dropdown-divider"></div>
+                      <a className="dropdown-item" href="/admin/categories" onClick={() => setDropdownOpen(false)}>
+                        Manage Categories
+                      </a>
+                      <a className="dropdown-item" href="/readme" onClick={() => setDropdownOpen(false)}>
+                        Read Me
+                      </a>
+                    </>
+                  )}
                   <div className="dropdown-divider"></div>
                   <a className="dropdown-item" href="#" onClick={() => { handleLogout(); setDropdownOpen(false); }}>
                     Sign Out

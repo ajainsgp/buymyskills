@@ -2,6 +2,7 @@ import React, { useState } from "react";
 import { useNavigate } from "react-router-dom";
 import "./login.css";
 import API_BASE from "../../utils/apiBase";
+import { validateEmail } from "../../utils/validation";
 
 function LoginApps() {
   const navigate = useNavigate();
@@ -9,10 +10,20 @@ function LoginApps() {
   const [submitting, setSubmitting] = useState(false);
   const [error, setError] = useState("");
   const [remember, setRemember] = useState(false);
+  const [fieldErrors, setFieldErrors] = useState({});
 
   const onChange = (e) => {
     const { name, value } = e.target;
     setForm((p) => ({ ...p, [name]: value }));
+
+    // Real-time validation
+    if (name === "emailId") {
+      const validation = validateEmail(value);
+      setFieldErrors((prev) => ({
+        ...prev,
+        emailId: validation.message,
+      }));
+    }
   };
 
   const onSubmit = async (e) => {
@@ -91,6 +102,11 @@ function LoginApps() {
                         value={form.emailId}
                         onChange={onChange}
                       />
+                      {fieldErrors.emailId && (
+                        <small className="form-text text-danger">
+                          {fieldErrors.emailId}
+                        </small>
+                      )}
                     </div>
                     <div className="form-group">
                       <label>Password</label>
@@ -159,22 +175,6 @@ function LoginApps() {
           </div>
         </div>
       </div>
-
-      {/* Footer */}
-      <footer className="bg-primary text-white py-4">
-        <div className="container">
-          <hr className="border-white" />
-          <div className="row">
-            <div className="col-md-6">
-              <p>Connecting talent with opportunity.</p>
-              <h5>BuyMySkills</h5>
-            </div>
-            <div className="col-md-6 text-md-right">
-              <p>&copy; 2024 BuyMySkills. All rights reserved.</p>
-            </div>
-          </div>
-        </div>
-      </footer>
     </>
   );
 }
