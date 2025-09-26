@@ -1,5 +1,5 @@
 import React, { useEffect } from "react";
-import Topbar from "./components/topbar/topbar";
+import Layout from "./components/Layout";
 import DashboardContent2 from "./pages/dashboardContent2";
 import { Route, Routes, Navigate } from "react-router-dom";
 import RegisterUser from "./components/register/register";
@@ -24,6 +24,95 @@ function App() {
     }
   }, []);
 
+  // Session timeout management
+  useEffect(() => {
+    let timeoutId;
+    let lastActivity = Date.now();
+
+    const resetActivity = () => {
+      lastActivity = Date.now();
+    };
+
+    const checkTimeout = () => {
+      const now = Date.now();
+      const timeSinceActivity = now - lastActivity;
+      const sessionTimeoutMinutes =
+        parseInt(process.env.REACT_APP_SESSION_TIMEOUT) || 15;
+      const sessionTimeoutMs = sessionTimeoutMinutes * 60 * 1000; // Convert to milliseconds
+
+      if (timeSinceActivity >= sessionTimeoutMs) {
+        // Auto logout
+        sessionStorage.removeItem("currentUser");
+        localStorage.removeItem("currentUser");
+        localStorage.removeItem("rememberMe");
+        if (typeof window !== "undefined" && window.dispatchEvent) {
+          window.dispatchEvent(new Event("auth-changed"));
+        }
+        // Navigate to home
+        if (typeof window !== "undefined" && window.location) {
+          window.location.href = "/home";
+        }
+      }
+    };
+
+    // Set up activity listeners
+    const events = [
+      "mousedown",
+      "mousemove",
+      "keypress",
+      "scroll",
+      "touchstart",
+      "click",
+    ];
+    events.forEach((event) => {
+      document.addEventListener(event, resetActivity, true);
+    });
+
+    // Check for timeout every minute
+    const startTimeoutCheck = () => {
+      timeoutId = setInterval(checkTimeout, 60000); // Check every minute
+    };
+
+    // Only start timeout check if user is logged in
+    const checkIfLoggedIn = () => {
+      try {
+        const currentUser =
+          sessionStorage.getItem("currentUser") ||
+          (localStorage.getItem("rememberMe") === "true"
+            ? localStorage.getItem("currentUser")
+            : null);
+        if (currentUser && JSON.parse(currentUser)) {
+          startTimeoutCheck();
+        }
+      } catch {
+        // ignore
+      }
+    };
+
+    checkIfLoggedIn();
+
+    // Listen for auth changes to start/stop timeout
+    const handleAuthChange = () => {
+      clearInterval(timeoutId);
+      checkIfLoggedIn();
+    };
+
+    window.addEventListener("auth-changed", handleAuthChange);
+    window.addEventListener("storage", (e) => {
+      if (e.key === "currentUser") {
+        handleAuthChange();
+      }
+    });
+
+    return () => {
+      clearInterval(timeoutId);
+      events.forEach((event) => {
+        document.removeEventListener(event, resetActivity, true);
+      });
+      window.removeEventListener("auth-changed", handleAuthChange);
+    };
+  }, []);
+
   return (
     <Routes>
       <Route path="/" element={<Navigate to="/home" replace />} />
@@ -31,136 +120,143 @@ function App() {
       <Route
         path="/home"
         element={
-          <>
-            <Topbar />
+          <Layout>
             <LandingPage />
-          </>
+          </Layout>
         }
       />
       <Route
         path="/about-us"
         element={
-          <>
-            <Topbar />
+          <Layout>
             <AboutUs />
-          </>
+          </Layout>
         }
       />
       <Route
         path="/browse"
         element={
-          <div id="wrapper">
-            <div id="content-wrapper" className="d-flex flex-column">
-              <div id="content">
-                <Topbar />
-                <BrowsePage />
+          <Layout>
+            <div id="wrapper">
+              <div id="content-wrapper" className="d-flex flex-column">
+                <div id="content">
+                  <BrowsePage />
+                </div>
               </div>
             </div>
-          </div>
+          </Layout>
         }
       />
       <Route
         path="/dashboard"
         element={
-          <div id="wrapper">
-            <div id="content-wrapper" className="d-flex flex-column">
-              <div id="content">
-                <Topbar />
-                <DashboardContent2 />
+          <Layout>
+            <div id="wrapper">
+              <div id="content-wrapper" className="d-flex flex-column">
+                <div id="content">
+                  <DashboardContent2 />
+                </div>
               </div>
             </div>
-          </div>
+          </Layout>
         }
       />
       <Route
         path="/dashboard2"
         element={
-          <div id="wrapper">
-            <div id="content-wrapper" className="d-flex flex-column">
-              <div id="content">
-                <Topbar />
-                <DashboardContent2 />
+          <Layout>
+            <div id="wrapper">
+              <div id="content-wrapper" className="d-flex flex-column">
+                <div id="content">
+                  <DashboardContent2 />
+                </div>
               </div>
             </div>
-          </div>
+          </Layout>
         }
       />
       <Route
         path="/register"
         element={
-          <div id="wrapper">
-            <div id="content-wrapper" className="d-flex flex-column">
-              <div id="content">
-                <Topbar />
-                <RegisterUser />
+          <Layout>
+            <div id="wrapper">
+              <div id="content-wrapper" className="d-flex flex-column">
+                <div id="content">
+                  <RegisterUser />
+                </div>
               </div>
             </div>
-          </div>
+          </Layout>
         }
       />
       <Route
         path="/login"
         element={
-          <div id="wrapper">
-            <div id="content-wrapper" className="d-flex flex-column">
-              <div id="content">
-                <Topbar />
-                <LoginApps />
+          <Layout>
+            <div id="wrapper">
+              <div id="content-wrapper" className="d-flex flex-column">
+                <div id="content">
+                  <LoginApps />
+                </div>
               </div>
             </div>
-          </div>
+          </Layout>
         }
       />
       <Route
         path="/profile"
         element={
-          <div id="wrapper">
-            <div id="content-wrapper" className="d-flex flex-column">
-              <div id="content">
-                <Topbar />
-                <Profile />
+          <Layout>
+            <div id="wrapper">
+              <div id="content-wrapper" className="d-flex flex-column">
+                <div id="content">
+                  <Profile />
+                </div>
               </div>
             </div>
-          </div>
+          </Layout>
         }
       />
       <Route
         path="/update-password"
         element={
-          <div id="wrapper">
-            <div id="content-wrapper" className="d-flex flex-column">
-              <div id="content">
-                <Topbar />
-                <UpdatePassword />
+          <Layout>
+            <div id="wrapper">
+              <div id="content-wrapper" className="d-flex flex-column">
+                <div id="content">
+                  <UpdatePassword />
+                </div>
               </div>
             </div>
-          </div>
+          </Layout>
         }
       />
       <Route
         path="/admin/categories"
         element={
-          <div id="wrapper">
-            <div id="content-wrapper" className="d-flex flex-column">
-              <div id="content">
-                <Topbar />
-                <AdminCategories />
+          <Layout>
+            <div id="wrapper">
+              <div id="content-wrapper" className="d-flex flex-column">
+                <div id="content">
+                  <AdminCategories />
+                </div>
               </div>
             </div>
-          </div>
+          </Layout>
         }
       />
       <Route
         path="/readme"
         element={
-          <div id="wrapper">
-            <div id="content-wrapper" className="d-flex flex-column">
-              <div id="content">
-                <Topbar />
-                <ReadMe />
+          <Layout>
+            <div id="wrapper">
+              <div id="content-wrapper" className="d-flex flex-column">
+                <div id="content">
+                  <ReadMe />
+                </div>
               </div>
             </div>
-          </div>
+          </Layout>
         }
       />
     </Routes>

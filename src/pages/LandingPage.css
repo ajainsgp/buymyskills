@@ -3,7 +3,7 @@
 }
 
 .category-tile {
-  height: 100px;
+  height: 110px;
   display: flex;
   flex-direction: column;
   justify-content: center;
@@ -11,7 +11,7 @@
 }
 
 .section-card {
-  height: 100px;
+  height: 110px;
 }
 
 .features-card {

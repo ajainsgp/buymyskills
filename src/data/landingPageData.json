@@ -1,0 +1,100 @@
+{
+  "landingPage": {
+    "sections": {
+      "features": {
+        "sectionTitle": "Why Choose Us?",
+        "sectionText": "Discover the benefits of our platform",
+        "cards": {
+          "connect": {
+            "icon": "fas fa-users fa-2x",
+            "cardTitle": "Connect with Experts",
+            "cardText": "Find skilled professionals from various fields to help with your projects."
+          },
+          "discovery": {
+            "icon": "fas fa-search fa-2x",
+            "cardTitle": "Easy Discovery",
+            "cardText": "Use our advanced filters to find the perfect match for your needs."
+          },
+          "security": {
+            "icon": "fas fa-shield-alt fa-2x",
+            "cardTitle": "Secure Platform",
+            "cardText": "Your data is protected with industry-standard security measures."
+          }
+        }
+      },
+      "categories": {
+        "sectionTitle": "Explore by Category",
+        "sectionText": "Find skills in the category that suits your needs",
+        "cards": {
+          "development": {
+            "icon": "fas fa-code fa-lg",
+            "cardTitle": "Development",
+            "cardText": "245 skills"
+          },
+          "design": {
+            "icon": "fas fa-paint-brush fa-lg",
+            "cardTitle": "Design",
+            "cardText": "189 skills"
+          },
+          "marketing": {
+            "icon": "fas fa-chart-line fa-lg",
+            "cardTitle": "Marketing",
+            "cardText": "156 skills"
+          },
+          "languages": {
+            "icon": "fas fa-language fa-lg",
+            "cardTitle": "Languages",
+            "cardText": "134 skills"
+          },
+          "photography": {
+            "icon": "fas fa-camera fa-lg",
+            "cardTitle": "Photography",
+            "cardText": "98 skills"
+          },
+          "music": {
+            "icon": "fas fa-music fa-lg",
+            "cardTitle": "Music",
+            "cardText": "87 skills"
+          },
+          "cooking": {
+            "icon": "fas fa-utensils fa-lg",
+            "cardTitle": "Cooking",
+            "cardText": "76 skills"
+          },
+          "writing": {
+            "icon": "fas fa-pen fa-lg",
+            "cardTitle": "Writing",
+            "cardText": "112 skills"
+          }
+        }
+      },
+      "skills": {
+        "sectionTitle": "Popular Skills",
+        "sectionText": "Discover the most sought-after skills on our platform",
+        "cards": {
+          "react": {
+            "icon": "fab fa-react fa-2x",
+            "cardTitle": "React Development",
+            "cardText": ""
+          },
+          "python": {
+            "icon": "fab fa-python fa-2x",
+            "cardTitle": "Python Programming",
+            "cardText": ""
+          },
+          "photography": {
+            "icon": "fas fa-camera fa-2x",
+            "cardTitle": "Photography",
+            "cardText": ""
+          }
+        }
+      }
+    },
+    "stats": {
+      "activeUsers": "1000+",
+      "skillsAvailable": "500+",
+      "categories": "50+",
+      "support": "24/7"
+    }
+  }
+}

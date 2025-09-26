@@ -3,6 +3,13 @@ import { useNavigate } from "react-router-dom";
 import "./register.css";
 import API_BASE from "../../utils/apiBase";
 import countries from "../../data/countries.json";
+import countryCodes from "../../data/countryCodes.json";
+import {
+  validateEmail,
+  validateMobile,
+  validateSummary,
+  validatePassword,
+} from "../../utils/validation";
 
 function RegisterUser() {
   const navigate = useNavigate();
@@ -13,11 +20,13 @@ function RegisterUser() {
     lastName: "",
     nickName: "",
     gender: "M",
+    countryCode: "+1",
     mobileNo: "",
     emailId: "",
     secondaryEmail: "",
     password: "",
     keywords: "",
+    summary: "",
     workPreference: "Hybrid",
     traveling: "No Traveling",
     available: "Immediate",
@@ -36,6 +45,8 @@ function RegisterUser() {
   const fileInputRef = useRef(null);
   const [photoError, setPhotoError] = useState("");
   const [categories, setCategories] = useState([]);
+  const [fieldErrors, setFieldErrors] = useState({});
+  const [confirmInfo, setConfirmInfo] = useState(false);
 
   useEffect(() => {
     let ignore = false;
@@ -58,10 +69,39 @@ function RegisterUser() {
 
   const onChange = (e) => {
     const { name, value, type, checked } = e.target;
+    const newValue = type === "checkbox" ? checked : value;
+
     setForm((prev) => ({
       ...prev,
-      [name]: type === "checkbox" ? checked : value,
+      [name]: newValue,
     }));
+
+    // Real-time validation
+    if (name === "emailId") {
+      const validation = validateEmail(newValue);
+      setFieldErrors((prev) => ({
+        ...prev,
+        emailId: validation.message,
+      }));
+    } else if (name === "mobileNo") {
+      const validation = validateMobile(newValue);
+      setFieldErrors((prev) => ({
+        ...prev,
+        mobileNo: validation.message,
+      }));
+    } else if (name === "summary") {
+      const validation = validateSummary(newValue);
+      setFieldErrors((prev) => ({
+        ...prev,
+        summary: validation.message,
+      }));
+    } else if (name === "password") {
+      const validation = validatePassword(newValue);
+      setFieldErrors((prev) => ({
+        ...prev,
+        password: validation.message,
+      }));
+    }
   };
 
   const MAX_IMAGE_BYTES = 150 * 1024;
@@ -109,6 +149,16 @@ function RegisterUser() {
 
     if (!form.firstName || !form.emailId || !form.password) {
       setError("First name, Email and Password are required.");
+      return;
+    }
+
+    // Validation
+    if (form.summary && form.summary.length > 100) {
+      setError("Summary must be 100 characters or less");
+      return;
+    }
+    if (form.mobileNo && !/^\d{10}$/.test(form.mobileNo.replace(/\s+/g, ""))) {
+      setError("Mobile number must be 10 digits");
       return;
     }
 
@@ -179,7 +229,7 @@ function RegisterUser() {
               <div className="panel panel-body">
                 <div className="col-md-12 no-left-right-padding">
                   <h3 className="panel-title">Your photo</h3>
-                  <div>
+                  <div className="text-center">
                     <div className="col-lg-12 col-md-12">
                       <img
                         src={
@@ -322,6 +372,11 @@ function RegisterUser() {
                             value={form.emailId}
                             onChange={onChange}
                           />
+                          {fieldErrors.emailId && (
+                            <small className="form-text text-danger">
+                              {fieldErrors.emailId}
+                            </small>
+                          )}
                           <small className="form-text text-muted">
                             this email id cannot be changed once registered with
                             this id
@@ -331,15 +386,41 @@ function RegisterUser() {
                       <div className="col-sm-6">
                         <div className="panel panel-info">
                           <div className="panel-heading">Mobile</div>
-                          <input
-                            type="text"
-                            name="mobileNo"
-                            id="mobileNo"
-                            className="form-control input-lg"
-                            placeholder="Mobile Number"
-                            value={form.mobileNo}
-                            onChange={onChange}
-                          />
+                          <div className="row">
+                            <div className="col-4">
+                              <select
+                                name="countryCode"
+                                className="form-control"
+                                value={form.countryCode}
+                                onChange={onChange}
+                              >
+                                {countryCodes.map((country) => (
+                                  <option
+                                    key={country.iso}
+                                    value={country.code}
+                                  >
+                                    {country.code} ({country.name})
+                                  </option>
+                                ))}
+                              </select>
+                            </div>
+                            <div className="col-8">
+                              <input
+                                type="text"
+                                name="mobileNo"
+                                id="mobileNo"
+                                className="form-control"
+                                placeholder="Mobile Number"
+                                value={form.mobileNo}
+                                onChange={onChange}
+                              />
+                            </div>
+                          </div>
+                          {fieldErrors.mobileNo && (
+                            <small className="form-text text-danger">
+                              {fieldErrors.mobileNo}
+                            </small>
+                          )}
                         </div>
                       </div>
                     </div>
@@ -357,6 +438,11 @@ function RegisterUser() {
                             value={form.password}
                             onChange={onChange}
                           />
+                          <small className="form-text text-muted">
+                            Password must be at least 8 characters long and
+                            contain at least one number and one special
+                            character.
+                          </small>
                         </div>
                       </div>
                       <div className="col-sm-6">
@@ -390,25 +476,6 @@ function RegisterUser() {
                     <div className="form-group row">
                       <div className="col-md-6">
                         <div className="panel panel-default">
-                          <div className="panel-heading">
-                            Describe yourself in 5 words
-                          </div>
-                          <input
-                            type="text"
-                            className="form-control"
-                            id="keywords"
-                            name="keywords"
-                            placeholder="Like #movies #kittens #travel #teacher #newyork"
-                            value={form.keywords}
-                            onChange={onChange}
-                          />
-                        </div>
-                      </div>
-                    </div>
-
-                    <div className="form-group row">
-                      <div className="col-md-6">
-                        <div className="panel panel-default">
                           <div className="panel-heading">Category</div>
                           <select
                             id="category"
@@ -424,6 +491,52 @@ function RegisterUser() {
                               </option>
                             ))}
                           </select>
+                        </div>
+                      </div>
+                    </div>
+
+                    <div className="form-group row">
+                      <div className="col-md-6">
+                        <div className="panel panel-default">
+                          <div className="panel-heading">
+                            Describe yourself in 5 words
+                          </div>
+                          <input
+                            type="text"
+                            className="form-control"
+                            id="keywords"
+                            name="keywords"
+                            placeholder="Like Software Development, Data Migration, AI & LLM Development"
+                            value={form.keywords}
+                            onChange={onChange}
+                          />
+                        </div>
+                      </div>
+                    </div>
+
+                    <div className="form-group row">
+                      <div className="col-md-12">
+                        <div className="panel panel-default">
+                          <div className="panel-heading">
+                            Summary of your skills
+                          </div>
+                          <textarea
+                            name="summary"
+                            className="form-control"
+                            placeholder="Briefly describe your key skills and expertise (max 100 characters)"
+                            value={form.summary}
+                            onChange={onChange}
+                            maxLength={100}
+                            rows={2}
+                          />
+                          <small className="form-text text-muted">
+                            {form.summary.length}/100 characters
+                          </small>
+                          {fieldErrors.summary && (
+                            <small className="form-text text-danger">
+                              {fieldErrors.summary}
+                            </small>
+                          )}
                         </div>
                       </div>
                     </div>
@@ -650,6 +763,34 @@ function RegisterUser() {
                     </div>
                   </div>
 
+                  <div className="panel no-left-right-padding">
+                    <div className="alert alert-info">
+                      <strong>Privacy Notice:</strong> We may use your IP
+                      address to detect your approximate location for providing
+                      location-based features. This information is not stored
+                      permanently and is only used to enhance your browsing
+                      experience.
+                    </div>
+                  </div>
+
+                  <div className="panel panel-body no-left-right-padding">
+                    <div className="form-group" style={{ padding: "10px" }}>
+                      <div className="checkbox">
+                        <label>
+                          <input
+                            type="checkbox"
+                            name="confirmInfo"
+                            checked={confirmInfo}
+                            onChange={(e) => setConfirmInfo(e.target.checked)}
+                            required
+                          />{" "}
+                          I confirm that all the information provided above is
+                          correct and up-to-date to the best of my knowledge.
+                        </label>
+                      </div>
+                    </div>
+                  </div>
+
                   <div className="panel panel-body no-left-right-padding set-padding-top">
                     <div className="form-group panel-body">
                       <button
@@ -663,7 +804,7 @@ function RegisterUser() {
                       <button
                         className="btn btn-primary"
                         type="submit"
-                        disabled={submitting}
+                        disabled={submitting || !confirmInfo}
                       >
                         <i className="fa fa-fw fa-check" aria-hidden="true"></i>{" "}
                         {submitting ? "Registering..." : "Register Profile"}
@@ -679,22 +820,6 @@ function RegisterUser() {
           </div>
         </div>
       </div>
-
-      {/* Footer */}
-      <footer className="bg-primary text-white py-4">
-        <div className="container">
-          <hr className="border-white" />
-          <div className="row">
-            <div className="col-md-6">
-              <p>Connecting talent with opportunity.</p>
-              <h5>BuyMySkills</h5>
-            </div>
-            <div className="col-md-6 text-md-right">
-              <p>&copy; 2024 BuyMySkills. All rights reserved.</p>
-            </div>
-          </div>
-        </div>
-      </footer>
     </div>
   );
 }
