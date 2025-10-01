@@ -2,7 +2,7 @@
 import React, { useEffect, useState, useRef } from "react";
 import API_BASE from "../utils/apiBase";
 import UserProfile from "../components/UserProfile";
-import { useLocation } from "react-router-dom";
+import { useLocation, useSearchParams } from "react-router-dom";
 import countriesData from "../data/countries.json";
 
 function BrowsePage() {
@@ -10,6 +10,7 @@ function BrowsePage() {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState("");
   const location = useLocation();
+  const [searchParams] = useSearchParams();
   const reqSeqRef = useRef(0);
   const countrySetRef = useRef(false);
 
@@ -73,12 +74,22 @@ function BrowsePage() {
     // Fetch categories
     fetch(`${API_BASE}/api/categories`)
       .then(res => res.json())
-      .then(data => setCategories(data.categories || []))
+      .then(data => {
+        const categoryList = data.categories || [];
+        setCategories(categoryList);
+
+        // Check for category query parameter after categories are loaded
+        const categoryParam = searchParams.get('category');
+        if (categoryParam) {
+          setSelectedCategory(categoryParam);
+          setCategoryFilter(categoryParam);
+        }
+      })
       .catch(err => console.error("Error fetching categories:", err));
 
     // Load countries from imported data
     setCountries(countriesData.map(c => c.name).sort());
-  }, []);
+  }, [searchParams]);
 
   const handleCategoryChange = (e) => {
     const value = e.target.value;
@@ -267,11 +278,11 @@ function BrowsePage() {
               </div>
             </div>
             <div className="mt-4">
-              <button className="btn btn-light btn-lg mr-3">
+              <button className="btn btn-light btn-lg mr-3 mb-2">
                 <i className="fas fa-star"></i> Popular Skills
               </button>
               <select
-                className="form-control form-control-lg d-inline-block w-auto mr-3"
+                className="form-control form-control-lg d-inline-block w-auto mr-3 mb-2"
                 value={selectedCategory}
                 onChange={handleCategoryChange}
                 style={{ maxWidth: '200px' }}

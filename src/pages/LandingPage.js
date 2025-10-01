@@ -1,9 +1,17 @@
 /* eslint-disable prettier/prettier */
 import React from "react";
+import { useNavigate } from "react-router-dom";
 import "./LandingPage.css";
 import landingPageData from "../data/landingPageData.json";
 
 function LandingPage() {
+  const navigate = useNavigate();
+
+  // Handle card click to navigate to browse page with category filter
+  const handleCardClick = (categoryName) => {
+    navigate(`/browse?category=${encodeURIComponent(categoryName)}`);
+  };
+
   // Render section header (title and subtitle)
   const renderSectionHeader = (sectionTitle, sectionText) => (
     <div className="text-center mb-3">
@@ -15,8 +23,8 @@ function LandingPage() {
   // Render feature cards (Why Choose Us section)
   const renderFeatureCard = (cardData, cardKey) => (
     <div key={cardKey} className="col-md-4 mb-4">
-      <div className="card h-100 border-0 shadow-sm features-card">
-        <div className="card-body text-center py-2">
+      <div className="card h-100 border-0 shadow-sm features-card cursor-no-pointer">
+        <div className="card-body text-center">
           <i className={`${cardData.icon} text-primary mb-1`}></i>
           <h5 className="card-title h6">{cardData.cardTitle}</h5>
           <p className="card-text small">{cardData.cardText}</p>
@@ -28,7 +36,11 @@ function LandingPage() {
   // Render category cards (Explore by Category section)
   const renderCategoryCard = (cardData, cardKey) => (
     <div key={cardKey} className="col-md-3 mb-4">
-      <div className="card border-0 shadow-sm text-center p-1 category-tile">
+      <div
+        className="card border-0 shadow-sm text-center p-1 category-tile clickable-card"
+        onClick={() => handleCardClick(cardData.cardTitle)}
+        style={{ cursor: 'pointer' }}
+      >
         <i className={`${cardData.icon} text-primary mb-1`}></i>
         <h5 className="card-title mb-0">{cardData.cardTitle}</h5>
         <small className="text-muted">{cardData.cardText}</small>
@@ -39,7 +51,11 @@ function LandingPage() {
   // Render skill cards (Popular Skills section)
   const renderSkillCard = (cardData, cardKey) => (
     <div key={cardKey} className="col-md-4 mb-4">
-      <div className="card border-0 shadow-sm section-card">
+      <div
+        className="card border-0 shadow-sm section-card clickable-card"
+        onClick={() => handleCardClick(cardData.cardTitle)}
+        style={{ cursor: 'pointer' }}
+      >
         <div className="card-body text-center py-3">
           <i className={`${cardData.icon} text-primary mb-2`}></i>
           <h5 className="card-title">{cardData.cardTitle}</h5>

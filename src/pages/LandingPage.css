@@ -17,3 +17,7 @@
 .features-card {
   height: 150px !important;
 }
+
+.cursor-no-pointer {
+  cursor: default;
+}
