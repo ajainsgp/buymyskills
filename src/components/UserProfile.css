@@ -1,14 +1,23 @@
   .card {
     display: grid;
-    grid-template-rows: max-content 310px 1fr;
+    grid-template-rows: max-content 360px 1fr;
     padding: 0 .5rem 0 .5rem;
-    background-color: #d9edf7;
+    background-color: #e8efea;
     box-shadow: 0 4px 8px 0 rgba(0,0,0,0.2);
     cursor: pointer;
     position: relative;
     transform-style: preserve-3d;
     transition: transform 450ms ease-in-out;
     transform: perspective(1100px) rotateY(var(--rotate-y, 0)) translateY(var(--translate-y, 0));
+  }
+
+  .user-profile-skills {
+    background-color: #042c76;
+    color: white;
+    max-width: fit-content;
+    border-radius: .7rem;
+    padding: .2rem;
+
   }
 
   .headerContent {
@@ -67,7 +76,7 @@
       font-size: 14px;
     }
     .headerContent {
-      grid-template-columns: 2fr 1fr;
+      grid-template-columns: 3fr 1fr;
     }
     .body-front,
     .body-back {

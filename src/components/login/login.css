@@ -3,9 +3,10 @@
     font-family: 'Poppins', sans-serif;
     font-size: 0;
     box-shadow: 0 0 25px -15px rgba(0,0,0,0.3);
+    margin: 1rem;
 }
 .form-container .left-content{
-    background-color: #2E323B;
+    background-color: hsl(219 93% 24%);
     font-family: 'Oswald', sans-serif;
     width: 45%;
     padding: 66px 50px;
@@ -67,7 +68,7 @@
 .form-container .form-horizontal .form-control:focus{ box-shadow: 0 0 5px #FF97A8; }
 .form-container .form-horizontal .signin{
     color: #fff;
-    background: linear-gradient(to right, #FF638E, #FF97A8);
+    background: linear-gradient(155deg, #042C76 10%, #09722f);
     font-size: 15px;
     font-weight: 500;
     letter-spacing: 0.5px;
@@ -80,7 +81,7 @@
 }
 .form-container .form-horizontal .btn:hover,
 .form-container .form-horizontal .btn:focus{
-    box-shadow: 0 0 10px #FF97A8;
+    box-shadow: 0 0 10px #0443f0;
     outline: none;
 }
 .form-container .form-horizontal .remember-me{

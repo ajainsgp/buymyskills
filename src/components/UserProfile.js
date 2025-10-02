@@ -91,7 +91,9 @@ function UserProfile({ userProfiles, showSensitive = false }) {
             </div>
           </div>
           <div className="card-body body-front">
-            <strong>Skills:</strong>
+            <div className="user-profile-skills">
+              <strong>Skills</strong>
+            </div>
             <p className="card-text">{profile.summary}</p>
           </div>
           <div className="card-footer bg-transparent">
