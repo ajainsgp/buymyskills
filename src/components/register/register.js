@@ -104,7 +104,7 @@ function RegisterUser() {
     }
   };
 
-  const MAX_IMAGE_BYTES = 150 * 1024;
+  const MAX_IMAGE_BYTES = 250 * 1024;
   const ALLOWED_TYPES = new Set(["image/jpeg", "image/png", "image/gif"]);
 
   const onPickPhoto = (e) => {
@@ -124,7 +124,7 @@ function RegisterUser() {
       return;
     }
     if (file.size > MAX_IMAGE_BYTES) {
-      setPhotoError("Image too large. Max 150KB");
+      setPhotoError("Image too large. Max 250KB");
       return;
     }
     const reader = new FileReader();
@@ -221,14 +221,15 @@ function RegisterUser() {
               <div className="panel panel-default">
                 <div className="panel-body">
                   <h2 className="panel-title pull-left">
-                    <i className="fa fa-cogs" aria-hidden="true"></i> Register
+                    <i className="fa-solid fa-user-gear" aria-hidden="true"></i>{" "}
+                    Register
                   </h2>
                 </div>
               </div>
 
               <div className="panel panel-body">
                 <div className="col-md-12 no-left-right-padding">
-                  <h3 className="panel-title">Your photo</h3>
+                  <h3 className="panel-title">My Profile photo</h3>
                   <div className="text-center">
                     <div className="col-lg-12 col-md-12">
                       <img
@@ -243,7 +244,7 @@ function RegisterUser() {
                     <br />
                     <div className="col-lg-12 col-md-12">
                       <button
-                        className="btn btn-primary"
+                        className="btn btn-primary set-margin-bottom"
                         type="button"
                         onClick={onPickPhoto}
                         disabled={submitting}
@@ -251,6 +252,24 @@ function RegisterUser() {
                         <i className="fa fa-upload" aria-hidden="true"></i>{" "}
                         Upload a new profile photo
                       </button>
+                      {photoDataUrl && (
+                        <button
+                          className="btn btn-danger"
+                          type="button"
+                          onClick={() => {
+                            setPhotoDataUrl("");
+                            setPhotoError("");
+                            if (fileInputRef.current) {
+                              fileInputRef.current.value = "";
+                            }
+                          }}
+                          disabled={submitting}
+                          style={{ marginLeft: "10px" }}
+                        >
+                          <i className="fa fa-trash" aria-hidden="true"></i>{" "}
+                          Remove Photo
+                        </button>
+                      )}
                       <input
                         type="file"
                         accept="image/jpeg,image/png,image/gif"
@@ -261,7 +280,7 @@ function RegisterUser() {
                       <div
                         style={{ fontSize: 12, color: "#777", marginTop: 8 }}
                       >
-                        Allowed types: .jpg, .jpeg, .png, .gif. Max size: 150KB.
+                        Allowed types: .jpg, .jpeg, .png, .gif. Max size: 250KB.
                       </div>
                       {photoError ? (
                         <div
@@ -281,7 +300,7 @@ function RegisterUser() {
                 <div className="row">
                   <div className="panel panel-body no-left-right-padding">
                     <div className="panel panel-title">
-                      <h3>My basic profile</h3>
+                      <h3>My basic Profile</h3>
                     </div>
 
                     <div className="form-group row">
@@ -394,14 +413,16 @@ function RegisterUser() {
                                 value={form.countryCode}
                                 onChange={onChange}
                               >
-                                {countryCodes.map((country) => (
-                                  <option
-                                    key={country.iso}
-                                    value={country.code}
-                                  >
-                                    {country.code} ({country.name})
-                                  </option>
-                                ))}
+                                {countryCodes
+                                  .filter((country) => country.enabled === "Y")
+                                  .map((country) => (
+                                    <option
+                                      key={country.iso}
+                                      value={country.code}
+                                    >
+                                      {country.code} ({country.name})
+                                    </option>
+                                  ))}
                               </select>
                             </div>
                             <div className="col-8">
@@ -696,11 +717,13 @@ function RegisterUser() {
                             onChange={onChange}
                           >
                             <option value="">Select...</option>
-                            {countries.map((c) => (
-                              <option key={c.code} value={c.name}>
-                                {c.name}
-                              </option>
-                            ))}
+                            {countries
+                              .filter((c) => c.enabled === "Y")
+                              .map((c) => (
+                                <option key={c.code} value={c.name}>
+                                  {c.name}
+                                </option>
+                              ))}
                           </select>
                         </div>
                       </div>

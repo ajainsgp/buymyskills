@@ -139,11 +139,13 @@ export default function SidebarFilters() {
           onChange={(e) => setCountryFilter(e.target.value)}
         >
           <option value="">All</option>
-          {countries.map((c) => (
-            <option key={c.code} value={c.name}>
-              {c.name}
-            </option>
-          ))}
+          {countries
+            .filter((c) => c.enabled === "Y")
+            .map((c) => (
+              <option key={c.code} value={c.name}>
+                {c.name}
+              </option>
+            ))}
         </select>
       </div>
 
