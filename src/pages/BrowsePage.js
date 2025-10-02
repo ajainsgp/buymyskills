@@ -258,6 +258,7 @@ function BrowsePage() {
             <h1 className="display-4 font-weight-bold mb-4">
               Find the Perfect Skill for Your Project
             </h1>
+            <h4>Connect with talented freelancers who can deliver quality work.</h4>
             <div className="row justify-content-center">
               <div className="col-md-6">
                 <div className="input-group mb-3">
