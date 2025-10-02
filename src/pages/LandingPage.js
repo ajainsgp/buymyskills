@@ -41,7 +41,7 @@ function LandingPage() {
         onClick={() => handleCardClick(cardData.cardTitle)}
         style={{ cursor: 'pointer' }}
       >
-        <i className={`${cardData.icon} text-primary mb-1`}></i>
+        <i className={`${cardData.icon} text-primary mb-2`}></i>
         <h5 className="card-title mb-0">{cardData.cardTitle}</h5>
         <small className="text-muted">{cardData.cardText}</small>
       </div>

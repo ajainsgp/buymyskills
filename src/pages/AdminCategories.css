@@ -1,0 +1,10 @@
+.admin-category-card,
+.manage-category-card {
+  grid-template-rows: max-content auto 1fr;
+  padding: 0;
+}
+
+.category-card-header {
+  background-color: #042C76;
+  color: aliceblue;
+}

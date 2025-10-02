@@ -302,7 +302,7 @@ function UpdatePassword() {
 
         <div className="row">
           <div className="col-lg-6 col-md-8">
-            <div className="panel panel-body">
+            <div className="panel panel-body" style={{ padding: ".3 rem" }}>
               <form onSubmit={onSubmit}>
                 {error ? (
                   <div className="alert alert-danger" role="alert">

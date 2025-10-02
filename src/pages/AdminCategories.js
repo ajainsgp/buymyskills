@@ -1,5 +1,6 @@
 import React, { useEffect, useMemo, useState } from "react";
 import API_BASE from "../utils/apiBase";
+import "./AdminCategories.css";
 
 function AdminCategories() {
   const [loading, setLoading] = useState(false);
@@ -194,8 +195,8 @@ function AdminCategories() {
           </div>
         ) : null}
 
-        <div className="card mb-4">
-          <div className="card-header">Add Category</div>
+        <div className="card mb-4 admin-category-card">
+          <div className="card-header category-card-header">Add Category</div>
           <div className="card-body">
             <form onSubmit={handleAdd}>
               <div className="form-row">
@@ -261,8 +262,10 @@ function AdminCategories() {
           </div>
         </div>
 
-        <div className="card">
-          <div className="card-header">Manage Categories</div>
+        <div className="card manage-category-card">
+          <div className="card-header category-card-header">
+            Manage Categories
+          </div>
           <div className="card-body">
             {loading ? (
               <div>Loading...</div>
@@ -350,7 +353,10 @@ function AdminCategories() {
                             </span>
                           </td>
                           <td>
-                            <div className="btn-group btn-group-sm">
+                            <div
+                              className="btn-group btn-group-sm"
+                              style={{ gap: ".2rem" }}
+                            >
                               <button
                                 className="btn btn-primary"
                                 disabled={disabled}

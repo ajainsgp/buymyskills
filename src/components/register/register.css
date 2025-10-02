@@ -8,18 +8,19 @@
 }
 
 .panel-body {
+  background-color: aliceblue;
   border-color: #3d7be9;
   margin-bottom: 1rem;
 }
 
-.panel-info {
+/* .panel-info {
     border-color: #BCE8EB;
-}
+} */
 
 .panel-heading {
-    color: #31708f;
-    background-color: #d9edf7;
-    border-color: #bce8f1;
+    color: #042c76;
+    /* background-color: #d9edf7;
+    border-color: #bce8f1; */
 }
 
 .panel-title {
@@ -35,4 +36,8 @@
 
 .set-padding-top {
   padding-top: .75rem;
+}
+
+.set-margin-bottom {
+  margin-bottom: .25rem;
 }

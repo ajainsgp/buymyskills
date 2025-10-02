@@ -1,6 +1,7 @@
 import React, { useEffect, useState, useRef } from "react";
 import { useNavigate } from "react-router-dom";
 import API_BASE from "../utils/apiBase";
+import countries from "../data/countries.json";
 import countryCodes from "../data/countryCodes.json";
 import { validateMobile, validateSummary } from "../utils/validation";
 /* eslint-disable prettier/prettier */
@@ -38,7 +39,7 @@ function Profile() {
   const [photoError, setPhotoError] = useState("");
   const [uploading, setUploading] = useState(false);
   const fileInputRef = useRef(null);
-  const MAX_IMAGE_BYTES = 150 * 1024;
+  const MAX_IMAGE_BYTES = 250 * 1024;
   const ALLOWED_TYPES = new Set(["image/jpeg", "image/png", "image/gif"]);
   const [categories, setCategories] = useState([]);
   const [fieldErrors, setFieldErrors] = useState({});
@@ -125,6 +126,7 @@ function Profile() {
             nickName: u.nickName || "",
             emailId: u.emailId || "",
             secondaryEmail: u.secondaryEmail || "",
+            countryCode: u.countryCode || "+1",
             mobile: u.mobile || "",
             category: u.category || "",
             summary: u.summary || "",
@@ -229,7 +231,7 @@ function Profile() {
       return;
     }
     if (file.size > MAX_IMAGE_BYTES) {
-      setPhotoError("Image too large. Max 150KB");
+      setPhotoError("Image too large. Max 250KB");
       return;
     }
     const reader = new FileReader();
@@ -445,7 +447,7 @@ function Profile() {
                             value={form.countryCode || "+1"}
                             onChange={onChange}
                           >
-                            {countryCodes.map((country) => (
+                            {countryCodes.filter((country) => country.enabled === "Y").map((country) => (
                               <option key={country.iso} value={country.code}>
                                 {country.code} ({country.name})
                               </option>
@@ -649,14 +651,19 @@ function Profile() {
                   <div className="col-md-6">
                     <div className="panel panel-default">
                       <div className="panel-heading">Country</div>
-                      <input
-                        type="text"
+                      <select
                         name="address.country"
                         className="form-control input-lg"
-                        placeholder="Country"
                         value={form.address.country}
                         onChange={onChange}
-                      />
+                      >
+                        <option value="">Select...</option>
+                        {countries.filter((c) => c.enabled === "Y").map((c) => (
+                          <option key={c.code} value={c.name}>
+                            {c.name}
+                          </option>
+                        ))}
+                      </select>
                     </div>
                   </div>
                 </div>
@@ -711,6 +718,37 @@ function Profile() {
                   >
                     {uploading ? "Uploading..." : "Upload Photo"}
                   </button>
+                  {photoUrl && photoUrl !== "http://ssl.gstatic.com/accounts/ui/avatar_2x.png" && (
+                    <button
+                      className="btn btn-danger"
+                      type="button"
+                      onClick={async () => {
+                        try {
+                          setUploading(true);
+                          setPhotoError("");
+                          if (userId) {
+                            await fetch(`${API_BASE}/api/users/${userId}/photo`, {
+                              method: "DELETE",
+                            });
+                          }
+                          setPhotoUrl("");
+                          if (fileInputRef.current) {
+                            fileInputRef.current.value = "";
+                          }
+                          setNotice("Photo removed successfully");
+                        } catch (err) {
+                          setPhotoError("Failed to remove photo");
+                        } finally {
+                          setUploading(false);
+                        }
+                      }}
+                      disabled={uploading || saving}
+                      style={{ marginLeft: "10px" }}
+                    >
+                      <i className="fa fa-trash" aria-hidden="true"></i>{" "}
+                      Remove Photo
+                    </button>
+                  )}
                   <input
                     type="file"
                     accept="image/*"
@@ -719,7 +757,7 @@ function Profile() {
                     onChange={onFileChange}
                   />
                   <div style={{ fontSize: 12, color: "#777", marginTop: 8 }}>
-                    Allowed types: .jpg, .jpeg, .png, .gif. Max size: 150KB.
+                    Allowed types: .jpg, .jpeg, .png, .gif. Max size: 250KB.
                   </div>
                   {photoError ? (
                     <div style={{ fontSize: 12, color: "#c00", marginTop: 4 }}>

@@ -88,7 +88,7 @@ function BrowsePage() {
       .catch(err => console.error("Error fetching categories:", err));
 
     // Load countries from imported data
-    setCountries(countriesData.map(c => c.name).sort());
+    setCountries(countriesData.filter(c => c.enabled === "Y").map(c => c.name).sort());
   }, [searchParams]);
 
   const handleCategoryChange = (e) => {
