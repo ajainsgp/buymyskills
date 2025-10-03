@@ -30,6 +30,12 @@ const USERS_FILE = path.resolve(DATA_DIR, "users.json");
 const ADDRESSES_FILE = path.resolve(DATA_DIR, "addresses.json");
 const PHOTOS_FILE = path.resolve(DATA_DIR, "photos.json");
 const CATEGORIES_FILE = path.resolve(DATA_DIR, "categories.json");
+const COUNTRIES_FILE = path.resolve(DATA_DIR, "countries.json");
+const LANDING_PAGE_CARDS_FILE = path.resolve(DATA_DIR, "landingPageCards.json");
+
+// Import landing page data for filesystem fallback
+const landingPageData = require("../src/data/landingPageData.json");
+
 
 // Optional MySQL DAL
 const db = USE_DB ? require("./db") : null;
@@ -299,7 +305,6 @@ async function ensureCategoriesFile() {
       id: `cat_${Date.now().toString(36)}_${idx}`,
       name,
       enabled: 1,
-      sortOrder: idx,
       createdAt: now,
     }));
     await fs.writeFile(CATEGORIES_FILE, JSON.stringify({ categories }, null, 2), "utf8");
@@ -335,9 +340,155 @@ async function readCategoriesFS() {
   const all = await readAllCategoriesFS();
   return all
     .filter((c) => c && (c.enabled === 1 || c.enabled === true))
-    .sort((a, b) => (a.sortOrder || 0) - (b.sortOrder || 0) || String(a.name).localeCompare(String(b.name)))
+    .sort((a, b) => String(a.name).localeCompare(String(b.name)))
     .map((c) => c.name);
 }
+
+async function ensureLandingPageCardsFile() {
+  try {
+    await fs.mkdir(DATA_DIR, { recursive: true });
+    await fs.access(LANDING_PAGE_CARDS_FILE);
+  } catch {
+    // Use landing page data from the JSON file as defaults
+    const now = new Date().toISOString();
+    const landingPageCards = [];
+
+    // Add categories cards
+    const categoriesCards = landingPageData.landingPage.sections.categories.cards;
+    categoriesCards.forEach((card, idx) => {
+      landingPageCards.push({
+        id: `card_${Date.now().toString(36)}_${idx}_categories`,
+        sectionName: "categories",
+        icon: card.icon,
+        icon_color: card.icon_color || "#042C76",
+        cardTitle: card.cardTitle,
+        cardText: card.cardText || "",
+        enabled: 1,
+        createdAt: now,
+      });
+    });
+
+    // Add skills cards
+    const skillsCards = landingPageData.landingPage.sections.skills.cards;
+    skillsCards.forEach((card, idx) => {
+      landingPageCards.push({
+        id: `card_${Date.now().toString(36)}_${idx + 10}_skills`,
+        sectionName: "skills",
+        icon: card.icon,
+        icon_color: card.icon_color || "#042C76",
+        cardTitle: card.cardTitle,
+        cardText: card.cardText || "",
+        enabled: 1,
+        createdAt: now,
+      });
+    });
+
+    // Add features cards
+    const featuresCards = landingPageData.landingPage.sections.features.cards;
+    featuresCards.forEach((card, idx) => {
+      landingPageCards.push({
+        id: `card_${Date.now().toString(36)}_${idx + 20}_features`,
+        sectionName: "features",
+        icon: card.icon,
+        icon_color: card.icon_color || "#042C76",
+        cardTitle: card.cardTitle,
+        cardText: card.cardText || "",
+        enabled: 1,
+        createdAt: now,
+      });
+    });
+
+    await fs.writeFile(LANDING_PAGE_CARDS_FILE, JSON.stringify({ cards: landingPageCards }, null, 2), "utf8");
+  }
+}
+
+async function readAllLandingPageCardsFS(sectionName) {
+  await ensureLandingPageCardsFile();
+  const raw = await fs.readFile(LANDING_PAGE_CARDS_FILE, "utf8");
+  try {
+    const parsed = JSON.parse(raw);
+    let cards = Array.isArray(parsed.cards) ? parsed.cards : [];
+    if (sectionName) {
+      cards = cards.filter(card => card.sectionName === sectionName);
+    }
+    return cards;
+  } catch {
+    return [];
+  }
+}
+
+async function writeAllLandingPageCardsFS(cards) {
+  await fs.writeFile(LANDING_PAGE_CARDS_FILE, JSON.stringify({ cards }, null, 2), "utf8");
+}
+
+async function ensureCountriesFile() {
+  try {
+    await fs.mkdir(DATA_DIR, { recursive: true });
+    await fs.access(COUNTRIES_FILE);
+  } catch {
+    // Use countries from the JSON file as defaults
+    try {
+      const countriesJson = path.resolve(DATA_DIR, "countries.json");
+      if (existsSync(countriesJson)) {
+        const raw = await fs.readFile(countriesJson, "utf8");
+        const data = JSON.parse(raw);
+        if (data && Array.isArray(data)) {
+          const now = new Date().toISOString();
+          const countries = data.map((c, idx) => ({
+            id: `country_${Date.now().toString(36)}_${idx}`,
+            name: c.name || "",
+            code: c.code || "",
+            enabled: c.enabled === "Y" ? 1 : 0,
+            createdAt: now,
+          }));
+          await fs.writeFile(COUNTRIES_FILE, JSON.stringify({ countries }, null, 2), "utf8");
+        } else {
+          // Fallback empty
+          await fs.writeFile(COUNTRIES_FILE, JSON.stringify({ countries: [] }, null, 2), "utf8");
+        }
+      } else {
+        await fs.writeFile(COUNTRIES_FILE, JSON.stringify({ countries: [] }, null, 2), "utf8");
+      }
+    } catch {
+      await fs.writeFile(COUNTRIES_FILE, JSON.stringify({ countries: [] }, null, 2), "utf8");
+    }
+  }
+}
+async function readAllCountriesFS() {
+  await ensureCountriesFile();
+  const raw = await fs.readFile(COUNTRIES_FILE, "utf8");
+  try {
+    const parsed = JSON.parse(raw);
+    let countries = [];
+    if (Array.isArray(parsed)) {
+      // Handle legacy array format
+      countries = parsed;
+    } else if (parsed && Array.isArray(parsed.countries)) {
+      // Handle object format
+      countries = parsed.countries;
+    }
+    // Normalize enabled field for compatibility
+    return countries.map(c => ({
+      ...c,
+      enabled: c.enabled === 1 || c.enabled === true || c.enabled === "Y" ? 1 : 0,
+      phoneCode: c.phoneCode || ""
+    }));
+  } catch {
+    return [];
+  }
+}
+async function writeAllCountriesFS(countries) {
+  await fs.writeFile(COUNTRIES_FILE, JSON.stringify({ countries }, null, 2), "utf8");
+}
+async function readCountriesFS() {
+  const all = await readAllCountriesFS();
+  return all
+    .filter((c) => c && (c.enabled === 1 || c.enabled === true))
+    .sort((a, b) => String(a.name).localeCompare(String(b.name)))
+    .map((c) => ({ name: c.name, code: c.code }));
+}
+
+
 
 async function ensureHashedPasswordsOnStartFS() {
   const store = await readUsersFS();
@@ -415,6 +566,95 @@ app.get("/api/categories", async (_req, res) => {
 });
 
 /**
+ * GET /api/countries
+ * - DB mode: list active countries from DB
+ * - FS mode: list from countries.json (created if missing) with sensible defaults
+ */
+app.get("/api/countries", async (_req, res) => {
+  try {
+    if (USE_DB) {
+      const countries = await db.listCountries();
+      return res.json({ countries });
+    }
+    const countries = await readCountriesFS();
+    return res.json({ countries });
+  } catch (err) {
+    console.error("Countries error:", err);
+    return res.status(500).json({ error: "Internal server error" });
+  }
+});
+
+/**
+ * GET /api/countries-with-codes
+ * - DB mode: list active countries with phone codes from DB
+ * - FS mode: list from countries.json with phone codes
+ */
+app.get("/api/countries-with-codes", async (_req, res) => {
+  try {
+    if (USE_DB) {
+      const countries = await db.listCountries();
+      return res.json({ countries });
+    }
+    const all = await readAllCountriesFS();
+    const countries = all
+      .filter((c) => c && (c.enabled === 1 || c.enabled === true || c.enabled === "Y"))
+      .sort((a, b) => String(a.name).localeCompare(String(b.name)))
+      .map((c) => ({ name: c.name, code: c.code, phoneCode: c.phoneCode }));
+    return res.json({ countries });
+  } catch (err) {
+    console.error("Countries with codes error:", err);
+    return res.status(500).json({ error: "Internal server error" });
+  }
+});
+
+/**
+ * GET /api/geolocate
+ * - Returns user's country based on IP address
+ */
+app.get("/api/geolocate", async (req, res) => {
+  try {
+    // Get client IP address
+    const clientIP = req.ip ||
+                     req.connection.remoteAddress ||
+                     req.socket.remoteAddress ||
+                     (req.connection.socket ? req.connection.socket.remoteAddress : null) ||
+                     req.headers['x-forwarded-for']?.split(',')[0] ||
+                     req.headers['x-real-ip'];
+
+    if (!clientIP || clientIP === '127.0.0.1' || clientIP === '::1' || clientIP === '::ffff:127.0.0.1') {
+      // Local development, return empty result
+      return res.json({ country: null, ip: clientIP });
+    }
+
+    // Use ipapi.co for geolocation (free tier, 1000 requests/day)
+    const geoRes = await fetch(`https://ipapi.co/${clientIP}/json/`, {
+      timeout: 5000, // 5 second timeout
+    });
+
+    if (!geoRes.ok) {
+      return res.json({ country: null, ip: clientIP, error: 'Geolocation service unavailable' });
+    }
+
+    const geoData = await geoRes.json();
+
+    if (geoData.country_name) {
+      return res.json({
+        country: geoData.country_name,
+        countryCode: geoData.country_code,
+        ip: clientIP
+      });
+    }
+
+    return res.json({ country: null, ip: clientIP });
+  } catch (err) {
+    console.error("Geolocation error:", err);
+    return res.json({ country: null, error: err.message });
+  }
+});
+
+
+
+/**
  * Admin: Categories CRUD
  * - GET    /api/admin/categories
  * - POST   /api/admin/categories         { name, enabled?, sortOrder? }
@@ -438,12 +678,12 @@ app.get("/api/admin/categories", async (_req, res) => {
 
 app.post("/api/admin/categories", async (req, res) => {
   try {
-    const { name, enabled = true, sortOrder = 0 } = req.body || {};
+    const { name, enabled = true } = req.body || {};
     if (!name || !String(name).trim()) {
       return res.status(400).json({ error: "name is required" });
     }
     if (USE_DB) {
-      await db.createCategory({ name: String(name).trim(), enabled: !!enabled, sortOrder });
+      await db.createCategory({ name: String(name).trim(), enabled: !!enabled });
       return res.status(201).json({ ok: true });
     }
     const cats = await readAllCategoriesFS();
@@ -452,7 +692,6 @@ app.post("/api/admin/categories", async (req, res) => {
       id: `cat_${Date.now().toString(36)}_${Math.random().toString(36).slice(2, 6)}`,
       name: String(name).trim(),
       enabled: enabled ? 1 : 0,
-      sortOrder: Number(sortOrder) || 0,
       createdAt: now,
     };
     cats.push(newCat);
@@ -472,7 +711,6 @@ app.put("/api/admin/categories/:id", async (req, res) => {
       await db.updateCategory(id, {
         name: patch.name,
         enabled: patch.enabled,
-        sortOrder: patch.sortOrder,
       });
       return res.json({ ok: true });
     }
@@ -484,8 +722,6 @@ app.put("/api/admin/categories/:id", async (req, res) => {
     if (Object.prototype.hasOwnProperty.call(patch, "name")) updated.name = String(patch.name || "");
     if (Object.prototype.hasOwnProperty.call(patch, "enabled"))
       updated.enabled = patch.enabled ? 1 : 0;
-    if (Object.prototype.hasOwnProperty.call(patch, "sortOrder"))
-      updated.sortOrder = Number(patch.sortOrder) || 0;
     cats[idx] = updated;
     await writeAllCategoriesFS(cats);
     return res.json({ category: updated });
@@ -513,6 +749,221 @@ app.delete("/api/admin/categories/:id", async (req, res) => {
     return res.status(500).json({ error: "Internal server error" });
   }
 });
+
+/**
+ * Admin: Countries CRUD
+ * - GET    /api/admin/countries
+ * - POST   /api/admin/countries         { name, code, enabled? }
+ * - PUT    /api/admin/countries/:id     { name?, code?, enabled? }
+ * - DELETE /api/admin/countries/:id
+ */
+app.get("/api/admin/countries", async (_req, res) => {
+  try {
+    if (USE_DB) {
+      const rows = await db.listAllCountries();
+      return res.json({ countries: rows });
+    }
+    const countries = await readAllCountriesFS();
+    return res.json({ countries });
+  } catch (err) {
+    console.error("Admin list countries error:", err);
+    return res.status(500).json({ error: "Internal server error" });
+  }
+});
+
+app.post("/api/admin/countries", async (req, res) => {
+  try {
+    const { name, code, phoneCode = '', enabled = true } = req.body || {};
+    if (!name || !String(name).trim() || !code || !String(code).trim()) {
+      return res.status(400).json({ error: "name and code are required" });
+    }
+    if (USE_DB) {
+      await db.createCountry({ name: String(name).trim(), code: String(code).trim().toUpperCase(), phoneCode: String(phoneCode).trim(), enabled: !!enabled });
+      return res.status(201).json({ ok: true });
+    }
+    const countries = await readAllCountriesFS();
+    const now = new Date().toISOString();
+    const newCountry = {
+      id: `country_${Date.now().toString(36)}_${Math.random().toString(36).slice(2, 6)}`,
+      name: String(name).trim(),
+      code: String(code).trim().toUpperCase(),
+      phoneCode: String(phoneCode).trim(),
+      enabled: enabled ? 1 : 0,
+      createdAt: now,
+    };
+    countries.push(newCountry);
+    await writeAllCountriesFS(countries);
+    return res.status(201).json({ country: newCountry });
+  } catch (err) {
+    console.error("Admin create country error:", err);
+    return res.status(500).json({ error: "Internal server error" });
+  }
+});
+
+app.put("/api/admin/countries/:id", async (req, res) => {
+  try {
+    const { id } = req.params || {};
+    const patch = req.body || {};
+    if (USE_DB) {
+      await db.updateCountry(id, {
+        name: patch.name,
+        code: patch.code,
+        phoneCode: patch.phoneCode,
+        enabled: patch.enabled,
+      });
+      return res.json({ ok: true });
+    }
+    const countries = await readAllCountriesFS();
+    const idx = countries.findIndex((c) => c.id === id);
+    if (idx === -1) return res.status(404).json({ error: "Not found" });
+    const cur = countries[idx];
+    const updated = { ...cur };
+    if (Object.prototype.hasOwnProperty.call(patch, "name")) updated.name = String(patch.name || "");
+    if (Object.prototype.hasOwnProperty.call(patch, "code")) updated.code = String(patch.code || "").toUpperCase();
+    if (Object.prototype.hasOwnProperty.call(patch, "phoneCode")) updated.phoneCode = String(patch.phoneCode || "");
+    if (Object.prototype.hasOwnProperty.call(patch, "enabled"))
+      updated.enabled = patch.enabled ? 1 : 0;
+    countries[idx] = updated;
+    await writeAllCountriesFS(countries);
+    return res.json({ country: updated });
+  } catch (err) {
+    console.error("Admin update country error:", err);
+    return res.status(500).json({ error: "Internal server error" });
+  }
+});
+
+app.delete("/api/admin/countries/:id", async (req, res) => {
+  try {
+    const { id } = req.params || {};
+    if (USE_DB) {
+      await db.deleteCountry(id);
+      return res.json({ ok: true });
+    }
+    const countries = await readAllCountriesFS();
+    const idx = countries.findIndex((c) => c.id === id);
+    if (idx === -1) return res.status(404).json({ error: "Not found" });
+    countries.splice(idx, 1);
+    await writeAllCountriesFS(countries);
+    return res.json({ ok: true });
+  } catch (err) {
+    console.error("Admin delete country error:", err);
+    return res.status(500).json({ error: "Internal server error" });
+  }
+});
+
+/**
+ * Admin: Landing Page Cards CRUD
+ * - GET    /api/admin/landing-page-cards?section=categories
+ * - POST   /api/admin/landing-page-cards         { sectionName?, icon, icon_color?, cardTitle, cardText?, enabled? }
+ * - PUT    /api/admin/landing-page-cards/:id     { sectionName?, icon?, icon_color?, cardTitle?, cardText?, enabled? }
+ * - DELETE /api/admin/landing-page-cards/:id
+ */
+app.get("/api/admin/landing-page-cards", async (req, res) => {
+  try {
+    const { section } = req.query || {};
+    if (USE_DB) {
+      const rows = await db.listAllLandingPageCards(section);
+      return res.json({ cards: rows });
+    }
+    // For filesystem mode, load from landingPageCards.json
+    const cards = await readAllLandingPageCardsFS(section);
+    return res.json({ cards });
+  } catch (err) {
+    console.error("Admin list landing page cards error:", err);
+    return res.status(500).json({ error: "Internal server error" });
+  }
+});
+
+app.post("/api/admin/landing-page-cards", async (req, res) => {
+  try {
+    const { sectionName = 'categories', icon, icon_color = '#042C76', cardTitle, cardText = '', enabled = true } = req.body || {};
+    if (!cardTitle || !String(cardTitle).trim() || !icon || !String(icon).trim()) {
+      return res.status(400).json({ error: "cardTitle and icon are required" });
+    }
+    if (USE_DB) {
+      await db.createLandingPageCard({
+        sectionName: String(sectionName).trim(),
+        icon: String(icon).trim(),
+        icon_color: String(icon_color).trim(),
+        cardTitle: String(cardTitle).trim(),
+        cardText: String(cardText).trim(),
+        enabled: !!enabled
+      });
+      return res.status(201).json({ ok: true });
+    }
+    // For filesystem mode, add to landingPageCards.json
+    const cards = await readAllLandingPageCardsFS();
+    const now = new Date().toISOString();
+    const newCard = {
+      id: `card_${Date.now().toString(36)}_${Math.random().toString(36).slice(2, 6)}`,
+      sectionName: String(sectionName).trim(),
+      icon: String(icon).trim(),
+      icon_color: String(icon_color).trim(),
+      cardTitle: String(cardTitle).trim(),
+      cardText: String(cardText).trim(),
+      enabled: enabled ? 1 : 0,
+      createdAt: now,
+    };
+    cards.push(newCard);
+    await writeAllLandingPageCardsFS(cards);
+    return res.status(201).json({ card: newCard });
+  } catch (err) {
+    console.error("Admin create landing page card error:", err);
+    return res.status(500).json({ error: "Internal server error" });
+  }
+});
+
+app.put("/api/admin/landing-page-cards/:id", async (req, res) => {
+  try {
+    const { id } = req.params || {};
+    const patch = req.body || {};
+    if (USE_DB) {
+      await db.updateLandingPageCard(id, patch);
+      return res.json({ ok: true });
+    }
+    // For filesystem mode, update in landingPageCards.json
+    const cards = await readAllLandingPageCardsFS();
+    const idx = cards.findIndex((c) => c.id === id);
+    if (idx === -1) return res.status(404).json({ error: "Not found" });
+    const cur = cards[idx];
+    const updated = { ...cur };
+    if (Object.prototype.hasOwnProperty.call(patch, "sectionName")) updated.sectionName = String(patch.sectionName || "");
+    if (Object.prototype.hasOwnProperty.call(patch, "icon")) updated.icon = String(patch.icon || "");
+    if (Object.prototype.hasOwnProperty.call(patch, "icon_color")) updated.icon_color = String(patch.icon_color || "");
+    if (Object.prototype.hasOwnProperty.call(patch, "cardTitle")) updated.cardTitle = String(patch.cardTitle || "");
+    if (Object.prototype.hasOwnProperty.call(patch, "cardText")) updated.cardText = String(patch.cardText || "");
+    if (Object.prototype.hasOwnProperty.call(patch, "enabled"))
+      updated.enabled = patch.enabled ? 1 : 0;
+    cards[idx] = updated;
+    await writeAllLandingPageCardsFS(cards);
+    return res.json({ card: updated });
+  } catch (err) {
+    console.error("Admin update landing page card error:", err);
+    return res.status(500).json({ error: "Internal server error" });
+  }
+});
+
+app.delete("/api/admin/landing-page-cards/:id", async (req, res) => {
+  try {
+    const { id } = req.params || {};
+    if (USE_DB) {
+      await db.deleteLandingPageCard(id);
+      return res.json({ ok: true });
+    }
+    // For filesystem mode, remove from landingPageCards.json
+    const cards = await readAllLandingPageCardsFS();
+    const idx = cards.findIndex((c) => c.id === id);
+    if (idx === -1) return res.status(404).json({ error: "Not found" });
+    cards.splice(idx, 1);
+    await writeAllLandingPageCardsFS(cards);
+    return res.json({ ok: true });
+  } catch (err) {
+    console.error("Admin delete landing page card error:", err);
+    return res.status(500).json({ error: "Internal server error" });
+  }
+});
+
+
 
 /**
  * POST /api/register

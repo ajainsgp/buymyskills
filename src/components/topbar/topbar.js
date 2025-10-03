@@ -154,6 +154,12 @@ function Topbar() {
                       <a className="dropdown-item" href="/admin/categories" onClick={() => setDropdownOpen(false)}>
                         Manage Categories
                       </a>
+                      <a className="dropdown-item" href="/admin/countries" onClick={() => setDropdownOpen(false)}>
+                        Manage Countries
+                      </a>
+                      <a className="dropdown-item" href="/admin/landing-page-cards" onClick={() => setDropdownOpen(false)}>
+                        Manage Landing Page Cards
+                      </a>
                       <a className="dropdown-item" href="/readme" onClick={() => setDropdownOpen(false)}>
                         Read Me
                       </a>
