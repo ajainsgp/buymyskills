@@ -2,17 +2,18 @@ import React, { useEffect, useMemo, useState } from "react";
 import API_BASE from "../utils/apiBase";
 import "./AdminCategories.css";
 
-function AdminCategories() {
+function AdminCountries() {
   const [loading, setLoading] = useState(false);
   const [err, setErr] = useState("");
-  const [categories, setCategories] = useState([]);
+  const [countries, setCountries] = useState([]);
   const [adding, setAdding] = useState(false);
   const [checkedRole, setCheckedRole] = useState(false);
   const [isAdmin, setIsAdmin] = useState(false);
-  const [newCat, setNewCat] = useState({
+  const [newCountry, setNewCountry] = useState({
     name: "",
+    code: "",
+    phoneCode: "",
     enabled: true,
-    sortOrder: 0,
   });
 
   // JSON headers only (no Admin Key anymore)
@@ -73,12 +74,12 @@ function AdminCategories() {
     setErr("");
     setLoading(true);
     try {
-      const res = await fetch(`${API_BASE}/api/admin/categories`, { headers });
+      const res = await fetch(`${API_BASE}/api/admin/countries`, { headers });
       const data = await res.json().catch(() => ({}));
       if (!res.ok) {
         throw new Error(data?.error || `Failed to load (${res.status})`);
       }
-      setCategories(Array.isArray(data.categories) ? data.categories : []);
+      setCountries(Array.isArray(data.countries) ? data.countries : []);
     } catch (e) {
       setErr(e.message || "Failed to load");
     } finally {
@@ -96,25 +97,27 @@ function AdminCategories() {
   const handleAdd = async (e) => {
     e.preventDefault();
     setErr("");
-    if (!newCat.name.trim()) {
-      setErr("Name is required");
+    if (!newCountry.name.trim() || !newCountry.code.trim()) {
+      setErr("Name and code are required");
       return;
     }
     setAdding(true);
     try {
-      const res = await fetch(`${API_BASE}/api/admin/categories`, {
+      const res = await fetch(`${API_BASE}/api/admin/countries`, {
         method: "POST",
         headers,
         body: JSON.stringify({
-          name: newCat.name.trim(),
-          enabled: !!newCat.enabled,
+          name: newCountry.name.trim(),
+          code: newCountry.code.trim().toUpperCase(),
+          phoneCode: newCountry.phoneCode.trim(),
+          enabled: !!newCountry.enabled,
         }),
       });
       const data = await res.json().catch(() => ({}));
       if (!res.ok) {
         throw new Error(data?.error || `Create failed (${res.status})`);
       }
-      setNewCat({ name: "", enabled: true, sortOrder: 0 });
+      setNewCountry({ name: "", code: "", phoneCode: "", enabled: true });
       await load();
     } catch (e) {
       setErr(e.message || "Create failed");
@@ -126,7 +129,7 @@ function AdminCategories() {
   const handleUpdate = async (id, patch) => {
     setErr("");
     try {
-      const res = await fetch(`${API_BASE}/api/admin/categories/${id}`, {
+      const res = await fetch(`${API_BASE}/api/admin/countries/${id}`, {
         method: "PUT",
         headers,
         body: JSON.stringify(patch),
@@ -142,10 +145,10 @@ function AdminCategories() {
   };
 
   const handleDelete = async (id) => {
-    if (!window.confirm("Delete this category?")) return;
+    if (!window.confirm("Delete this country?")) return;
     setErr("");
     try {
-      const res = await fetch(`${API_BASE}/api/admin/categories/${id}`, {
+      const res = await fetch(`${API_BASE}/api/admin/countries/${id}`, {
         method: "DELETE",
         headers,
       });
@@ -169,7 +172,7 @@ function AdminCategories() {
       <div className="container-fluid">
         <div style={{ paddingBottom: "1.5rem" }}>
           <div className="d-sm-flex align-items-center justify-content-between mb-4">
-            <h1 className="h3 mb-0 text-gray-800">Admin: Categories</h1>
+            <h1 className="h3 mb-0 text-gray-800">Admin: Countries</h1>
           </div>
           <div className="alert alert-warning" role="alert">
             You are not authorized to view this page.
@@ -185,7 +188,7 @@ function AdminCategories() {
     <div className="container-fluid">
       <div style={{ paddingBottom: "1.5rem" }}>
         <div className="d-sm-flex align-items-center justify-content-between mb-4">
-          <h1 className="h3 mb-0 text-gray-800">Admin: Categories</h1>
+          <h1 className="h3 mb-0 text-gray-800">Admin: Countries</h1>
         </div>
 
         {err ? (
@@ -195,39 +198,74 @@ function AdminCategories() {
         ) : null}
 
         <div className="card mb-4 admin-category-card">
-          <div className="card-header category-card-header">Add Category</div>
+          <div className="card-header category-card-header">Add Country</div>
           <div className="card-body">
             <form onSubmit={handleAdd}>
               <div className="form-row">
-                <div className="form-group col-md-7">
+                <div className="form-group col-md-3">
                   <label>Name</label>
                   <input
                     type="text"
                     className="form-control"
-                    value={newCat.name}
+                    value={newCountry.name}
                     onChange={(e) =>
-                      setNewCat((p) => ({ ...p, name: e.target.value }))
+                      setNewCountry((p) => ({ ...p, name: e.target.value }))
                     }
                     disabled={disabled || adding}
                   />
                 </div>
-                <div className="form-group col-md-3">
+                <div className="form-group col-md-2">
+                  <label>Code</label>
+                  <input
+                    type="text"
+                    className="form-control"
+                    maxLength={3}
+                    value={newCountry.code}
+                    onChange={(e) =>
+                      setNewCountry((p) => ({
+                        ...p,
+                        code: e.target.value.toUpperCase(),
+                      }))
+                    }
+                    disabled={disabled || adding}
+                  />
+                </div>
+                <div className="form-group col-md-2">
+                  <label>Phone Code</label>
+                  <input
+                    type="text"
+                    className="form-control"
+                    maxLength={6}
+                    value={newCountry.phoneCode}
+                    onChange={(e) =>
+                      setNewCountry((p) => ({
+                        ...p,
+                        phoneCode: e.target.value,
+                      }))
+                    }
+                    disabled={disabled || adding}
+                  />
+                </div>
+                <div className="form-group col-md-2">
                   <label style={{ display: "block" }}>Enabled</label>
                   <div className="form-check">
                     <input
-                      id="new-enabled"
+                      id="new-country-enabled"
                       className="form-check-input"
                       type="checkbox"
-                      checked={!!newCat.enabled}
+                      checked={!!newCountry.enabled}
                       onChange={(e) =>
-                        setNewCat((p) => ({
+                        setNewCountry((p) => ({
                           ...p,
                           enabled: e.target.checked,
                         }))
                       }
                       disabled={disabled || adding}
                     />
-                    <label className="form-check-label" htmlFor="new-enabled">
+                    <label
+                      className="form-check-label"
+                      htmlFor="new-country-enabled"
+                    >
                       Yes
                     </label>
                   </div>
@@ -248,7 +286,7 @@ function AdminCategories() {
 
         <div className="card manage-category-card">
           <div className="card-header category-card-header">
-            Manage Categories
+            Manage Countries
           </div>
           <div className="card-body">
             {loading ? (
@@ -258,21 +296,23 @@ function AdminCategories() {
                 <table className="table table-sm table-bordered">
                   <thead>
                     <tr>
-                      <th style={{ width: 280 }}>Name</th>
-                      <th style={{ width: 120 }}>Enabled</th>
-                      <th style={{ width: 220 }}>Created</th>
-                      <th style={{ width: 160 }}>Actions</th>
+                      <th style={{ width: 180 }}>Name</th>
+                      <th style={{ width: 60 }}>Code</th>
+                      <th style={{ width: 70 }}>Phone Code</th>
+                      <th style={{ width: 60 }}>Enabled</th>
+                      <th style={{ width: 120 }}>Created</th>
+                      <th style={{ width: 100 }}>Actions</th>
                     </tr>
                   </thead>
                   <tbody>
-                    {categories.length === 0 ? (
+                    {countries.length === 0 ? (
                       <tr>
-                        <td colSpan={4} className="text-center">
-                          No categories
+                        <td colSpan={6} className="text-center">
+                          No countries
                         </td>
                       </tr>
                     ) : (
-                      categories
+                      countries
                         .sort((a, b) => a.name.localeCompare(b.name))
                         .map((c) => (
                           <tr key={c.id}>
@@ -283,7 +323,7 @@ function AdminCategories() {
                                 value={c.name}
                                 onChange={(e) => {
                                   const name = e.target.value;
-                                  setCategories((prev) =>
+                                  setCountries((prev) =>
                                     prev.map((row) => {
                                       if (row.id === c.id) {
                                         return { ...row, name };
@@ -295,13 +335,57 @@ function AdminCategories() {
                                 disabled={disabled}
                               />
                             </td>
+                            <td>
+                              <input
+                                type="text"
+                                className="form-control form-control-sm"
+                                maxLength={3}
+                                value={c.code}
+                                onChange={(e) => {
+                                  const code = e.target.value.toUpperCase();
+                                  setCountries((prev) =>
+                                    prev.map((row) => {
+                                      if (row.id === c.id) {
+                                        return { ...row, code };
+                                      }
+                                      return row;
+                                    }),
+                                  );
+                                }}
+                                disabled={disabled}
+                              />
+                            </td>
+                            <td>
+                              <input
+                                type="text"
+                                className="form-control form-control-sm"
+                                maxLength={6}
+                                value={c.phoneCode || ""}
+                                onChange={(e) => {
+                                  const phoneCode = e.target.value;
+                                  setCountries((prev) =>
+                                    prev.map((row) => {
+                                      if (row.id === c.id) {
+                                        return { ...row, phoneCode };
+                                      }
+                                      return row;
+                                    }),
+                                  );
+                                }}
+                                disabled={disabled}
+                              />
+                            </td>
                             <td className="text-center">
                               <input
                                 type="checkbox"
-                                checked={!!c.enabled}
+                                checked={
+                                  c.enabled === 1 ||
+                                  c.enabled === true ||
+                                  c.enabled === "Y"
+                                }
                                 onChange={(e) => {
-                                  const enabled = e.target.checked;
-                                  setCategories((prev) =>
+                                  const enabled = e.target.checked ? 1 : 0;
+                                  setCountries((prev) =>
                                     prev.map((row) => {
                                       if (row.id === c.id) {
                                         return { ...row, enabled };
@@ -329,7 +413,14 @@ function AdminCategories() {
                                   onClick={() =>
                                     handleUpdate(c.id, {
                                       name: c.name,
-                                      enabled: !!c.enabled,
+                                      code: c.code,
+                                      phoneCode: c.phoneCode,
+                                      enabled:
+                                        c.enabled === 1 ||
+                                        c.enabled === true ||
+                                        c.enabled === "Y"
+                                          ? 1
+                                          : 0,
                                     })
                                   }
                                 >
@@ -352,7 +443,7 @@ function AdminCategories() {
               </div>
             )}
             <div style={{ fontSize: 12, color: "#555", marginTop: 8 }}>
-              Note: Only Enabled categories are returned by GET /api/categories
+              Note: Only Enabled countries are returned by GET /api/countries
               and shown in dropdowns.
             </div>
           </div>
@@ -362,4 +453,4 @@ function AdminCategories() {
   );
 }
 
-export default AdminCategories;
+export default AdminCountries;

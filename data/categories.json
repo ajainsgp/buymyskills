@@ -4,161 +4,162 @@
       "id": "cat_mfqwjycg_0",
       "name": "Software Engineer",
       "enabled": 1,
-      "sortOrder": 0,
       "createdAt": "2025-09-19T13:55:44.415Z"
     },
     {
       "id": "cat_mfqwjycg_1",
       "name": "Backend Engineer",
       "enabled": 1,
-      "sortOrder": 1,
       "createdAt": "2025-09-19T13:55:44.415Z"
     },
     {
       "id": "cat_mfqwjycg_2",
-      "name": "carpenter",
+      "name": "Carpenter",
       "enabled": 1,
-      "sortOrder": 2,
       "createdAt": "2025-09-19T13:55:44.415Z"
     },
     {
       "id": "cat_mfqwjycg_3",
       "name": "Cooking",
       "enabled": 1,
-      "sortOrder": 3,
       "createdAt": "2025-09-19T13:55:44.415Z"
     },
     {
       "id": "cat_mfqwjycg_4",
       "name": "Development",
       "enabled": 1,
-      "sortOrder": 4,
       "createdAt": "2025-09-30T13:55:44.415Z"
     },
     {
       "id": "cat_mfqwjycg_5",
       "name": "Frontend Engineer",
       "enabled": 1,
-      "sortOrder": 5,
       "createdAt": "2025-09-19T13:55:44.415Z"
     },
     {
       "id": "cat_mfqwjycg_6",
       "name": "Fullstack Engineer",
       "enabled": 1,
-      "sortOrder": 6,
       "createdAt": "2025-09-19T13:55:44.415Z"
     },
     {
       "id": "cat_mfqwjycg_7",
       "name": "Data Analyst",
       "enabled": 1,
-      "sortOrder": 7,
       "createdAt": "2025-09-19T13:55:44.415Z"
     },
     {
       "id": "cat_mfqwjycg_8",
       "name": "Data Scientist",
       "enabled": 1,
-      "sortOrder": 8,
       "createdAt": "2025-09-19T13:55:44.415Z"
     },
     {
       "id": "cat_mfqwjycg_9",
       "name": "DevOps Engineer",
       "enabled": 1,
-      "sortOrder": 9,
       "createdAt": "2025-09-19T13:55:44.415Z"
     },
     {
       "id": "cat_mfqwjycg_10",
       "name": "Electrician",
       "enabled": 1,
-      "sortOrder": 10,
       "createdAt": "2025-09-19T13:55:44.415Z"
     },
     {
       "id": "cat_mfqwjycg_11",
       "name": "Languages",
       "enabled": 1,
-      "sortOrder": 11,
       "createdAt": "2025-09-19T13:55:44.415Z"
     },
     {
       "id": "cat_mfqwjycg_12",
       "name": "Marketing",
       "enabled": 1,
-      "sortOrder": 12,
       "createdAt": "2025-09-19T13:55:44.415Z"
     },
     {
       "id": "cat_mfqwjycg_13",
       "name": "Music",
       "enabled": 1,
-      "sortOrder": 13,
       "createdAt": "2025-09-19T13:55:44.415Z"
     },
     {
       "id": "cat_mfqwjycg_14",
       "name": "Photography",
       "enabled": 1,
-      "sortOrder": 14,
       "createdAt": "2025-09-19T13:55:44.415Z"
     },
     {
       "id": "cat_mfqwjycg_15",
       "name": "Pumber",
       "enabled": 1,
-      "sortOrder": 15,
       "createdAt": "2025-09-19T13:55:44.415Z"
     },
     {
       "id": "cat_mfqwjycg_16",
       "name": "Product Manager",
       "enabled": 1,
-      "sortOrder": 16,
       "createdAt": "2025-09-19T13:55:44.415Z"
     },
     {
       "id": "cat_mfqwjycg_17",
       "name": "Project Manager",
       "enabled": 1,
-      "sortOrder": 17,
       "createdAt": "2025-09-19T13:55:44.415Z"
     },
     {
       "id": "cat_mfqwjycg_18",
       "name": "Python Programming",
       "enabled": 1,
-      "sortOrder": 18,
       "createdAt": "2025-09-19T13:55:44.415Z"
     },
     {
       "id": "cat_mfqwjycg_19",
       "name": "React Development",
       "enabled": 1,
-      "sortOrder": 19,
       "createdAt": "2025-09-19T13:55:44.415Z"
     },
     {
       "id": "cat_mfqwjycg_20",
       "name": "QA Engineer",
       "enabled": 1,
-      "sortOrder": 20,
       "createdAt": "2025-09-19T13:55:44.415Z"
     },
     {
       "id": "cat_mfqwjycg_21",
       "name": "UI/UX Designer",
       "enabled": 1,
-      "sortOrder": 21,
       "createdAt": "2025-09-19T13:55:44.415Z"
     },
     {
       "id": "cat_mfqwjycg_22",
       "name": "Writing",
       "enabled": 1,
-      "sortOrder": 22,
+      "createdAt": "2025-09-19T13:55:44.415Z"
+    },
+    {
+      "id": "cat_mfqwjycg_23",
+      "name": "Architect",
+      "enabled": 1,
+      "createdAt": "2025-09-19T13:55:44.415Z"
+    },
+    {
+      "id": "cat_mfqwjycg_24",
+      "name": "Town Planner",
+      "enabled": 1,
+      "createdAt": "2025-09-19T13:55:44.415Z"
+    },
+    {
+      "id": "cat_mfqwjycg_25",
+      "name": "Doctor",
+      "enabled": 1,
+      "createdAt": "2025-09-19T13:55:44.415Z"
+    },
+    {
+      "id": "cat_mfqwjycg_26",
+      "name": "Physiotherapy",
+      "enabled": 1,
       "createdAt": "2025-09-19T13:55:44.415Z"
     }
   ]

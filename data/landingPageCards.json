@@ -1,0 +1,144 @@
+{
+  "cards": [
+    {
+      "id": "card_mgbcaph5_0_categories",
+      "sectionName": "categories",
+      "icon": "fas fa-code fa-lg",
+      "icon_color": "#042C76",
+      "cardTitle": "Development",
+      "cardText": "245 skills",
+      "enabled": 1,
+      "createdAt": "2025-10-03T21:11:50.393Z"
+    },
+    {
+      "id": "card_mgbcaph5_1_categories",
+      "sectionName": "categories",
+      "icon": "fas fa-paint-brush fa-lg",
+      "icon_color": "#042C76",
+      "cardTitle": "Design",
+      "cardText": "189 skills",
+      "enabled": 1,
+      "createdAt": "2025-10-03T21:11:50.393Z"
+    },
+    {
+      "id": "card_mgbcaph5_2_categories",
+      "sectionName": "categories",
+      "icon": "fas fa-chart-line fa-lg",
+      "icon_color": "#042C76",
+      "cardTitle": "Marketing",
+      "cardText": "156 skills",
+      "enabled": 1,
+      "createdAt": "2025-10-03T21:11:50.393Z"
+    },
+    {
+      "id": "card_mgbcaph5_3_categories",
+      "sectionName": "categories",
+      "icon": "fas fa-language fa-lg",
+      "icon_color": "#042C76",
+      "cardTitle": "Languages",
+      "cardText": "134 skills",
+      "enabled": 1,
+      "createdAt": "2025-10-03T21:11:50.393Z"
+    },
+    {
+      "id": "card_mgbcaph5_4_categories",
+      "sectionName": "categories",
+      "icon": "fas fa-camera fa-lg",
+      "icon_color": "#042C76",
+      "cardTitle": "Photography",
+      "cardText": "98 skills",
+      "enabled": 1,
+      "createdAt": "2025-10-03T21:11:50.393Z"
+    },
+    {
+      "id": "card_mgbcaph5_5_categories",
+      "sectionName": "categories",
+      "icon": "fas fa-music fa-lg",
+      "icon_color": "#042C76",
+      "cardTitle": "Music",
+      "cardText": "87 skills",
+      "enabled": 1,
+      "createdAt": "2025-10-03T21:11:50.393Z"
+    },
+    {
+      "id": "card_mgbcaph5_6_categories",
+      "sectionName": "categories",
+      "icon": "fas fa-utensils fa-lg",
+      "icon_color": "#042C76",
+      "cardTitle": "Cooking",
+      "cardText": "76 skills",
+      "enabled": 1,
+      "createdAt": "2025-10-03T21:11:50.393Z"
+    },
+    {
+      "id": "card_mgbcaph5_7_categories",
+      "sectionName": "categories",
+      "icon": "fas fa-pen fa-lg",
+      "icon_color": "#042C76",
+      "cardTitle": "Writing",
+      "cardText": "112 skills",
+      "enabled": 1,
+      "createdAt": "2025-10-03T21:11:50.393Z"
+    },
+    {
+      "id": "card_mgbcaph5_10_skills",
+      "sectionName": "skills",
+      "icon": "fab fa-react fa-2x",
+      "icon_color": "#042C76",
+      "cardTitle": "React Development",
+      "cardText": "",
+      "enabled": 1,
+      "createdAt": "2025-10-03T21:11:50.393Z"
+    },
+    {
+      "id": "card_mgbcaph5_11_skills",
+      "sectionName": "skills",
+      "icon": "fab fa-python fa-2x",
+      "icon_color": "#042C76",
+      "cardTitle": "Python Programming",
+      "cardText": "",
+      "enabled": 1,
+      "createdAt": "2025-10-03T21:11:50.393Z"
+    },
+    {
+      "id": "card_mgbcaph5_12_skills",
+      "sectionName": "skills",
+      "icon": "fas fa-camera fa-2x",
+      "icon_color": "#042C76",
+      "cardTitle": "Photography",
+      "cardText": "",
+      "enabled": 1,
+      "createdAt": "2025-10-03T21:11:50.393Z"
+    },
+    {
+      "id": "card_mgbcaph5_20_features",
+      "sectionName": "features",
+      "icon": "fas fa-users fa-2x",
+      "icon_color": "#042C76",
+      "cardTitle": "Connect with Experts",
+      "cardText": "Find skilled professionals from various fields to help with your projects.",
+      "enabled": 1,
+      "createdAt": "2025-10-03T21:11:50.393Z"
+    },
+    {
+      "id": "card_mgbcaph5_21_features",
+      "sectionName": "features",
+      "icon": "fas fa-search fa-2x",
+      "icon_color": "#042C76",
+      "cardTitle": "Easy Discovery",
+      "cardText": "Use our advanced filters to find the perfect match for your needs.",
+      "enabled": 1,
+      "createdAt": "2025-10-03T21:11:50.393Z"
+    },
+    {
+      "id": "card_mgbcaph5_22_features",
+      "sectionName": "features",
+      "icon": "fas fa-shield-alt fa-2x",
+      "icon_color": "#042C76",
+      "cardTitle": "Secure Platform",
+      "cardText": "Your data is protected with industry-standard security measures.",
+      "enabled": 1,
+      "createdAt": "2025-10-03T21:11:50.393Z"
+    }
+  ]
+}

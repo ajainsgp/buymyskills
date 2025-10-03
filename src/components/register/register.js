@@ -55,7 +55,7 @@ function RegisterUser() {
         const res = await fetch(`${API_BASE}/api/categories`);
         const data = await res.json().catch(() => ({}));
         if (res.ok && Array.isArray(data.categories) && !ignore) {
-          setCategories(data.categories);
+          setCategories(data.categories.sort((a, b) => a.localeCompare(b)));
         }
       } catch {
         // ignore fetch errors

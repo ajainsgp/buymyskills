@@ -7,10 +7,13 @@ import LoginApps from "./components/login/login";
 import Profile from "./pages/profile";
 import UpdatePassword from "./components/auth/UpdatePassword";
 import AdminCategories from "./pages/AdminCategories";
+import AdminCountries from "./pages/AdminCountries";
+import AdminLandingPageCards from "./pages/AdminLandingPageCards";
 import ReadMe from "./pages/ReadMe";
 import LandingPage from "./pages/LandingPage";
 import BrowsePage from "./pages/BrowsePage";
 import AboutUs from "./pages/AboutUs";
+import { LandingPageCardsProvider } from "./contexts/LandingPageCardsContext";
 
 function App() {
   // On initial load, ensure no auto-login unless user explicitly chose "Remember Me"
@@ -114,152 +117,182 @@ function App() {
   }, []);
 
   return (
-    <Routes>
-      <Route path="/" element={<Navigate to="/home" replace />} />
-      <Route path="*" element={<Navigate to="/home" replace />} />
-      <Route
-        path="/home"
-        element={
-          <Layout>
-            <LandingPage />
-          </Layout>
-        }
-      />
-      <Route
-        path="/about-us"
-        element={
-          <Layout>
-            <AboutUs />
-          </Layout>
-        }
-      />
-      <Route
-        path="/browse"
-        element={
-          <Layout>
-            <div id="wrapper">
-              <div id="content-wrapper" className="d-flex flex-column">
-                <div id="content">
-                  <BrowsePage />
+    <LandingPageCardsProvider>
+      <Routes>
+        <Route path="/" element={<Navigate to="/home" replace />} />
+        <Route path="*" element={<Navigate to="/home" replace />} />
+        <Route
+          path="/home"
+          element={
+            <Layout>
+              <LandingPage />
+            </Layout>
+          }
+        />
+        <Route
+          path="/about-us"
+          element={
+            <Layout>
+              <AboutUs />
+            </Layout>
+          }
+        />
+        <Route
+          path="/browse"
+          element={
+            <Layout>
+              <div id="wrapper">
+                <div id="content-wrapper" className="d-flex flex-column">
+                  <div id="content">
+                    <BrowsePage />
+                  </div>
                 </div>
               </div>
-            </div>
-          </Layout>
-        }
-      />
-      <Route
-        path="/dashboard"
-        element={
-          <Layout>
-            <div id="wrapper">
-              <div id="content-wrapper" className="d-flex flex-column">
-                <div id="content">
-                  <DashboardContent2 />
+            </Layout>
+          }
+        />
+        <Route
+          path="/dashboard"
+          element={
+            <Layout>
+              <div id="wrapper">
+                <div id="content-wrapper" className="d-flex flex-column">
+                  <div id="content">
+                    <DashboardContent2 />
+                  </div>
                 </div>
               </div>
-            </div>
-          </Layout>
-        }
-      />
-      <Route
-        path="/dashboard2"
-        element={
-          <Layout>
-            <div id="wrapper">
-              <div id="content-wrapper" className="d-flex flex-column">
-                <div id="content">
-                  <DashboardContent2 />
+            </Layout>
+          }
+        />
+        <Route
+          path="/dashboard2"
+          element={
+            <Layout>
+              <div id="wrapper">
+                <div id="content-wrapper" className="d-flex flex-column">
+                  <div id="content">
+                    <DashboardContent2 />
+                  </div>
                 </div>
               </div>
-            </div>
-          </Layout>
-        }
-      />
-      <Route
-        path="/register"
-        element={
-          <Layout>
-            <div id="wrapper">
-              <div id="content-wrapper" className="d-flex flex-column">
-                <div id="content">
-                  <RegisterUser />
+            </Layout>
+          }
+        />
+        <Route
+          path="/register"
+          element={
+            <Layout>
+              <div id="wrapper">
+                <div id="content-wrapper" className="d-flex flex-column">
+                  <div id="content">
+                    <RegisterUser />
+                  </div>
                 </div>
               </div>
-            </div>
-          </Layout>
-        }
-      />
-      <Route
-        path="/login"
-        element={
-          <Layout>
-            <div id="wrapper">
-              <div id="content-wrapper" className="d-flex flex-column">
-                <div id="content">
-                  <LoginApps />
+            </Layout>
+          }
+        />
+        <Route
+          path="/login"
+          element={
+            <Layout>
+              <div id="wrapper">
+                <div id="content-wrapper" className="d-flex flex-column">
+                  <div id="content">
+                    <LoginApps />
+                  </div>
                 </div>
               </div>
-            </div>
-          </Layout>
-        }
-      />
-      <Route
-        path="/profile"
-        element={
-          <Layout>
-            <div id="wrapper">
-              <div id="content-wrapper" className="d-flex flex-column">
-                <div id="content">
-                  <Profile />
+            </Layout>
+          }
+        />
+        <Route
+          path="/profile"
+          element={
+            <Layout>
+              <div id="wrapper">
+                <div id="content-wrapper" className="d-flex flex-column">
+                  <div id="content">
+                    <Profile />
+                  </div>
                 </div>
               </div>
-            </div>
-          </Layout>
-        }
-      />
-      <Route
-        path="/update-password"
-        element={
-          <Layout>
-            <div id="wrapper">
-              <div id="content-wrapper" className="d-flex flex-column">
-                <div id="content">
-                  <UpdatePassword />
+            </Layout>
+          }
+        />
+        <Route
+          path="/update-password"
+          element={
+            <Layout>
+              <div id="wrapper">
+                <div id="content-wrapper" className="d-flex flex-column">
+                  <div id="content">
+                    <UpdatePassword />
+                  </div>
                 </div>
               </div>
-            </div>
-          </Layout>
-        }
-      />
-      <Route
-        path="/admin/categories"
-        element={
-          <Layout>
-            <div id="wrapper">
-              <div id="content-wrapper" className="d-flex flex-column">
-                <div id="content">
-                  <AdminCategories />
+            </Layout>
+          }
+        />
+        <Route
+          path="/admin/categories"
+          element={
+            <Layout>
+              <div id="wrapper">
+                <div id="content-wrapper" className="d-flex flex-column">
+                  <div id="content">
+                    <AdminCategories />
+                  </div>
                 </div>
               </div>
-            </div>
-          </Layout>
-        }
-      />
-      <Route
-        path="/readme"
-        element={
-          <Layout>
-            <div id="wrapper">
-              <div id="content-wrapper" className="d-flex flex-column">
-                <div id="content">
-                  <ReadMe />
+            </Layout>
+          }
+        />
+        <Route
+          path="/admin/countries"
+          element={
+            <Layout>
+              <div id="wrapper">
+                <div id="content-wrapper" className="d-flex flex-column">
+                  <div id="content">
+                    <AdminCountries />
+                  </div>
                 </div>
               </div>
-            </div>
-          </Layout>
-        }
-      />
-    </Routes>
+            </Layout>
+          }
+        />
+        <Route
+          path="/admin/landing-page-cards"
+          element={
+            <Layout>
+              <div id="wrapper">
+                <div id="content-wrapper" className="d-flex flex-column">
+                  <div id="content">
+                    <AdminLandingPageCards />
+                  </div>
+                </div>
+              </div>
+            </Layout>
+          }
+        />
+        <Route
+          path="/readme"
+          element={
+            <Layout>
+              <div id="wrapper">
+                <div id="content-wrapper" className="d-flex flex-column">
+                  <div id="content">
+                    <ReadMe />
+                  </div>
+                </div>
+              </div>
+            </Layout>
+          }
+        />
+      </Routes>
+    </LandingPageCardsProvider>
   );
 }
 

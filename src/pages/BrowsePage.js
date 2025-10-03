@@ -75,7 +75,7 @@ function BrowsePage() {
     fetch(`${API_BASE}/api/categories`)
       .then(res => res.json())
       .then(data => {
-        const categoryList = data.categories || [];
+        const categoryList = (data.categories || []).sort((a, b) => a.localeCompare(b));
         setCategories(categoryList);
 
         // Check for category query parameter after categories are loaded
@@ -199,7 +199,7 @@ function BrowsePage() {
     }
   }, [location.pathname]);
 
-  // Set default country based on user profile (only for logged-in users)
+  // Set default country based on user profile or IP geolocation
   useEffect(() => {
     if (currentUser && !locationDetected && !countrySetRef.current) {
       // Logged-in user: fetch their profile to get country
@@ -216,11 +216,24 @@ function BrowsePage() {
         .catch(() => {
           setLocationDetected(true);
         });
-    } else if (!currentUser) {
-      // Not logged in: keep default as "all"
-      setLocationDetected(true);
+    } else if (!currentUser && !locationDetected) {
+      // Not logged in: try IP-based geolocation via our API
+      fetch(`${API_BASE}/api/geolocate`)
+        .then(res => res.json())
+        .then(data => {
+          if (data.country && countries.includes(data.country)) {
+            setSelectedCountry(data.country);
+            setCountryFilter(data.country);
+          }
+          // If country not found or not in our list, keep "all"
+          setLocationDetected(true);
+        })
+        .catch(() => {
+          // IP geolocation failed, keep "all"
+          setLocationDetected(true);
+        });
     }
-  }, [currentUser, locationDetected]);
+  }, [currentUser, locationDetected, countries]);
 
   // Filtered data with fuzzy search
   const filtered = users.filter((u) => {

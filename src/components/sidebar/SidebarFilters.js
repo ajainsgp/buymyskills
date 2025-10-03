@@ -41,7 +41,7 @@ export default function SidebarFilters() {
         const res = await fetch(`${API_BASE}/api/categories`);
         const data = await res.json().catch(() => ({}));
         if (!ignore && res.ok && Array.isArray(data.categories)) {
-          setCategories(data.categories);
+          setCategories(data.categories.sort((a, b) => a.localeCompare(b)));
         }
       } catch {
         // ignore

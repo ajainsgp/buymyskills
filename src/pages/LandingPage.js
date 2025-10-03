@@ -3,9 +3,11 @@ import React from "react";
 import { useNavigate } from "react-router-dom";
 import "./LandingPage.css";
 import landingPageData from "../data/landingPageData.json";
+import { useLandingPageCards } from "../contexts/LandingPageCardsContext";
 
 function LandingPage() {
   const navigate = useNavigate();
+  const { cards: dbCards } = useLandingPageCards();
 
   // Handle card click to navigate to browse page with category filter
   const handleCardClick = (categoryName) => {
@@ -25,7 +27,7 @@ function LandingPage() {
     <div key={cardKey} className="col-md-4 mb-4">
       <div className="card h-100 border-0 shadow-sm features-card cursor-no-pointer">
         <div className="card-body text-center">
-          <i className={`${cardData.icon} text-primary mb-1`}></i>
+          <i className={`${cardData.icon} mb-1`} style={{ color: cardData.icon_color || '#042C76' }}></i>
           <h5 className="card-title h6">{cardData.cardTitle}</h5>
           <p className="card-text small">{cardData.cardText}</p>
         </div>
@@ -41,7 +43,7 @@ function LandingPage() {
         onClick={() => handleCardClick(cardData.cardTitle)}
         style={{ cursor: 'pointer' }}
       >
-        <i className={`${cardData.icon} text-primary mb-2`}></i>
+        <i className={`${cardData.icon} mb-2`} style={{ color: cardData.icon_color || '#042C76' }}></i>
         <h5 className="card-title mb-0">{cardData.cardTitle}</h5>
         <small className="text-muted">{cardData.cardText}</small>
       </div>
@@ -65,18 +67,32 @@ function LandingPage() {
   );
 
   // Render section with cards
-  const renderSectionWithCards = (sectionData, cardRenderer, sectionClass = "") => (
-    <section className={`py-3 ${sectionClass}`}>
-      <div className="container">
-        {renderSectionHeader(sectionData.sectionTitle, sectionData.sectionText)}
-        <div className="row">
-          {Object.entries(sectionData.cards).map(([cardKey, cardData]) =>
-            cardRenderer(cardData, cardKey)
-          )}
+  const renderSectionWithCards = (sectionData, cardRenderer, sectionClass = "", sectionKey = "") => {
+    // Use database cards if available for all managed sections
+    let cardsToRender = sectionData.cards;
+    if (sectionKey === 'categories' && dbCards.categories && dbCards.categories.length > 0) {
+      cardsToRender = dbCards.categories;
+    } else if (sectionKey === 'skills' && dbCards.skills && dbCards.skills.length > 0) {
+      cardsToRender = dbCards.skills;
+    } else if (sectionKey === 'features' && dbCards.features && dbCards.features.length > 0) {
+      cardsToRender = dbCards.features;
+    }
+
+    return (
+      <section className={`py-3 ${sectionClass}`}>
+        <div className="container">
+          {renderSectionHeader(sectionData.sectionTitle, sectionData.sectionText)}
+          <div className="row">
+            {Array.isArray(cardsToRender)
+              ? cardsToRender.map((cardData, index) => cardRenderer(cardData, index))
+              : Object.entries(cardsToRender).map(([cardKey, cardData]) =>
+                  cardRenderer(cardData, cardKey)
+                )}
+          </div>
         </div>
-      </div>
-    </section>
-  );
+      </section>
+    );
+  };
 
   const { sections, stats } = landingPageData.landingPage;
 
@@ -117,13 +133,13 @@ function LandingPage() {
       </section>
 
       {/* Features Section */}
-      {renderSectionWithCards(sections.features, renderFeatureCard, "features-section")}
+      {renderSectionWithCards(sections.features, renderFeatureCard, "features-section", "features")}
 
       {/* Explore by Category Section */}
-      {renderSectionWithCards(sections.categories, renderCategoryCard, "explore-category-section bg-light")}
+      {renderSectionWithCards(sections.categories, renderCategoryCard, "explore-category-section bg-light", "categories")}
 
       {/* Popular Skills Section */}
-      {renderSectionWithCards(sections.skills, renderSkillCard, "popular-skills-section")}
+      {renderSectionWithCards(sections.skills, renderSkillCard, "popular-skills-section", "skills")}
 
       {/* Stats Section */}
       <section className="stats-section bg-light py-3">

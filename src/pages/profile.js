@@ -171,9 +171,9 @@ function Profile() {
       try {
         const res = await fetch(`${API_BASE}/api/categories`);
         const data = await res.json().catch(() => ({}));
-        if (res.ok && Array.isArray(data.categories)) {
-          setCategories(data.categories);
-        }
+      if (res.ok && Array.isArray(data.categories)) {
+        setCategories(data.categories.sort((a, b) => a.localeCompare(b)));
+      }
       } catch {
         // ignore
       }
