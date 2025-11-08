@@ -22,6 +22,7 @@ function BrowsePage() {
   const [kw, setKw] = useState("");
   const [categoryFilter, setCategoryFilter] = useState("");
   const [countryFilter, setCountryFilter] = useState("");
+  const [cityFilter, setCityFilter] = useState("");
   const [searchKw, setSearchKw] = useState("");
 
   const [selectedCategory, setSelectedCategory] = useState("all");
@@ -101,6 +102,10 @@ function BrowsePage() {
     const value = e.target.value;
     setSelectedCountry(value);
     setCountryFilter(value === "all" ? "" : value);
+  };
+
+  const handleCityChange = (e) => {
+    setCityFilter(e.target.value);
   };
 
   const handleSearch = () => {
@@ -257,7 +262,11 @@ function BrowsePage() {
       !countryFilter ||
       (u.address?.country || "").toLowerCase() === countryFilter.toLowerCase();
 
-    return kwOk && categoryOk && countryOk;
+    const cityOk =
+      !cityFilter.trim() ||
+      (u.address?.city || "").toLowerCase().includes(cityFilter.toLowerCase().trim());
+
+    return kwOk && categoryOk && countryOk && cityOk;
   });
 
   const displayUsers = filtered;
@@ -307,7 +316,7 @@ function BrowsePage() {
                 ))}
               </select>
               <select
-                className="form-control form-control-lg d-inline-block w-auto"
+                className="form-control form-control-lg d-inline-block w-auto mr-3"
                 value={selectedCountry}
                 onChange={handleCountryChange}
                 style={{ maxWidth: '200px' }}
@@ -317,6 +326,14 @@ function BrowsePage() {
                   <option key={name} value={name}>{name}</option>
                 ))}
               </select>
+              <input
+                type="text"
+                className="form-control form-control-lg d-inline-block w-auto"
+                placeholder="City"
+                value={cityFilter}
+                onChange={handleCityChange}
+                style={{ maxWidth: '200px' }}
+              />
             </div>
           </div>
         </div>

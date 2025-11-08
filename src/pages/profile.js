@@ -524,14 +524,14 @@ function Profile() {
                       <textarea
                         name="summary"
                         className="form-control"
-                        placeholder="Briefly describe your key skills and expertise (max 100 characters)"
+                        placeholder="Briefly describe your key skills and expertise (150 characters)"
                         value={form.summary}
                         onChange={onChange}
-                        maxLength={100}
-                        rows={2}
+                        maxLength={150}
+                        rows={3}
                       />
                       <small className="form-text text-muted">
-                        {form.summary.length}/100 characters
+                        {form.summary.length}/150 characters
                       </small>
                     </div>
                   </div>
