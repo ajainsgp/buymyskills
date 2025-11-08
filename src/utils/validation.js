@@ -23,7 +23,7 @@ export const validateMobile = (mobile) => {
 };
 
 /**
- * Validates summary field (max 100 characters)
+ * Validates summary field (150 characters)
  * @param {string} summary - Summary text to validate
  * @returns {Object} { isValid: boolean, message: string }
  */
@@ -32,10 +32,10 @@ export const validateSummary = (summary) => {
     return { isValid: true, message: "" }; // Optional field
   }
 
-  if (summary.length > 100) {
+  if (summary.length > 150) {
     return {
       isValid: false,
-      message: `Summary must be 100 characters or less (${summary.length}/100)`,
+      message: `Summary must be 100 characters or less (${summary.length}/150)`,
     };
   }
 

@@ -11,7 +11,7 @@ function Footer() {
             <h5>BuyMySkills</h5>
           </div>
           <div className="col-md-6 text-md-right">
-            <p>&copy; 2024 BuyMySkills. All rights reserved.</p>
+            <p>&copy; 2025 BuyMySkills. All rights reserved.</p>
           </div>
         </div>
       </div>
