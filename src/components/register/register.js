@@ -84,7 +84,7 @@ function RegisterUser() {
         emailId: validation.message,
       }));
     } else if (name === "mobileNo") {
-      const validation = validateMobile(newValue);
+      const validation = validateMobile(newValue, form.countryCode);
       setFieldErrors((prev) => ({
         ...prev,
         mobileNo: validation.message,
@@ -157,9 +157,13 @@ function RegisterUser() {
       setError("Summary must be 100 characters or less");
       return;
     }
-    if (form.mobileNo && !/^\d{10}$/.test(form.mobileNo.replace(/\s+/g, ""))) {
-      setError("Mobile number must be 10 digits");
-      return;
+    // Validate mobile number based on country code
+    if (form.mobileNo) {
+      const mobileValidation = validateMobile(form.mobileNo, form.countryCode);
+      if (!mobileValidation.isValid) {
+        setError(mobileValidation.message);
+        return;
+      }
     }
 
     try {

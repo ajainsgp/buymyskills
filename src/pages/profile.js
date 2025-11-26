@@ -194,7 +194,7 @@ function Profile() {
 
       // Real-time validation
       if (name === "mobile") {
-        const validation = validateMobile(value);
+        const validation = validateMobile(value, form.countryCode);
         setFieldErrors((prev) => ({
           ...prev,
           mobile: validation.message,
@@ -274,9 +274,13 @@ function Profile() {
       setError("Summary must be 100 characters or less");
       return;
     }
-    if (form.mobile && !/^\d{10}$/.test(form.mobile.replace(/\s+/g, ''))) {
-      setError("Mobile number must be 10 digits");
-      return;
+    // Validate mobile number based on country code
+    if (form.mobile) {
+      const mobileValidation = validateMobile(form.mobile, form.countryCode);
+      if (!mobileValidation.isValid) {
+        setError(mobileValidation.message);
+        return;
+      }
     }
 
     try {

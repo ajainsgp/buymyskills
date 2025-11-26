@@ -1,21 +1,49 @@
 // Validation utility functions
 
+// Mobile number digit requirements by country code
+const MOBILE_LENGTHS = {
+  "+1": { min: 10, max: 10 }, // US/Canada
+  "+44": { min: 10, max: 11 }, // UK
+  "+91": { min: 10, max: 10 }, // India
+  "+65": { min: 8, max: 8 }, // Singapore
+  "+353": { min: 9, max: 10 }, // Ireland
+  // Default for other countries
+  default: { min: 7, max: 15 },
+};
+
 /**
- * Validates mobile number format (10 digits)
+ * Validates mobile number format based on country code
  * @param {string} mobile - Mobile number to validate
+ * @param {string} countryCode - Country code (e.g., '+65' for Singapore)
  * @returns {Object} { isValid: boolean, message: string }
  */
-export const validateMobile = (mobile) => {
+export const validateMobile = (mobile, countryCode = "+1") => {
   if (!mobile || mobile.trim() === "") {
     return { isValid: true, message: "" }; // Optional field, empty is ok
   }
 
-  const cleanMobile = mobile.replace(/\s+/g, "");
+  const cleanMobile = mobile.replace(/\s+/g, "").replace(/[-()]/g, "");
 
-  if (!/^\d{10}$/.test(cleanMobile)) {
+  // Get digit requirements for the country
+  const lengthReq = MOBILE_LENGTHS[countryCode] || MOBILE_LENGTHS.default;
+
+  if (
+    cleanMobile.length < lengthReq.min ||
+    cleanMobile.length > lengthReq.max
+  ) {
     return {
       isValid: false,
-      message: "Mobile number must be exactly 10 digits",
+      message: `Mobile number must be ${
+        lengthReq.min
+      }${lengthReq.min !== lengthReq.max ? `-${lengthReq.max}` : ""} digits for this country`,
+    };
+  }
+
+  // Check if it's all digits
+  if (!/^\d+$/.test(cleanMobile)) {
+    return {
+      isValid: false,
+      message: "Mobile number can only contain digits",
     };
   }
 
