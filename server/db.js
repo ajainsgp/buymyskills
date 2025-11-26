@@ -51,22 +51,25 @@ async function initSchema() {
   const conn = await pool.getConnection();
   try {
     await conn.query(`CREATE TABLE IF NOT EXISTS users (
-      id              VARCHAR(64) PRIMARY KEY,
-      name            VARCHAR(255),
-      first_name      VARCHAR(100),
-      last_name       VARCHAR(100),
-      nick_name       VARCHAR(100),
-      gender          VARCHAR(10),
-      mobile          VARCHAR(32),
-      email_id        VARCHAR(255) NOT NULL UNIQUE,
-      secondary_email VARCHAR(255),
-      password_hash   VARCHAR(255),
-      summary         TEXT,
-      work_preference VARCHAR(20),
-      traveling       VARCHAR(20),
-      availability    VARCHAR(20),
-      created_at      DATETIME NOT NULL,
-      INDEX (email_id)
+      id                VARCHAR(64) PRIMARY KEY,
+      name              VARCHAR(255),
+      first_name        VARCHAR(100),
+      last_name         VARCHAR(100),
+      nick_name         VARCHAR(100),
+      gender            VARCHAR(10),
+      mobile            VARCHAR(32),
+      email_id          VARCHAR(255) NOT NULL UNIQUE,
+      secondary_email   VARCHAR(255),
+      password_hash     VARCHAR(255),
+      summary           TEXT,
+      work_preference   VARCHAR(20),
+      traveling         VARCHAR(20),
+      availability      VARCHAR(20),
+      created_at        DATETIME NOT NULL,
+      is_active         TINYINT(1) NOT NULL DEFAULT 0,
+      confirmation_token VARCHAR(255),
+      INDEX (email_id),
+      INDEX (confirmation_token)
     ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;`);
 
     await conn.query(`CREATE TABLE IF NOT EXISTS address_current (
@@ -304,6 +307,14 @@ async function getUserById(id) {
   return rows[0] || null;
 }
 
+async function getUserByConfirmationToken(token) {
+  const [rows] = await pool.execute(
+    `SELECT * FROM users WHERE confirmation_token=? LIMIT 1`,
+    [token],
+  );
+  return rows[0] || null;
+}
+
 /**
  * List users plus their current address (LEFT JOIN).
  * Returns flat rows; caller can map to the API shape.
@@ -326,8 +337,9 @@ async function createUser(u) {
       id, name, first_name, last_name, nick_name, gender,
       mobile, email_id, secondary_email, password_hash,
       summary, work_preference, traveling, availability, created_at,
-      role_type, category, show_in_dashboard, show_photo
-    ) VALUES (?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?)`,
+      role_type, category, show_in_dashboard, show_photo,
+      is_active, confirmation_token
+    ) VALUES (?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?)`,
     [
       u.id,
       u.name || null,
@@ -348,6 +360,8 @@ async function createUser(u) {
       u.category || null,
       u.showInDashboard ? 1 : 0,
       u.showPhoto ? 1 : 0,
+      u.isActive ? 1 : 0,
+      u.confirmationToken || null,
     ],
   );
 }
@@ -374,6 +388,8 @@ async function updateUserFields(id, patch) {
     category: "category",
     showInDashboard: "show_in_dashboard",
     showPhoto: "show_photo",
+    isActive: "is_active",
+    confirmationToken: "confirmation_token",
     // passwordHash intentionally excluded here; use updatePasswordHash
   };
   const sets = [];
@@ -759,6 +775,7 @@ module.exports = {
   // users
   getUserByEmail,
   getUserById,
+  getUserByConfirmationToken,
   listUsers,
   listPublicUsers,
   createUser,

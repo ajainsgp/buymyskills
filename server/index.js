@@ -15,6 +15,7 @@ const rateLimit = require("express-rate-limit");
 const compression = require("compression");
 const morgan = require("morgan");
 const bcrypt = require("bcrypt");
+const nodemailer = require("nodemailer");
 
 const USE_DB =
   String(process.env.PERSISTENCE || "").toLowerCase() === "mysql" ||
@@ -23,6 +24,19 @@ const USE_DB =
 const app = express();
 const PORT = process.env.PORT || 4000;
 const ADMIN_EMAIL = process.env.ADMIN_BOOTSTRAP_EMAIL || "admin@buymyskills.local";
+
+// Email configuration
+const emailTransporter = nodemailer.createTransporter({
+  host: process.env.EMAIL_HOST || 'smtp.gmail.com',
+  port: parseInt(process.env.EMAIL_PORT || '587'),
+  secure: String(process.env.EMAIL_SECURE || '').toLowerCase() === 'true',
+  auth: {
+    user: process.env.EMAIL_USER,
+    pass: process.env.EMAIL_PASS,
+  },
+});
+
+const EMAIL_FROM = process.env.EMAIL_FROM || process.env.EMAIL_USER;
 
 // File-based storage locations (used when not using DB)
 const DATA_DIR = path.resolve(__dirname, "../data");
@@ -158,6 +172,40 @@ async function verifyPassword(password, stored) {
 // Photos constraints
 const MAX_IMAGE_BYTES = 150 * 1024;
 const ALLOWED_CONTENT_TYPES = new Set(["image/jpeg", "image/png", "image/gif"]);
+
+// Email functions
+async function sendConfirmationEmail(email, confirmationToken, firstName) {
+  const confirmationUrl = `${process.env.FRONTEND_ORIGIN || 'http://localhost:3000'}/confirm-email?token=${confirmationToken}`;
+
+  const mailOptions = {
+    from: EMAIL_FROM,
+    to: email,
+    subject: 'Confirm Your Email - Buy My Skills',
+    html: `
+      <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto;">
+        <h2>Welcome to Buy My Skills, ${firstName}!</h2>
+        <p>Thank you for registering. Please confirm your email address by clicking the link below:</p>
+        <a href="${confirmationUrl}" style="display: inline-block; padding: 10px 20px; background-color: #007bff; color: white; text-decoration: none; border-radius: 5px;">Confirm Email</a>
+        <p>If the button doesn't work, copy and paste this URL into your browser:</p>
+        <p>${confirmationUrl}</p>
+        <p>This link will expire in 24 hours.</p>
+        <p>If you didn't register for Buy My Skills, please ignore this email.</p>
+      </div>
+    `,
+  };
+
+  try {
+    await emailTransporter.sendMail(mailOptions);
+    console.log(`Confirmation email sent to ${email}`);
+  } catch (error) {
+    console.error('Error sending confirmation email:', error);
+    throw error;
+  }
+}
+
+function generateConfirmationToken() {
+  return crypto.randomBytes(32).toString('hex');
+}
 
 // ========== Filesystem Implementation (default) ==========
 
@@ -1004,6 +1052,7 @@ app.post("/api/register", async (req, res) => {
       if (exists) return res.status(409).json({ error: "User with this email already exists" });
 
       const passwordHash = await hashPassword(String(password || ""));
+      const confirmationToken = generateConfirmationToken();
       const newUser = {
         id: makeId(),
         name: [firstName, lastName].filter(Boolean).join(" ").trim(),
@@ -1024,6 +1073,8 @@ app.post("/api/register", async (req, res) => {
         category: category || "",
         showInDashboard: !!showInDashboard,
         showPhoto: !!showPhoto,
+        isActive: false,
+        confirmationToken,
       };
       await db.createUser(newUser);
       await db.setAddressForUser(newUser.id, {
@@ -1034,11 +1085,20 @@ app.post("/api/register", async (req, res) => {
         postcode,
         country,
       });
+
+      // Send confirmation email
+      try {
+        await sendConfirmationEmail(emailId, confirmationToken, firstName);
+      } catch (emailError) {
+        console.error('Failed to send confirmation email:', emailError);
+        // Don't fail registration if email fails, but log it
+      }
+
       const apiUser = sanitizeUser({
         ...newUser,
         createdAt: new Date(newUser.createdAt).toISOString(),
       });
-      return res.status(201).json({ user: apiUser, message: "Registered successfully" });
+      return res.status(201).json({ user: apiUser, message: "Registration successful. Please check your email to confirm your account." });
     }
 
     // FS flow
@@ -1049,6 +1109,7 @@ app.post("/api/register", async (req, res) => {
     if (exists) return res.status(409).json({ error: "User with this email already exists" });
 
     const passwordHash = await hashPassword(String(password || ""));
+    const confirmationToken = generateConfirmationToken();
     const newUser = {
       id: makeId(),
       name: [firstName, lastName].filter(Boolean).join(" ").trim(),
@@ -1069,11 +1130,22 @@ app.post("/api/register", async (req, res) => {
       category: category || "",
       showInDashboard: !!showInDashboard,
       showPhoto: !!showPhoto,
+      isActive: false,
+      confirmationToken,
     };
     store.users.push(newUser);
     await writeUsersFS(store);
     await setAddressForUserFS(newUser.id, { addressLine1, addressLine2, city, state, postcode, country });
-    return res.status(201).json({ user: sanitizeUser(newUser), message: "Registered successfully" });
+
+    // Send confirmation email
+    try {
+      await sendConfirmationEmail(emailId, confirmationToken, firstName);
+    } catch (emailError) {
+      console.error('Failed to send confirmation email:', emailError);
+      // Don't fail registration if email fails, but log it
+    }
+
+    return res.status(201).json({ user: sanitizeUser(newUser), message: "Registration successful. Please check your email to confirm your account." });
   } catch (err) {
     console.error("Register error:", err);
     return res.status(500).json({ error: "Internal server error" });
@@ -1095,6 +1167,11 @@ app.post("/api/login", async (req, res) => {
       if (!row) return res.status(401).json({ error: "Invalid credentials" });
       const ok = await verifyPassword(String(password || ""), row.password_hash);
       if (!ok) return res.status(401).json({ error: "Invalid credentials" });
+
+      // Check if account is active
+      if (row.is_active !== 1 && row.is_active !== true) {
+        return res.status(403).json({ error: "Account not activated. Please check your email for the confirmation link." });
+      }
 
       // Ensure correct roleType on login (backfill if missing)
       const adminEmailLower = String(ADMIN_EMAIL).toLowerCase();
@@ -1134,6 +1211,12 @@ app.post("/api/login", async (req, res) => {
     if (user.passwordHash) ok = await verifyPassword(String(password || ""), user.passwordHash);
     else if (user.password) ok = String(user.password) === String(password);
     if (!ok) return res.status(401).json({ error: "Invalid credentials" });
+
+    // Check if account is active
+    if (!user.isActive) {
+      return res.status(403).json({ error: "Account not activated. Please check your email for the confirmation link." });
+    }
+
     // FS mode: ensure admin email is treated as administrator in response
     const adminEmailLower = String(ADMIN_EMAIL).toLowerCase();
     const additionalAdmins = String(process.env.ADMIN_ADDITIONAL_EMAILS || "")
@@ -1593,6 +1676,65 @@ app.get("/api/users/:id/photo", async (req, res) => {
     return res.json({ contentType: r.contentType, base64: r.base64, uploadedAt: r.uploadedAt });
   } catch (err) {
     console.error("Get photo error:", err);
+    return res.status(500).json({ error: "Internal server error" });
+  }
+});
+
+/**
+ * POST /api/confirm-email
+ * Confirms user email using confirmation token
+ */
+app.post("/api/confirm-email", async (req, res) => {
+  try {
+    const { token } = req.body || {};
+    if (!token) {
+      return res.status(400).json({ error: "Confirmation token is required" });
+    }
+
+    if (USE_DB) {
+      const row = await db.getUserByConfirmationToken(token);
+      if (!row) {
+        return res.status(400).json({ error: "Invalid or expired confirmation token" });
+      }
+
+      // Check if token is expired (24 hours)
+      const createdAt = new Date(row.created_at);
+      const now = new Date();
+      const hoursDiff = (now - createdAt) / (1000 * 60 * 60);
+      if (hoursDiff > 24) {
+        return res.status(400).json({ error: "Confirmation token has expired. Please register again." });
+      }
+
+      // Update user as active and remove confirmation token
+      await db.updateUserFields(row.id, { isActive: true, confirmationToken: null });
+
+      return res.json({ message: "Email confirmed successfully. Your account is now active." });
+    }
+
+    // FS flow
+    const store = await readUsersFS();
+    const userIndex = store.users.findIndex((u) => u.confirmationToken === token);
+    if (userIndex === -1) {
+      return res.status(400).json({ error: "Invalid or expired confirmation token" });
+    }
+
+    const user = store.users[userIndex];
+    // Check if token is expired (24 hours)
+    const createdAt = new Date(user.createdAt);
+    const now = new Date();
+    const hoursDiff = (now - createdAt) / (1000 * 60 * 60);
+    if (hoursDiff > 24) {
+      return res.status(400).json({ error: "Confirmation token has expired. Please register again." });
+    }
+
+    // Update user as active and remove confirmation token
+    user.isActive = true;
+    delete user.confirmationToken;
+    await writeUsersFS(store);
+
+    return res.json({ message: "Email confirmed successfully. Your account is now active." });
+  } catch (err) {
+    console.error("Confirm email error:", err);
     return res.status(500).json({ error: "Internal server error" });
   }
 });

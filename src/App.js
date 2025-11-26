@@ -13,6 +13,7 @@ import ReadMe from "./pages/ReadMe";
 import LandingPage from "./pages/LandingPage";
 import BrowsePage from "./pages/BrowsePage";
 import AboutUs from "./pages/AboutUs";
+import EmailConfirmation from "./pages/EmailConfirmation";
 import { LandingPageCardsProvider } from "./contexts/LandingPageCardsContext";
 
 function App() {
@@ -187,6 +188,20 @@ function App() {
                 <div id="content-wrapper" className="d-flex flex-column">
                   <div id="content">
                     <RegisterUser />
+                  </div>
+                </div>
+              </div>
+            </Layout>
+          }
+        />
+        <Route
+          path="/email-confirmation"
+          element={
+            <Layout>
+              <div id="wrapper">
+                <div id="content-wrapper" className="d-flex flex-column">
+                  <div id="content">
+                    <EmailConfirmation />
                   </div>
                 </div>
               </div>

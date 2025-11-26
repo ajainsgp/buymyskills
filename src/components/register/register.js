@@ -178,27 +178,15 @@ function RegisterUser() {
       }
 
       const data = await res.json();
-      // Optionally persist currentUser for later use
+      // Store user data temporarily for email confirmation page
       try {
-        localStorage.setItem("currentUser", JSON.stringify(data.user));
+        localStorage.setItem("pendingUser", JSON.stringify(data.user));
       } catch {
         // ignore storage errors
       }
-      if (typeof window !== "undefined" && window.dispatchEvent) {
-        window.dispatchEvent(new Event("auth-changed"));
-      }
-      if (photoDataUrl) {
-        try {
-          await fetch(`${API_BASE}/api/users/${data.user.id}/photo`, {
-            method: "POST",
-            headers: { "Content-Type": "application/json" },
-            body: JSON.stringify({ base64: photoDataUrl }),
-          });
-        } catch (e) {
-          // ignore upload errors
-        }
-      }
-      navigate("/home");
+
+      // Show success message and navigate to confirmation page
+      navigate("/email-confirmation");
     } catch (err) {
       setError(err.message || "Something went wrong");
     } finally {
