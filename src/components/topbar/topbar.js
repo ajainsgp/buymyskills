@@ -94,7 +94,7 @@ function Topbar() {
               </a>
             </li>
             <li className="nav-item">
-              <a className="nav-link text-dark" href="#how-it-works">
+              <a className="nav-link text-dark" href="/how-it-works">
                 How it Works
               </a>
             </li>

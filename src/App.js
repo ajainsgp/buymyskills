@@ -10,6 +10,7 @@ import AdminCategories from "./pages/AdminCategories";
 import AdminCountries from "./pages/AdminCountries";
 import AdminLandingPageCards from "./pages/AdminLandingPageCards";
 import ReadMe from "./pages/ReadMe";
+import HowItWorks from "./pages/HowItWorks";
 import LandingPage from "./pages/LandingPage";
 import BrowsePage from "./pages/BrowsePage";
 import AboutUs from "./pages/AboutUs";
@@ -271,6 +272,20 @@ function App() {
                 <div id="content-wrapper" className="d-flex flex-column">
                   <div id="content">
                     <AdminLandingPageCards />
+                  </div>
+                </div>
+              </div>
+            </Layout>
+          }
+        />
+        <Route
+          path="/how-it-works"
+          element={
+            <Layout>
+              <div id="wrapper">
+                <div id="content-wrapper" className="d-flex flex-column">
+                  <div id="content">
+                    <HowItWorks />
                   </div>
                 </div>
               </div>
