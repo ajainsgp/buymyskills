@@ -1,0 +1,140 @@
+/* Feedback Page Styles */
+
+.feedback-container {
+  padding: 2rem 0;
+}
+
+.feedback-header {
+  background: linear-gradient(135deg, #007bff 0%, #6610f2 100%);
+  color: white;
+  padding: 4rem 2rem;
+  text-align: center;
+  margin-bottom: 2rem;
+}
+
+.feedback-timeline {
+  position: relative;
+  padding-left: 30px;
+}
+
+.feedback-timeline::before {
+  content: "";
+  position: absolute;
+  left: 15px;
+  top: 0;
+  bottom: 0;
+  width: 2px;
+  background: #e9ecef;
+}
+
+.feedback-timeline-item {
+  position: relative;
+  margin-bottom: 30px;
+}
+
+.feedback-timeline-marker {
+  position: absolute;
+  left: -23px;
+  top: 10px;
+  width: 16px;
+  height: 16px;
+  border-radius: 50%;
+  border: 3px solid #fff;
+  z-index: 1;
+}
+
+.feedback-timeline-content {
+  background: #fff;
+  border-radius: 8px;
+}
+
+.feedback-card {
+  margin-bottom: 1rem;
+}
+
+.feedback-card .card-header {
+  background-color: #f8f9fa;
+  border-bottom: 1px solid #dee2e6;
+}
+
+.feedback-response-card .card-header {
+  background-color: #d4edda;
+  color: #155724;
+  border-bottom: 1px solid #c3e6cb;
+}
+
+.feedback-pending-card {
+  border: 1px solid #ffc107;
+}
+
+.feedback-pending-card .card-body {
+  text-align: center;
+  color: #856404;
+  background-color: #fff3cd;
+}
+
+.feedback-form-card {
+  margin-bottom: 2rem;
+}
+
+.feedback-form-card .card-header {
+  background-color: #007bff;
+  color: white;
+}
+
+.feedback-history-card .card-header {
+  background-color: #17a2b8;
+  color: white;
+}
+
+.feedback-empty-state {
+  text-align: center;
+  padding: 3rem 1rem;
+}
+
+.feedback-empty-state .fa-inbox {
+  font-size: 3rem;
+  color: #6c757d;
+  margin-bottom: 1rem;
+}
+
+.feedback-empty-state h5 {
+  color: #6c757d;
+  margin-bottom: 0.5rem;
+}
+
+.feedback-empty-state p {
+  color: #6c757d;
+}
+
+.feedback-alert {
+  margin-bottom: 1.5rem;
+}
+
+.feedback-spinner {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  min-height: 200px;
+}
+
+/* Responsive adjustments */
+@media (max-width: 768px) {
+  .feedback-container {
+    padding: 1rem 0;
+  }
+
+  .feedback-timeline {
+    padding-left: 20px;
+  }
+
+  .feedback-timeline::before {
+    left: 10px;
+  }
+
+  .feedback-timeline-marker {
+    left: -18px;
+    width: 12px;
+    height: 12px;
+  }
+}
