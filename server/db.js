@@ -272,6 +272,9 @@ async function initSchema() {
       if (!names.has("role_type")) {
         await conn.query("ALTER TABLE users ADD COLUMN role_type VARCHAR(64) NULL");
       }
+      if (!names.has("country_code")) {
+        await conn.query("ALTER TABLE users ADD COLUMN country_code VARCHAR(10) NULL");
+      }
       if (!names.has("show_in_dashboard")) {
         await conn.query("ALTER TABLE users ADD COLUMN show_in_dashboard TINYINT(1) NOT NULL DEFAULT 0");
       }
@@ -324,10 +327,10 @@ async function createUser(u) {
   await pool.execute(
     `INSERT INTO users (
       id, name, first_name, last_name, nick_name, gender,
-      mobile, email_id, secondary_email, password_hash,
+      country_code, mobile, email_id, secondary_email, password_hash,
       summary, work_preference, traveling, availability, created_at,
       role_type, category, show_in_dashboard, show_photo
-    ) VALUES (?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?)`,
+    ) VALUES (?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?)`,
     [
       u.id,
       u.name || null,
@@ -335,6 +338,7 @@ async function createUser(u) {
       u.lastName || null,
       u.nickName || null,
       u.gender || null,
+      u.countryCode || null,
       u.mobile || null,
       u.emailId,
       u.secondaryEmail || null,
@@ -364,6 +368,7 @@ async function updateUserFields(id, patch) {
     lastName: "last_name",
     nickName: "nick_name",
     gender: "gender",
+    countryCode: "country_code",
     mobile: "mobile",
     secondaryEmail: "secondary_email",
     summary: "summary",
