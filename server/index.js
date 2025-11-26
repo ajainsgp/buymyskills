@@ -1601,6 +1601,119 @@ app.get("/api/users/:id/photo", async (req, res) => {
   }
 });
 
+/**
+ * Feedback endpoints
+ * - GET /api/feedback - get current user's feedback
+ * - POST /api/feedback - submit new feedback
+ * - GET /api/admin/feedback - get all feedback (admin only)
+ * - PUT /api/admin/feedback/:id - respond to feedback (admin only)
+ */
+
+// Get user's own feedback
+app.get("/api/feedback", async (req, res) => {
+  try {
+    // Get current user from session/localStorage or from a token (simplified for now)
+    // In a real app, you'd use JWT or session middleware
+    let currentUser = null;
+    try {
+      const s = (req.headers['x-current-user'] || "").toString().trim();
+      if (s) currentUser = JSON.parse(s);
+    } catch {
+      // ignore
+    }
+
+    if (!currentUser || !currentUser.id) {
+      return res.status(401).json({ error: "Authentication required" });
+    }
+
+    const feedback = await db.getUserFeedback(currentUser.id);
+    return res.json({ feedback });
+  } catch (err) {
+    console.error("Get feedback error:", err);
+    return res.status(500).json({ error: "Internal server error" });
+  }
+});
+
+// Submit new feedback
+app.post("/api/feedback", async (req, res) => {
+  try {
+    const { query } = req.body || {};
+    if (!query || !String(query).trim()) {
+      return res.status(400).json({ error: "Query is required" });
+    }
+
+    // Get current user
+    let currentUser = null;
+    try {
+      const s = (req.headers['x-current-user'] || "").toString().trim();
+      if (s) currentUser = JSON.parse(s);
+    } catch {
+      // ignore
+    }
+
+    if (!currentUser || !currentUser.id) {
+      return res.status(401).json({ error: "Authentication required" });
+    }
+
+    const feedbackId = await db.createFeedback(currentUser.id, String(query).trim());
+    return res.status(201).json({
+      feedbackId,
+      message: "Feedback submitted successfully. We'll respond to your query soon."
+    });
+  } catch (err) {
+    console.error("Create feedback error:", err);
+    return res.status(500).json({ error: "Internal server error" });
+  }
+});
+
+// Admin: Get all feedback
+app.get("/api/admin/feedback", async (req, res) => {
+  try {
+    // Simple admin check - in real app use proper authentication
+    const isAdmin = req.headers['x-admin'] === 'true';
+    if (!isAdmin) {
+      return res.status(403).json({ error: "Admin access required" });
+    }
+
+    const feedback = await db.getAllFeedback();
+    return res.json({ feedback });
+  } catch (err) {
+    console.error("Get all feedback error:", err);
+    return res.status(500).json({ error: "Internal server error" });
+  }
+});
+
+// Admin: Respond to feedback
+app.put("/api/admin/feedback/:id", async (req, res) => {
+  try {
+    const { id } = req.params || {};
+    const { response } = req.body || {};
+
+    if (!response || !String(response).trim()) {
+      return res.status(400).json({ error: "Response is required" });
+    }
+
+    // Simple admin check
+    const isAdmin = req.headers['x-admin'] === 'true';
+    if (!isAdmin) {
+      return res.status(403).json({ error: "Admin access required" });
+    }
+
+    await db.respondToFeedback(id, String(response).trim());
+
+    // TODO: Send email notification to user
+    // const feedback = await db.getFeedbackById(id);
+    // if (feedback) {
+    //   await sendEmailNotification(feedback.userEmail, feedback.response);
+    // }
+
+    return res.json({ message: "Response sent successfully" });
+  } catch (err) {
+    console.error("Respond to feedback error:", err);
+    return res.status(500).json({ error: "Internal server error" });
+  }
+});
+
 app.get("/api/health", (_req, res) => {
   res.json({ ok: true, mode: USE_DB ? "mysql" : "fs" });
 });

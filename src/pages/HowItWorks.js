@@ -4,26 +4,21 @@ import { Link } from "react-router-dom";
 function HowItWorks() {
   return (
     <div>
-      {/* Hero Section - Full Width, No Margins */}
-      <div
-        style={{
-          padding: "4rem 2rem",
-          background: "linear-gradient(135deg, #667eea 0%, #764ba2 100%)",
-          color: "white",
-          width: "100vw",
-          marginLeft: "calc(-50vw + 50%)",
-        }}
+      {/* Hero Section - Same as About and Feedback pages */}
+      <section
+        className="hero-section bg-gradient-primary text-white py-5"
+        style={{ paddingLeft: "0px", paddingRight: "0px" }}
       >
-        <div className="container">
+        <div className="about-us-fluid">
           <div className="text-center">
-            <h1 className="display-4 font-weight-bold mb-3">How It Works</h1>
-            <p className="lead" style={{ fontSize: "1.5rem", opacity: "0.9" }}>
+            <h1 className="display-4 font-weight-bold mb-4">How It Works</h1>
+            <p className="lead mb-4">
               Transform your expertise into opportunities. Join thousands of
               professionals connecting globally.
             </p>
           </div>
         </div>
-      </div>
+      </section>
 
       {/* Main Content */}
       <div style={{ padding: "2rem 0" }}>

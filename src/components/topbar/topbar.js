@@ -103,11 +103,13 @@ function Topbar() {
                 About
               </a>
             </li>
-            <li className="nav-item">
-              <a className="nav-link text-dark" href="#feedback">
-                Feedback
-              </a>
-            </li>
+            {currentUser && (
+              <li className="nav-item">
+                <a className="nav-link text-dark" href="/feedback">
+                  Support
+                </a>
+              </li>
+            )}
           </ul>
 
           {/* Search Form */}
@@ -159,6 +161,9 @@ function Topbar() {
                       </a>
                       <a className="dropdown-item" href="/admin/landing-page-cards" onClick={() => setDropdownOpen(false)}>
                         Manage Landing Page Cards
+                      </a>
+                      <a className="dropdown-item" href="/admin/feedback" onClick={() => setDropdownOpen(false)}>
+                        Manage Feedback
                       </a>
                       <a className="dropdown-item" href="/readme" onClick={() => setDropdownOpen(false)}>
                         Read Me
