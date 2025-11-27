@@ -13,6 +13,7 @@ import ReadMe from "./pages/ReadMe";
 import HowItWorks from "./pages/HowItWorks";
 import Feedback from "./pages/Feedback";
 import AdminFeedback from "./pages/AdminFeedback";
+import MyEngagedList from "./pages/MyEngagedList";
 import LandingPage from "./pages/LandingPage";
 import BrowsePage from "./pages/BrowsePage";
 import AboutUs from "./pages/AboutUs";
@@ -302,6 +303,20 @@ function App() {
                 <div id="content-wrapper" className="d-flex flex-column">
                   <div id="content">
                     <Feedback />
+                  </div>
+                </div>
+              </div>
+            </Layout>
+          }
+        />
+        <Route
+          path="/my-engaged-list"
+          element={
+            <Layout>
+              <div id="wrapper">
+                <div id="content-wrapper" className="d-flex flex-column">
+                  <div id="content">
+                    <MyEngagedList />
                   </div>
                 </div>
               </div>

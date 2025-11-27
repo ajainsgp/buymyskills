@@ -104,11 +104,18 @@ function Topbar() {
               </a>
             </li>
             {currentUser && (
-              <li className="nav-item">
-                <a className="nav-link text-dark" href="/feedback">
-                  Support
-                </a>
-              </li>
+              <>
+                <li className="nav-item">
+                  <a className="nav-link text-dark" href="/feedback">
+                    Support
+                  </a>
+                </li>
+                <li className="nav-item">
+                  <a className="nav-link text-dark" href="/my-engaged-list">
+                    My Engaged List
+                  </a>
+                </li>
+              </>
             )}
           </ul>
 

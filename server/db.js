@@ -116,6 +116,22 @@ async function initSchema() {
       CONSTRAINT fk_feedback_user FOREIGN KEY (user_id) REFERENCES users(id) ON DELETE CASCADE
     ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;`);
 
+    await conn.query(`CREATE TABLE IF NOT EXISTS buyer_engaged_list (
+      id                BIGINT AUTO_INCREMENT PRIMARY KEY,
+      buyer_user_id     VARCHAR(64) NOT NULL,
+      seller_user_id    VARCHAR(64) NOT NULL,
+      date_skills_used  DATETIME NOT NULL,
+      rating            TINYINT,
+      rating_date       DATETIME,
+      created_at        DATETIME NOT NULL,
+      INDEX idx_buyer_engaged_buyer (buyer_user_id),
+      INDEX idx_buyer_engaged_seller (seller_user_id),
+      INDEX idx_buyer_engaged_rating (rating),
+      CONSTRAINT fk_buyer_engaged_buyer FOREIGN KEY (buyer_user_id) REFERENCES users(id) ON DELETE CASCADE,
+      CONSTRAINT fk_buyer_engaged_seller FOREIGN KEY (seller_user_id) REFERENCES users(id) ON DELETE CASCADE,
+      CONSTRAINT chk_rating_range CHECK (rating >= 1 AND rating <= 5)
+    ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;`);
+
     await conn.query(`CREATE TABLE IF NOT EXISTS categories (
       id INT AUTO_INCREMENT PRIMARY KEY,
       name VARCHAR(100) NOT NULL UNIQUE,
@@ -823,6 +839,60 @@ async function respondToFeedback(feedbackId, response) {
   );
 }
 
+/* ========== BUYER ENGAGED LIST ========== */
+
+async function createBuyerEngaged(buyerUserId, sellerUserId) {
+  const now = new Date();
+  const [result] = await pool.execute(
+    `INSERT INTO buyer_engaged_list (buyer_user_id, seller_user_id, date_skills_used, created_at) VALUES (?, ?, ?, ?)`,
+    [buyerUserId, sellerUserId, now, now],
+  );
+  return result.insertId;
+}
+
+async function getBuyerEngagedList(buyerUserId) {
+  const [rows] = await pool.execute(
+    `SELECT bel.id, bel.date_skills_used, bel.rating, bel.rating_date,
+            u.id as seller_id, u.first_name, u.last_name, u.nick_name, u.category
+     FROM buyer_engaged_list bel
+     JOIN users u ON bel.seller_user_id = u.id
+     WHERE bel.buyer_user_id = ?
+     ORDER BY bel.date_skills_used DESC`,
+    [buyerUserId],
+  );
+  return rows.map((r) => ({
+    id: r.id,
+    sellerId: r.seller_id,
+    sellerName: [r.first_name, r.last_name].filter(Boolean).join(" ").trim() || r.nick_name,
+    sellerCategory: r.category,
+    dateSkillsUsed: r.date_skills_used instanceof Date ? r.date_skills_used.toISOString() : r.date_skills_used,
+    rating: r.rating,
+    ratingDate: r.rating_date instanceof Date ? r.rating_date.toISOString() : r.rating_date,
+  }));
+}
+
+async function updateEngagedRating(engagedId, rating) {
+  const now = new Date();
+  await pool.execute(
+    `UPDATE buyer_engaged_list SET rating = ?, rating_date = ? WHERE id = ?`,
+    [rating, now, engagedId],
+  );
+}
+
+async function getUserAverageRating(userId) {
+  const [rows] = await pool.execute(
+    `SELECT AVG(rating) as average_rating, COUNT(*) as total_ratings
+     FROM buyer_engaged_list
+     WHERE seller_user_id = ? AND rating IS NOT NULL`,
+    [userId],
+  );
+  const result = rows[0];
+  return {
+    averageRating: result.average_rating ? parseFloat(result.average_rating.toFixed(1)) : null,
+    totalRatings: result.total_ratings || 0,
+  };
+}
+
 
 
 module.exports = {
@@ -866,4 +936,9 @@ module.exports = {
   getUserFeedback,
   getAllFeedback,
   respondToFeedback,
+  // buyer engaged list
+  createBuyerEngaged,
+  getBuyerEngagedList,
+  updateEngagedRating,
+  getUserAverageRating,
 };
