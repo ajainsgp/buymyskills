@@ -1609,6 +1609,113 @@ app.get("/api/users/:id/photo", async (req, res) => {
  * - PUT /api/admin/feedback/:id - respond to feedback (admin only)
  */
 
+/**
+ * Buyer Engaged List endpoints
+ * - POST /api/buyer-engaged - mark user as engaged with seller
+ * - GET /api/buyer-engaged - get current user's engaged list
+ * - PUT /api/buyer-engaged/:id/rating - update rating for engaged seller
+ * - GET /api/users/:id/rating - get user's average rating
+ */
+
+// Mark user as engaged with seller
+app.post("/api/buyer-engaged", async (req, res) => {
+  try {
+    const { sellerUserId } = req.body || {};
+    if (!sellerUserId) {
+      return res.status(400).json({ error: "sellerUserId is required" });
+    }
+
+    // Get current user
+    let currentUser = null;
+    try {
+      const s = (req.headers['x-current-user'] || "").toString().trim();
+      if (s) currentUser = JSON.parse(s);
+    } catch {
+      // ignore
+    }
+
+    if (!currentUser || !currentUser.id) {
+      return res.status(401).json({ error: "Authentication required" });
+    }
+
+    const engagedId = await db.createBuyerEngaged(currentUser.id, sellerUserId);
+    return res.status(201).json({
+      engagedId,
+      message: "Successfully marked as engaged with this seller."
+    });
+  } catch (err) {
+    console.error("Create buyer engaged error:", err);
+    return res.status(500).json({ error: "Internal server error" });
+  }
+});
+
+// Get current user's engaged list
+app.get("/api/buyer-engaged", async (req, res) => {
+  try {
+    // Get current user
+    let currentUser = null;
+    try {
+      const s = (req.headers['x-current-user'] || "").toString().trim();
+      if (s) currentUser = JSON.parse(s);
+    } catch {
+      // ignore
+    }
+
+    if (!currentUser || !currentUser.id) {
+      return res.status(401).json({ error: "Authentication required" });
+    }
+
+    const engagedList = await db.getBuyerEngagedList(currentUser.id);
+    return res.json({ engagedList });
+  } catch (err) {
+    console.error("Get buyer engaged list error:", err);
+    return res.status(500).json({ error: "Internal server error" });
+  }
+});
+
+// Update rating for engaged seller
+app.put("/api/buyer-engaged/:id/rating", async (req, res) => {
+  try {
+    const { id } = req.params || {};
+    const { rating } = req.body || {};
+
+    if (!rating || rating < 1 || rating > 5) {
+      return res.status(400).json({ error: "Rating must be between 1 and 5" });
+    }
+
+    // Get current user
+    let currentUser = null;
+    try {
+      const s = (req.headers['x-current-user'] || "").toString().trim();
+      if (s) currentUser = JSON.parse(s);
+    } catch {
+      // ignore
+    }
+
+    if (!currentUser || !currentUser.id) {
+      return res.status(401).json({ error: "Authentication required" });
+    }
+
+    await db.updateEngagedRating(id, rating);
+    return res.json({ message: "Rating updated successfully" });
+  } catch (err) {
+    console.error("Update engaged rating error:", err);
+    return res.status(500).json({ error: "Internal server error" });
+  }
+});
+
+// Get user's average rating
+app.get("/api/users/:id/rating", async (req, res) => {
+  try {
+    const { id } = req.params || {};
+    const rating = await db.getUserAverageRating(id);
+    return res.json({ rating });
+  } catch (err) {
+    console.error("Get user rating error:", err);
+    return res.status(500).json({ error: "Internal server error" });
+  }
+});
+
 // Get user's own feedback
 app.get("/api/feedback", async (req, res) => {
   try {
