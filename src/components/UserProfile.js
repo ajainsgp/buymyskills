@@ -8,6 +8,10 @@ function UserProfile({ userProfiles, showSensitive = false }) {
   const [ratings, setRatings] = useState({});
   const [showMobile, setShowMobile] = useState({});
   const [currentUser, setCurrentUser] = useState(null);
+  const [showMessageForm, setShowMessageForm] = useState(null);
+  const [messageSubject, setMessageSubject] = useState("");
+  const [messageContent, setMessageContent] = useState("");
+  const [sendingMessage, setSendingMessage] = useState(false);
   // Load current user
   useEffect(() => {
     const getCurrentUser = () => {
@@ -135,6 +139,52 @@ function UserProfile({ userProfiles, showSensitive = false }) {
     } catch (error) {
       console.error("Engagement error:", error);
       alert("Failed to update engagement status");
+    }
+  };
+
+  const handleSendMessage = async (receiverId) => {
+    if (!currentUser) return;
+
+    try {
+      setSendingMessage(true);
+      const response = await fetch(`${API_BASE}/api/messages`, {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+          "x-current-user": JSON.stringify(currentUser),
+        },
+        body: JSON.stringify({
+          receiverId,
+          subject: messageSubject.trim(),
+          content: messageContent.trim(),
+        }),
+      });
+
+      if (response.ok) {
+        alert("Message sent successfully!");
+        setShowMessageForm(null);
+        setMessageSubject("");
+        setMessageContent("");
+      } else {
+        alert("Failed to send message");
+      }
+    } catch (error) {
+      console.error("Send message error:", error);
+      alert("Failed to send message");
+    } finally {
+      setSendingMessage(false);
+    }
+  };
+
+  const getGenderPronoun = (gender) => {
+    switch (gender) {
+      case "M":
+        return "him";
+      case "F":
+        return "her";
+      case "O":
+      default:
+        return "him/her";
     }
   };
 
@@ -273,10 +323,105 @@ function UserProfile({ userProfiles, showSensitive = false }) {
                 "Login to view"
               )}
             </p>
+            {showSensitive && profile.facebookUrl && (
+              <p>
+                Facebook:{" "}
+                <a
+                  href={profile.facebookUrl}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  style={{ color: "#007bff" }}
+                  onClick={(e) => e.stopPropagation()}
+                >
+                  {profile.facebookUrl}
+                </a>
+              </p>
+            )}
+            {showSensitive && profile.linkedinUrl && (
+              <p>
+                LinkedIn:{" "}
+                <a
+                  href={profile.linkedinUrl}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  style={{ color: "#007bff" }}
+                  onClick={(e) => e.stopPropagation()}
+                >
+                  {profile.linkedinUrl}
+                </a>
+              </p>
+            )}
             {showSensitive && currentUser && currentUser.id !== profile.id && (
-              <div className="mt-3 d-flex align-items-center">
+              <div className="mt-2">
+                <button
+                  className="btn btn-primary btn-sm mr-2"
+                  onClick={(e) => {
+                    e.stopPropagation();
+                    setShowMessageForm(
+                      showMessageForm === profile.id ? null : profile.id,
+                    );
+                  }}
+                  style={{ fontSize: "12px", padding: "4px 8px" }}
+                >
+                  <i className="fa fa-envelope mr-1"></i>
+                  Send Message
+                </button>
+              </div>
+            )}
+            {showMessageForm === profile.id && (
+              <div className="mt-2" onClick={(e) => e.stopPropagation()}>
+                <div
+                  className="border rounded p-2"
+                  style={{ backgroundColor: "#f8f9fa" }}
+                >
+                  <div className="form-group mb-2">
+                    <input
+                      type="text"
+                      className="form-control form-control-sm"
+                      placeholder="Subject"
+                      value={messageSubject}
+                      onChange={(e) => setMessageSubject(e.target.value)}
+                    />
+                  </div>
+                  <div className="form-group mb-2">
+                    <textarea
+                      className="form-control form-control-sm"
+                      rows="3"
+                      placeholder="Your message..."
+                      value={messageContent}
+                      onChange={(e) => setMessageContent(e.target.value)}
+                    ></textarea>
+                  </div>
+                  <div className="text-right">
+                    <button
+                      className="btn btn-secondary btn-sm mr-1"
+                      onClick={() => {
+                        setShowMessageForm(null);
+                        setMessageSubject("");
+                        setMessageContent("");
+                      }}
+                    >
+                      Cancel
+                    </button>
+                    <button
+                      className="btn btn-primary btn-sm"
+                      onClick={() => handleSendMessage(profile.id)}
+                      disabled={
+                        !messageSubject.trim() ||
+                        !messageContent.trim() ||
+                        sendingMessage
+                      }
+                    >
+                      {sendingMessage ? "Sending..." : "Send"}
+                    </button>
+                  </div>
+                </div>
+              </div>
+            )}
+            {showSensitive && currentUser && currentUser.id !== profile.id && (
+              <div className="mt-2 d-flex align-items-center">
                 <strong style={{ fontSize: "14px" }}>
-                  Did you used the skills?
+                  Did you hire {getGenderPronoun(profile.gender)}?
                 </strong>
                 <div className="btn-group btn-group-sm ml-2">
                   <button

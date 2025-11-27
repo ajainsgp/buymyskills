@@ -14,6 +14,7 @@ import HowItWorks from "./pages/HowItWorks";
 import Feedback from "./pages/Feedback";
 import AdminFeedback from "./pages/AdminFeedback";
 import AdminRegions from "./pages/AdminRegions";
+import Messages from "./pages/Messages";
 import MyEngagedList from "./pages/MyEngagedList";
 import LandingPage from "./pages/LandingPage";
 import BrowsePage from "./pages/BrowsePage";
@@ -304,6 +305,20 @@ function App() {
                 <div id="content-wrapper" className="d-flex flex-column">
                   <div id="content">
                     <AdminRegions />
+                  </div>
+                </div>
+              </div>
+            </Layout>
+          }
+        />
+        <Route
+          path="/messages"
+          element={
+            <Layout>
+              <div id="wrapper">
+                <div id="content-wrapper" className="d-flex flex-column">
+                  <div id="content">
+                    <Messages />
                   </div>
                 </div>
               </div>
