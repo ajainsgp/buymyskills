@@ -301,8 +301,10 @@ function UserProfile({ userProfiles, showSensitive = false }) {
             <h5 className="card-title">Contact Details</h5>
           </div>
           <div className="card-body body-back">
-            <p>Email: {showSensitive ? profile.emailId : "Login to view"}</p>
-            <p>
+            <p style={{ marginBottom: 0 }}>
+              Email: {showSensitive ? profile.emailId : "Login to view"}
+            </p>
+            <p style={{ marginBottom: 0 }}>
               Mobile:{" "}
               {showSensitive ? (
                 showMobile[profile.id] ? (
@@ -324,7 +326,7 @@ function UserProfile({ userProfiles, showSensitive = false }) {
               )}
             </p>
             {showSensitive && profile.facebookUrl && (
-              <p>
+              <p style={{ marginBottom: 0 }}>
                 Facebook:{" "}
                 <a
                   href={profile.facebookUrl}
@@ -338,7 +340,7 @@ function UserProfile({ userProfiles, showSensitive = false }) {
               </p>
             )}
             {showSensitive && profile.linkedinUrl && (
-              <p>
+              <p style={{ marginBottom: 0 }}>
                 LinkedIn:{" "}
                 <a
                   href={profile.linkedinUrl}
@@ -366,6 +368,27 @@ function UserProfile({ userProfiles, showSensitive = false }) {
                   <i className="fa fa-envelope mr-1"></i>
                   Send Message
                 </button>
+              </div>
+            )}
+            {showSensitive && currentUser && currentUser.id !== profile.id && (
+              <div className="mt-2 d-flex align-items-center">
+                <strong style={{ fontSize: "14px" }}>
+                  Did you hire {getGenderPronoun(profile.gender)}?
+                </strong>
+                <div className="btn-group btn-group-sm ml-2">
+                  <button
+                    className="btn btn-success btn-sm"
+                    onClick={(e) => handleEngagement(profile.id, true, e)}
+                  >
+                    Yes
+                  </button>
+                  <button
+                    className="btn btn-secondary btn-sm"
+                    onClick={(e) => handleEngagement(profile.id, false, e)}
+                  >
+                    No
+                  </button>
+                </div>
               </div>
             )}
             {showMessageForm === profile.id && (
@@ -415,27 +438,6 @@ function UserProfile({ userProfiles, showSensitive = false }) {
                       {sendingMessage ? "Sending..." : "Send"}
                     </button>
                   </div>
-                </div>
-              </div>
-            )}
-            {showSensitive && currentUser && currentUser.id !== profile.id && (
-              <div className="mt-2 d-flex align-items-center">
-                <strong style={{ fontSize: "14px" }}>
-                  Did you hire {getGenderPronoun(profile.gender)}?
-                </strong>
-                <div className="btn-group btn-group-sm ml-2">
-                  <button
-                    className="btn btn-success btn-sm"
-                    onClick={(e) => handleEngagement(profile.id, true, e)}
-                  >
-                    Yes
-                  </button>
-                  <button
-                    className="btn btn-secondary btn-sm"
-                    onClick={(e) => handleEngagement(profile.id, false, e)}
-                  >
-                    No
-                  </button>
                 </div>
               </div>
             )}

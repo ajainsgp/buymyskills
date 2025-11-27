@@ -88,6 +88,7 @@ function Profile() {
           nickName: cu.nickName || "",
           emailId: cu.emailId || "",
           secondaryEmail: cu.secondaryEmail || "",
+          countryCode: cu.countryCode || "+1",
           mobile: cu.mobile || "",
           category: cu.category || "",
           summary: cu.summary || "",
@@ -117,6 +118,10 @@ function Profile() {
             postcode: cu.address?.postcode || "",
             country: cu.address?.country || "",
           },
+          isWhatsappAvailable: cu.isWhatsappAvailable || false,
+          whatsappNumber: cu.whatsappNumber || "",
+          facebookUrl: cu.facebookUrl || "",
+          linkedinUrl: cu.linkedinUrl || "",
         }));
 
         // Refresh from backend (source of truth)
@@ -160,6 +165,10 @@ function Profile() {
               postcode: u.address?.postcode || "",
               country: u.address?.country || "",
             },
+            isWhatsappAvailable: u.isWhatsappAvailable || false,
+            whatsappNumber: u.whatsappNumber || "",
+            facebookUrl: u.facebookUrl || "",
+            linkedinUrl: u.linkedinUrl || "",
           });
         }
       } catch (e) {
@@ -296,6 +305,10 @@ function Profile() {
         secondaryEmail: form.secondaryEmail,
         countryCode: form.countryCode,
         mobile: form.mobile,
+        isWhatsappAvailable: form.isWhatsappAvailable,
+        whatsappNumber: form.whatsappNumber,
+        facebookUrl: form.facebookUrl,
+        linkedinUrl: form.linkedinUrl,
         category: form.category,
         summary: form.summary,
         workPreference: form.workPreference,
