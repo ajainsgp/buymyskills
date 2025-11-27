@@ -73,6 +73,7 @@ async function migrateUsers() {
           gender: newUser.gender,
           mobile: newUser.mobile,
           secondaryEmail: newUser.secondaryEmail,
+          category: newUser.category,
           summary: newUser.summary,
           workPreference: newUser.workPreference,
           traveling: newUser.traveling,

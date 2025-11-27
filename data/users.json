@@ -20,7 +20,6 @@
       "countryCode": "+353",
       "isWhatsappAvailable": true,
       "whatsappNumber": "",
-      "facebook_url": "https://facebook.com/abhi15",
       "linkedinUrl": "https://linkedin.com/abhishek15",
       "facebookUrl": "https://facebook.com/abhi"
     },
@@ -35,6 +34,7 @@
       "emailId": "amitkgsg@hotmail.com",
       "secondaryEmail": "amitkgsg@hotmail.com",
       "passwordHash": "scrypt$c3a220ce9c441320141ef5da8bf52126$2832e1a6df2e5b6f347c426104f40d790919ebfb18cd270f3abedc64f806bbfb43a2fe467037ead42d4f485001d746f9c39ae1580e110285e1ecc95270a53ecd",
+      "category": "Software Engineer",
       "summary": "Project Management, Data Migration, Data Governance",
       "workPreference": "Remote",
       "traveling": "No Traveling",
