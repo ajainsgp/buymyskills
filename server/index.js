@@ -1482,12 +1482,33 @@ app.post("/api/users/:id/photo", async (req, res) => {
 /**
  * GET /api/users/public?category=Software%20Engineer
  * Returns only users who consented to be shown in the dashboard (and optional category filter)
+ * REGION-RESTRICTED: Users can only see sellers from their own region
  */
 app.get("/api/users/public", async (req, res) => {
   try {
     const category = (req.query.category || "").toString().trim();
+
+    // Get current user to determine their region
+    let currentUser = null;
+    try {
+      const s = (req.headers['x-current-user'] || "").toString().trim();
+      if (s) currentUser = JSON.parse(s);
+    } catch {
+      // ignore
+    }
+
+    if (!currentUser || !currentUser.id) {
+      return res.status(401).json({ error: "Authentication required" });
+    }
+
     if (USE_DB) {
-      const rows = await db.listPublicUsers(category || null);
+      // Get user's region first
+      const userRegion = await db.getUserRegion(currentUser.id);
+      if (!userRegion) {
+        return res.json({ users: [] }); // No region found, return empty
+      }
+
+      const rows = await db.listPublicUsersInRegion(userRegion.id, category || null);
       const users = rows.map((r) => {
         const u = mapDbUserRowToApiUser(r);
         const addr =
@@ -1510,10 +1531,11 @@ app.get("/api/users/public", async (req, res) => {
           photoPresent: !!r.photo_present,
         };
       });
-      return res.json({ users });
+      return res.json({ users, region: userRegion.name });
     }
 
-    // FS flow
+    // FS flow - For now, return all users (region filtering not implemented for FS mode)
+    // TODO: Implement region filtering for filesystem mode
     const store = await readUsersFS();
     const addrStore = await readAddressesFS();
     const photos = await readPhotosFS();
@@ -1542,7 +1564,7 @@ app.get("/api/users/public", async (req, res) => {
           photoPresent: hasPhoto,
         };
       });
-    return res.json({ users });
+    return res.json({ users, region: "All Regions (FS Mode)" });
   } catch (err) {
     console.error("Public users error:", err);
     return res.status(500).json({ error: "Internal server error" });
@@ -1616,6 +1638,205 @@ app.get("/api/users/:id/photo", async (req, res) => {
  * - PUT /api/buyer-engaged/:id/rating - update rating for engaged seller
  * - GET /api/users/:id/rating - get user's average rating
  */
+
+/**
+ * Region Management endpoints (Admin only)
+ * - GET /api/admin/regions - list all regions
+ * - POST /api/admin/regions - create new region
+ * - PUT /api/admin/regions/:id - update region
+ * - DELETE /api/admin/regions/:id - delete region
+ * - GET /api/admin/country-region-mappings - list country-region mappings
+ * - POST /api/admin/country-region-mappings - create mapping
+ * - PUT /api/admin/country-region-mappings/:id - update mapping
+ * - DELETE /api/admin/country-region-mappings/:id - delete mapping
+ * - GET /api/users/region - get current user's region
+ * - GET /api/users/public - get users filtered by region (modified)
+ */
+
+// Admin: Get all regions
+app.get("/api/admin/regions", async (req, res) => {
+  try {
+    // Simple admin check
+    const isAdmin = req.headers['x-admin'] === 'true';
+    if (!isAdmin) {
+      return res.status(403).json({ error: "Admin access required" });
+    }
+
+    const regions = await db.listRegions();
+    return res.json({ regions });
+  } catch (err) {
+    console.error("Get regions error:", err);
+    return res.status(500).json({ error: "Internal server error" });
+  }
+});
+
+// Admin: Create new region
+app.post("/api/admin/regions", async (req, res) => {
+  try {
+    // Simple admin check
+    const isAdmin = req.headers['x-admin'] === 'true';
+    if (!isAdmin) {
+      return res.status(403).json({ error: "Admin access required" });
+    }
+
+    const { name, description = '', enabled = true } = req.body || {};
+    if (!name || !String(name).trim()) {
+      return res.status(400).json({ error: "name is required" });
+    }
+
+    await db.createRegion({ name: String(name).trim(), description: String(description).trim(), enabled: !!enabled });
+    return res.status(201).json({ message: "Region created successfully" });
+  } catch (err) {
+    console.error("Create region error:", err);
+    return res.status(500).json({ error: "Internal server error" });
+  }
+});
+
+// Admin: Update region
+app.put("/api/admin/regions/:id", async (req, res) => {
+  try {
+    // Simple admin check
+    const isAdmin = req.headers['x-admin'] === 'true';
+    if (!isAdmin) {
+      return res.status(403).json({ error: "Admin access required" });
+    }
+
+    const { id } = req.params || {};
+    const patch = req.body || {};
+
+    await db.updateRegion(id, patch);
+    return res.json({ message: "Region updated successfully" });
+  } catch (err) {
+    console.error("Update region error:", err);
+    return res.status(500).json({ error: "Internal server error" });
+  }
+});
+
+// Admin: Delete region
+app.delete("/api/admin/regions/:id", async (req, res) => {
+  try {
+    // Simple admin check
+    const isAdmin = req.headers['x-admin'] === 'true';
+    if (!isAdmin) {
+      return res.status(403).json({ error: "Admin access required" });
+    }
+
+    const { id } = req.params || {};
+
+    await db.deleteRegion(id);
+    return res.json({ message: "Region deleted successfully" });
+  } catch (err) {
+    console.error("Delete region error:", err);
+    return res.status(500).json({ error: "Internal server error" });
+  }
+});
+
+// Admin: Get all country-region mappings
+app.get("/api/admin/country-region-mappings", async (req, res) => {
+  try {
+    // Simple admin check
+    const isAdmin = req.headers['x-admin'] === 'true';
+    if (!isAdmin) {
+      return res.status(403).json({ error: "Admin access required" });
+    }
+
+    const mappings = await db.listCountryRegionMappings();
+    return res.json({ mappings });
+  } catch (err) {
+    console.error("Get country-region mappings error:", err);
+    return res.status(500).json({ error: "Internal server error" });
+  }
+});
+
+// Admin: Create country-region mapping
+app.post("/api/admin/country-region-mappings", async (req, res) => {
+  try {
+    // Simple admin check
+    const isAdmin = req.headers['x-admin'] === 'true';
+    if (!isAdmin) {
+      return res.status(403).json({ error: "Admin access required" });
+    }
+
+    const { countryCode, countryName, regionId, enabled = true } = req.body || {};
+    if (!countryCode || !countryName || !regionId) {
+      return res.status(400).json({ error: "countryCode, countryName, and regionId are required" });
+    }
+
+    await db.createCountryRegionMapping({
+      countryCode: String(countryCode).toUpperCase(),
+      countryName: String(countryName).trim(),
+      regionId,
+      enabled: !!enabled
+    });
+    return res.status(201).json({ message: "Country-region mapping created successfully" });
+  } catch (err) {
+    console.error("Create country-region mapping error:", err);
+    return res.status(500).json({ error: "Internal server error" });
+  }
+});
+
+// Admin: Update country-region mapping
+app.put("/api/admin/country-region-mappings/:id", async (req, res) => {
+  try {
+    // Simple admin check
+    const isAdmin = req.headers['x-admin'] === 'true';
+    if (!isAdmin) {
+      return res.status(403).json({ error: "Admin access required" });
+    }
+
+    const { id } = req.params || {};
+    const patch = req.body || {};
+
+    await db.updateCountryRegionMapping(id, patch);
+    return res.json({ message: "Country-region mapping updated successfully" });
+  } catch (err) {
+    console.error("Update country-region mapping error:", err);
+    return res.status(500).json({ error: "Internal server error" });
+  }
+});
+
+// Admin: Delete country-region mapping
+app.delete("/api/admin/country-region-mappings/:id", async (req, res) => {
+  try {
+    // Simple admin check
+    const isAdmin = req.headers['x-admin'] === 'true';
+    if (!isAdmin) {
+      return res.status(403).json({ error: "Admin access required" });
+    }
+
+    const { id } = req.params || {};
+
+    await db.deleteCountryRegionMapping(id);
+    return res.json({ message: "Country-region mapping deleted successfully" });
+  } catch (err) {
+    console.error("Delete country-region mapping error:", err);
+    return res.status(500).json({ error: "Internal server error" });
+  }
+});
+
+// Get current user's region
+app.get("/api/users/region", async (req, res) => {
+  try {
+    // Get current user
+    let currentUser = null;
+    try {
+      const s = (req.headers['x-current-user'] || "").toString().trim();
+      if (s) currentUser = JSON.parse(s);
+    } catch {
+      // ignore
+    }
+
+    if (!currentUser || !currentUser.id) {
+      return res.status(401).json({ error: "Authentication required" });
+    }
+
+    const region = await db.getUserRegion(currentUser.id);
+    return res.json({ region });
+  } catch (err) {
+    console.error("Get user region error:", err);
+    return res.status(500).json({ error: "Internal server error" });
+  }
+});
 
 // Mark user as engaged with seller
 app.post("/api/buyer-engaged", async (req, res) => {

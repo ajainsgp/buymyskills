@@ -13,6 +13,7 @@ import ReadMe from "./pages/ReadMe";
 import HowItWorks from "./pages/HowItWorks";
 import Feedback from "./pages/Feedback";
 import AdminFeedback from "./pages/AdminFeedback";
+import AdminRegions from "./pages/AdminRegions";
 import MyEngagedList from "./pages/MyEngagedList";
 import LandingPage from "./pages/LandingPage";
 import BrowsePage from "./pages/BrowsePage";
@@ -289,6 +290,20 @@ function App() {
                 <div id="content-wrapper" className="d-flex flex-column">
                   <div id="content">
                     <AdminFeedback />
+                  </div>
+                </div>
+              </div>
+            </Layout>
+          }
+        />
+        <Route
+          path="/admin/regions"
+          element={
+            <Layout>
+              <div id="wrapper">
+                <div id="content-wrapper" className="d-flex flex-column">
+                  <div id="content">
+                    <AdminRegions />
                   </div>
                 </div>
               </div>

@@ -51,21 +51,25 @@ async function initSchema() {
   const conn = await pool.getConnection();
   try {
     await conn.query(`CREATE TABLE IF NOT EXISTS users (
-      id              VARCHAR(64) PRIMARY KEY,
-      name            VARCHAR(255),
-      first_name      VARCHAR(100),
-      last_name       VARCHAR(100),
-      nick_name       VARCHAR(100),
-      gender          VARCHAR(10),
-      mobile          VARCHAR(32),
-      email_id        VARCHAR(255) NOT NULL UNIQUE,
-      secondary_email VARCHAR(255),
-      password_hash   VARCHAR(255),
-      summary         TEXT,
-      work_preference VARCHAR(20),
-      traveling       VARCHAR(20),
-      availability    VARCHAR(20),
-      created_at      DATETIME NOT NULL,
+      id                      VARCHAR(64) PRIMARY KEY,
+      name                    VARCHAR(255),
+      first_name              VARCHAR(100),
+      last_name               VARCHAR(100),
+      nick_name               VARCHAR(100),
+      gender                  VARCHAR(10),
+      mobile                  VARCHAR(32),
+      is_whatsapp_available   TINYINT(1) NOT NULL DEFAULT 0,
+      whatsapp_number         VARCHAR(32),
+      email_id                VARCHAR(255) NOT NULL UNIQUE,
+      secondary_email         VARCHAR(255),
+      password_hash           VARCHAR(255),
+      summary                 TEXT,
+      work_preference         VARCHAR(20),
+      traveling               VARCHAR(20),
+      availability            VARCHAR(20),
+      facebook_url            VARCHAR(255),
+      linkedin_url            VARCHAR(255),
+      created_at              DATETIME NOT NULL,
       INDEX (email_id)
     ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;`);
 
@@ -158,6 +162,28 @@ async function initSchema() {
       enabled TINYINT(1) NOT NULL DEFAULT 1,
       created_at DATETIME NOT NULL,
       INDEX idx_section_name (section_name)
+    ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;`);
+
+    await conn.query(`CREATE TABLE IF NOT EXISTS regions (
+      id INT AUTO_INCREMENT PRIMARY KEY,
+      name VARCHAR(100) NOT NULL UNIQUE,
+      description VARCHAR(255),
+      enabled TINYINT(1) NOT NULL DEFAULT 1,
+      created_at DATETIME NOT NULL,
+      INDEX idx_region_enabled (enabled)
+    ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;`);
+
+    await conn.query(`CREATE TABLE IF NOT EXISTS country_region_mapping (
+      id INT AUTO_INCREMENT PRIMARY KEY,
+      country_code VARCHAR(3) NOT NULL,
+      country_name VARCHAR(100) NOT NULL,
+      region_id INT NOT NULL,
+      enabled TINYINT(1) NOT NULL DEFAULT 1,
+      created_at DATETIME NOT NULL,
+      UNIQUE KEY unique_country_region (country_code, region_id),
+      INDEX idx_mapping_region (region_id),
+      INDEX idx_mapping_country (country_code),
+      CONSTRAINT fk_country_region_mapping_region FOREIGN KEY (region_id) REFERENCES regions(id) ON DELETE CASCADE
     ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;`);
 
 
@@ -314,6 +340,56 @@ async function initSchema() {
       // Non-fatal: some MySQL versions/users may lack ALTER privileges in certain environments
       console.warn("users column ensure warning:", e.message);
     }
+
+    // Seed default regions and country mappings if empty
+    try {
+      // Seed regions
+      const [regionCntRows] = await conn.query("SELECT COUNT(*) AS c FROM regions");
+      const regionCount = regionCntRows && regionCntRows[0] ? Number(regionCntRows[0].c || 0) : 0;
+      if (regionCount === 0) {
+        const now = new Date();
+        const regions = [
+          { name: "India", description: "Indian subcontinent region" },
+          { name: "UK & Ireland", description: "United Kingdom and Ireland region" },
+          { name: "Singapore", description: "Singapore region" }
+        ];
+        for (let i = 0; i < regions.length; i++) {
+          await conn.query(
+            "INSERT INTO regions (name, description, enabled, created_at) VALUES (?,?,?,?)",
+            [regions[i].name, regions[i].description, 1, now]
+          );
+        }
+      }
+
+      // Seed country-region mappings
+      const [mappingCntRows] = await conn.query("SELECT COUNT(*) AS c FROM country_region_mapping");
+      const mappingCount = mappingCntRows && mappingCntRows[0] ? Number(mappingCntRows[0].c || 0) : 0;
+      if (mappingCount === 0) {
+        const now = new Date();
+        const mappings = [
+          // India region
+          { countryCode: "IN", countryName: "India", regionName: "India" },
+          // UK & Ireland region
+          { countryCode: "GB", countryName: "United Kingdom", regionName: "UK & Ireland" },
+          { countryCode: "IE", countryName: "Ireland", regionName: "UK & Ireland" },
+          // Singapore region
+          { countryCode: "SG", countryName: "Singapore", regionName: "Singapore" }
+        ];
+
+        for (let i = 0; i < mappings.length; i++) {
+          // Get region ID
+          const [regionRows] = await conn.query("SELECT id FROM regions WHERE name = ? LIMIT 1", [mappings[i].regionName]);
+          if (regionRows && regionRows[0]) {
+            await conn.query(
+              "INSERT INTO country_region_mapping (country_code, country_name, region_id, enabled, created_at) VALUES (?,?,?,?,?)",
+              [mappings[i].countryCode, mappings[i].countryName, regionRows[0].id, 1, now]
+            );
+          }
+        }
+      }
+    } catch (e) {
+      console.warn("regions and country mappings seed warning:", e.message);
+    }
   } finally {
     conn.release();
   }
@@ -356,10 +432,12 @@ async function createUser(u) {
   await pool.execute(
     `INSERT INTO users (
       id, name, first_name, last_name, nick_name, gender,
-      country_code, mobile, email_id, secondary_email, password_hash,
-      summary, work_preference, traveling, availability, created_at,
+      country_code, mobile, is_whatsapp_available, whatsapp_number,
+      email_id, secondary_email, password_hash,
+      summary, work_preference, traveling, availability,
+      facebook_url, linkedin_url, created_at,
       role_type, category, show_in_dashboard, show_photo
-    ) VALUES (?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?)`,
+    ) VALUES (?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?)`,
     [
       u.id,
       u.name || null,
@@ -369,6 +447,8 @@ async function createUser(u) {
       u.gender || null,
       u.countryCode || null,
       u.mobile || null,
+      u.isWhatsappAvailable ? 1 : 0,
+      u.whatsappNumber || null,
       u.emailId,
       u.secondaryEmail || null,
       u.passwordHash || null,
@@ -376,6 +456,8 @@ async function createUser(u) {
       u.workPreference || null,
       u.traveling || null,
       u.availability || null,
+      u.facebookUrl || null,
+      u.linkedinUrl || null,
       u.createdAt,
       u.roleType || "user",
       u.category || null,
@@ -893,6 +975,150 @@ async function getUserAverageRating(userId) {
   };
 }
 
+/* ========== REGIONS ========== */
+
+async function listRegions() {
+  const [rows] = await pool.execute(
+    `SELECT id, name, description, enabled, created_at FROM regions ORDER BY name`,
+  );
+  return rows.map((r) => ({
+    id: r.id,
+    name: r.name,
+    description: r.description,
+    enabled: r.enabled === 1,
+    createdAt: r.created_at instanceof Date ? r.created_at.toISOString() : r.created_at,
+  }));
+}
+
+async function createRegion({ name, description = '', enabled = true }) {
+  const now = new Date();
+  await pool.execute(
+    `INSERT INTO regions (name, description, enabled, created_at) VALUES (?,?,?,?)`,
+    [name, description, enabled ? 1 : 0, now],
+  );
+}
+
+async function updateRegion(id, patch) {
+  const sets = [];
+  const vals = [];
+  if (Object.prototype.hasOwnProperty.call(patch, "name")) {
+    sets.push("name = ?");
+    vals.push(patch.name);
+  }
+  if (Object.prototype.hasOwnProperty.call(patch, "description")) {
+    sets.push("description = ?");
+    vals.push(patch.description);
+  }
+  if (Object.prototype.hasOwnProperty.call(patch, "enabled")) {
+    sets.push("enabled = ?");
+    vals.push(patch.enabled ? 1 : 0);
+  }
+  if (!sets.length) return;
+  vals.push(id);
+  await pool.execute(`UPDATE regions SET ${sets.join(", ")} WHERE id = ?`, vals);
+}
+
+async function deleteRegion(id) {
+  await pool.execute(`DELETE FROM regions WHERE id = ?`, [id]);
+}
+
+async function listCountryRegionMappings() {
+  const [rows] = await pool.execute(
+    `SELECT crm.id, crm.country_code, crm.country_name, crm.enabled, crm.created_at,
+            r.id as region_id, r.name as region_name, r.description as region_description
+     FROM country_region_mapping crm
+     JOIN regions r ON crm.region_id = r.id
+     ORDER BY r.name, crm.country_name`,
+  );
+  return rows.map((r) => ({
+    id: r.id,
+    countryCode: r.country_code,
+    countryName: r.country_name,
+    regionId: r.region_id,
+    regionName: r.region_name,
+    regionDescription: r.region_description,
+    enabled: r.enabled === 1,
+    createdAt: r.created_at instanceof Date ? r.created_at.toISOString() : r.created_at,
+  }));
+}
+
+async function createCountryRegionMapping({ countryCode, countryName, regionId, enabled = true }) {
+  const now = new Date();
+  await pool.execute(
+    `INSERT INTO country_region_mapping (country_code, country_name, region_id, enabled, created_at) VALUES (?,?,?,?,?)`,
+    [countryCode.toUpperCase(), countryName, regionId, enabled ? 1 : 0, now],
+  );
+}
+
+async function updateCountryRegionMapping(id, patch) {
+  const sets = [];
+  const vals = [];
+  if (Object.prototype.hasOwnProperty.call(patch, "countryCode")) {
+    sets.push("country_code = ?");
+    vals.push(patch.countryCode.toUpperCase());
+  }
+  if (Object.prototype.hasOwnProperty.call(patch, "countryName")) {
+    sets.push("country_name = ?");
+    vals.push(patch.countryName);
+  }
+  if (Object.prototype.hasOwnProperty.call(patch, "regionId")) {
+    sets.push("region_id = ?");
+    vals.push(patch.regionId);
+  }
+  if (Object.prototype.hasOwnProperty.call(patch, "enabled")) {
+    sets.push("enabled = ?");
+    vals.push(patch.enabled ? 1 : 0);
+  }
+  if (!sets.length) return;
+  vals.push(id);
+  await pool.execute(`UPDATE country_region_mapping SET ${sets.join(", ")} WHERE id = ?`, vals);
+}
+
+async function deleteCountryRegionMapping(id) {
+  await pool.execute(`DELETE FROM country_region_mapping WHERE id = ?`, [id]);
+}
+
+async function getUserRegion(userId) {
+  const [rows] = await pool.execute(
+    `SELECT r.id, r.name, r.description
+     FROM users u
+     JOIN address_current ac ON u.id = ac.user_id
+     JOIN country_region_mapping crm ON ac.country = crm.country_name AND crm.enabled = 1
+     JOIN regions r ON crm.region_id = r.id AND r.enabled = 1
+     WHERE u.id = ? LIMIT 1`,
+    [userId],
+  );
+  return rows[0] ? {
+    id: rows[0].id,
+    name: rows[0].name,
+    description: rows[0].description,
+  } : null;
+}
+
+async function listPublicUsersInRegion(regionId, category) {
+  const params = [regionId];
+  let where = `u.show_in_dashboard = 1 AND crm.region_id = ? AND crm.enabled = 1 AND r.enabled = 1`;
+  if (category) {
+    where += " AND u.category = ?";
+    params.push(category);
+  }
+  const [rows] = await pool.execute(
+    `SELECT
+       u.*,
+       ac.address_line1, ac.address_line2, ac.city, ac.state, ac.postcode, ac.country,
+       (p.user_id IS NOT NULL) AS photo_present
+     FROM users u
+     LEFT JOIN address_current ac ON ac.user_id = u.id
+     LEFT JOIN photos p ON p.user_id = u.id
+     JOIN country_region_mapping crm ON ac.country = crm.country_name
+     JOIN regions r ON crm.region_id = r.id
+     WHERE ${where}
+     ORDER BY u.created_at DESC`,
+    params,
+  );
+  return rows;
+}
+
 
 
 module.exports = {
@@ -941,4 +1167,15 @@ module.exports = {
   getBuyerEngagedList,
   updateEngagedRating,
   getUserAverageRating,
+  // regions
+  listRegions,
+  createRegion,
+  updateRegion,
+  deleteRegion,
+  listCountryRegionMappings,
+  createCountryRegionMapping,
+  updateCountryRegionMapping,
+  deleteCountryRegionMapping,
+  getUserRegion,
+  listPublicUsersInRegion,
 };

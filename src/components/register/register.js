@@ -39,6 +39,10 @@ function RegisterUser() {
     category: "",
     showInDashboard: true,
     showPhoto: true,
+    isWhatsappAvailable: true,
+    whatsappNumber: "",
+    facebookUrl: "",
+    linkedinUrl: "",
   });
 
   const [photoDataUrl, setPhotoDataUrl] = useState("");
@@ -446,6 +450,40 @@ function RegisterUser() {
                               {fieldErrors.mobileNo}
                             </small>
                           )}
+                          <div className="mt-2">
+                            <div className="form-check">
+                              <input
+                                className="form-check-input"
+                                type="checkbox"
+                                name="isWhatsappAvailable"
+                                id="isWhatsappAvailable"
+                                checked={form.isWhatsappAvailable}
+                                onChange={onChange}
+                              />
+                              <label
+                                className="form-check-label"
+                                htmlFor="isWhatsappAvailable"
+                              >
+                                This number is also available on WhatsApp
+                              </label>
+                            </div>
+                          </div>
+                          {!form.isWhatsappAvailable && (
+                            <div className="mt-2">
+                              <input
+                                type="text"
+                                name="whatsappNumber"
+                                className="form-control"
+                                placeholder="WhatsApp Contact Number"
+                                value={form.whatsappNumber}
+                                onChange={onChange}
+                              />
+                              <small className="form-text text-muted">
+                                Enter your WhatsApp number if different from
+                                above
+                              </small>
+                            </div>
+                          )}
                         </div>
                       </div>
                     </div>
@@ -562,6 +600,45 @@ function RegisterUser() {
                               {fieldErrors.summary}
                             </small>
                           )}
+                        </div>
+                      </div>
+                    </div>
+
+                    <div className="form-group row">
+                      <div className="col-md-6">
+                        <div className="panel panel-default">
+                          <div className="panel-heading">
+                            Facebook URL (optional)
+                          </div>
+                          <input
+                            type="url"
+                            name="facebookUrl"
+                            className="form-control"
+                            placeholder="https://facebook.com/yourprofile"
+                            value={form.facebookUrl}
+                            onChange={onChange}
+                          />
+                          <small className="form-text text-muted">
+                            Your Facebook profile or page URL
+                          </small>
+                        </div>
+                      </div>
+                      <div className="col-md-6">
+                        <div className="panel panel-default">
+                          <div className="panel-heading">
+                            LinkedIn URL (optional)
+                          </div>
+                          <input
+                            type="url"
+                            name="linkedinUrl"
+                            className="form-control"
+                            placeholder="https://linkedin.com/in/yourprofile"
+                            value={form.linkedinUrl}
+                            onChange={onChange}
+                          />
+                          <small className="form-text text-muted">
+                            Your LinkedIn profile URL
+                          </small>
                         </div>
                       </div>
                     </div>
