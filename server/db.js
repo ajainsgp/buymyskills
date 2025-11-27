@@ -186,6 +186,23 @@ async function initSchema() {
       CONSTRAINT fk_country_region_mapping_region FOREIGN KEY (region_id) REFERENCES regions(id) ON DELETE CASCADE
     ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;`);
 
+    await conn.query(`CREATE TABLE IF NOT EXISTS messages (
+      id INT AUTO_INCREMENT PRIMARY KEY,
+      sender_id VARCHAR(64) NOT NULL,
+      receiver_id VARCHAR(64) NOT NULL,
+      subject VARCHAR(255) NOT NULL,
+      content TEXT NOT NULL,
+      is_read TINYINT(1) NOT NULL DEFAULT 0,
+      created_at DATETIME NOT NULL,
+      updated_at DATETIME NOT NULL,
+      INDEX idx_messages_sender (sender_id),
+      INDEX idx_messages_receiver (receiver_id),
+      INDEX idx_messages_created (created_at),
+      INDEX idx_messages_read (is_read),
+      CONSTRAINT fk_messages_sender FOREIGN KEY (sender_id) REFERENCES users(id) ON DELETE CASCADE,
+      CONSTRAINT fk_messages_receiver FOREIGN KEY (receiver_id) REFERENCES users(id) ON DELETE CASCADE
+    ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;`);
+
 
 
     await conn.query(`CREATE TABLE IF NOT EXISTS roles (
@@ -1119,6 +1136,65 @@ async function listPublicUsersInRegion(regionId, category) {
   return rows;
 }
 
+/* ========== MESSAGES ========== */
+
+async function sendMessage(senderId, receiverId, subject, content) {
+  const now = new Date();
+  const [result] = await pool.execute(
+    `INSERT INTO messages (sender_id, receiver_id, subject, content, created_at, updated_at) VALUES (?, ?, ?, ?, ?, ?)`,
+    [senderId, receiverId, subject, content, now, now],
+  );
+  return result.insertId;
+}
+
+async function getUserMessages(userId) {
+  const [rows] = await pool.execute(
+    `SELECT m.id, m.subject, m.content, m.is_read, m.created_at, m.updated_at,
+            sender.id as sender_id, sender.first_name as sender_first_name, sender.last_name as sender_last_name, sender.nick_name as sender_nick_name,
+            receiver.id as receiver_id, receiver.first_name as receiver_first_name, receiver.last_name as receiver_last_name, receiver.nick_name as receiver_nick_name
+     FROM messages m
+     JOIN users sender ON m.sender_id = sender.id
+     JOIN users receiver ON m.receiver_id = receiver.id
+     WHERE m.sender_id = ? OR m.receiver_id = ?
+     ORDER BY m.created_at DESC`,
+    [userId, userId],
+  );
+  return rows.map((r) => ({
+    id: r.id,
+    subject: r.subject,
+    content: r.content,
+    isRead: r.is_read === 1,
+    createdAt: r.created_at instanceof Date ? r.created_at.toISOString() : r.created_at,
+    updatedAt: r.updated_at instanceof Date ? r.updated_at.toISOString() : r.updated_at,
+    sender: {
+      id: r.sender_id,
+      name: [r.sender_first_name, r.sender_last_name].filter(Boolean).join(" ").trim() || r.sender_nick_name,
+    },
+    receiver: {
+      id: r.receiver_id,
+      name: [r.receiver_first_name, r.receiver_last_name].filter(Boolean).join(" ").trim() || r.receiver_nick_name,
+    },
+    // Determine if current user is sender or receiver
+    isSentByMe: r.sender_id === userId,
+  }));
+}
+
+async function markMessageAsRead(messageId, userId) {
+  // Only mark as read if the user is the receiver
+  const now = new Date();
+  await pool.execute(
+    `UPDATE messages SET is_read = 1, updated_at = ? WHERE id = ? AND receiver_id = ?`,
+    [now, messageId, userId],
+  );
+}
+
+async function getUnreadMessageCount(userId) {
+  const [rows] = await pool.execute(
+    `SELECT COUNT(*) as unread_count FROM messages WHERE receiver_id = ? AND is_read = 0`,
+    [userId],
+  );
+  return rows[0] ? rows[0].unread_count : 0;
+}
 
 
 module.exports = {
@@ -1178,4 +1254,9 @@ module.exports = {
   deleteCountryRegionMapping,
   getUserRegion,
   listPublicUsersInRegion,
+  // messages
+  sendMessage,
+  getUserMessages,
+  markMessageAsRead,
+  getUnreadMessageCount,
 };

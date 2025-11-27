@@ -39,7 +39,7 @@
 
   .body-front,
   .body-back {
-   height: 7.5rem;
+   height: auto;
   }
 
   .card-body {

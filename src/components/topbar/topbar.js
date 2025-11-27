@@ -4,6 +4,8 @@ import React, { useState, useEffect } from "react";
 function Topbar() {
   const [currentUser, setCurrentUser] = useState(null);
   const [dropdownOpen, setDropdownOpen] = useState(false);
+  // eslint-disable-next-line no-unused-vars
+  const [unreadCount, setUnreadCount] = useState(0);
 
   useEffect(() => {
     const getCurrentUser = () => {
@@ -140,6 +142,16 @@ function Topbar() {
           {/* Right side buttons */}
           {currentUser ? (
             <ul className="navbar-nav ml-auto">
+              <li className="nav-item">
+                <a className="nav-link text-dark" href="/messages">
+                  Messages
+                  {unreadCount > 0 && (
+                    <span className="badge badge-danger ml-1" style={{ fontSize: '10px' }}>
+                      {unreadCount}
+                    </span>
+                  )}
+                </a>
+              </li>
               <li className="nav-item dropdown">
                 <a
                   className="nav-link dropdown-toggle text-dark"

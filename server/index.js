@@ -1653,6 +1653,14 @@ app.get("/api/users/:id/photo", async (req, res) => {
  * - GET /api/users/public - get users filtered by region (modified)
  */
 
+/**
+ * Messaging endpoints
+ * - POST /api/messages - send a message
+ * - GET /api/messages - get user's messages
+ * - PUT /api/messages/:id/read - mark message as read
+ * - GET /api/messages/unread-count - get unread message count
+ */
+
 // Admin: Get all regions
 app.get("/api/admin/regions", async (req, res) => {
   try {
@@ -1921,6 +1929,120 @@ app.put("/api/buyer-engaged/:id/rating", async (req, res) => {
     return res.json({ message: "Rating updated successfully" });
   } catch (err) {
     console.error("Update engaged rating error:", err);
+    return res.status(500).json({ error: "Internal server error" });
+  }
+});
+
+/**
+ * Messaging endpoints
+ * - POST /api/messages - send a message
+ * - GET /api/messages - get user's messages
+ * - PUT /api/messages/:id/read - mark message as read
+ * - GET /api/messages/unread-count - get unread message count
+ */
+
+// Send a message
+app.post("/api/messages", async (req, res) => {
+  try {
+    const { receiverId, subject, content } = req.body || {};
+    if (!receiverId || !subject || !content) {
+      return res.status(400).json({ error: "receiverId, subject, and content are required" });
+    }
+
+    // Get current user
+    let currentUser = null;
+    try {
+      const s = (req.headers['x-current-user'] || "").toString().trim();
+      if (s) currentUser = JSON.parse(s);
+    } catch {
+      // ignore
+    }
+
+    if (!currentUser || !currentUser.id) {
+      return res.status(401).json({ error: "Authentication required" });
+    }
+
+    const messageId = await db.sendMessage(currentUser.id, receiverId, subject, content);
+    return res.status(201).json({
+      messageId,
+      message: "Message sent successfully"
+    });
+  } catch (err) {
+    console.error("Send message error:", err);
+    return res.status(500).json({ error: "Internal server error" });
+  }
+});
+
+// Get user's messages
+app.get("/api/messages", async (req, res) => {
+  try {
+    // Get current user
+    let currentUser = null;
+    try {
+      const s = (req.headers['x-current-user'] || "").toString().trim();
+      if (s) currentUser = JSON.parse(s);
+    } catch {
+      // ignore
+    }
+
+    if (!currentUser || !currentUser.id) {
+      return res.status(401).json({ error: "Authentication required" });
+    }
+
+    const messages = await db.getUserMessages(currentUser.id);
+    return res.json({ messages });
+  } catch (err) {
+    console.error("Get messages error:", err);
+    return res.status(500).json({ error: "Internal server error" });
+  }
+});
+
+// Mark message as read
+app.put("/api/messages/:id/read", async (req, res) => {
+  try {
+    const { id } = req.params || {};
+
+    // Get current user
+    let currentUser = null;
+    try {
+      const s = (req.headers['x-current-user'] || "").toString().trim();
+      if (s) currentUser = JSON.parse(s);
+    } catch {
+      // ignore
+    }
+
+    if (!currentUser || !currentUser.id) {
+      return res.status(401).json({ error: "Authentication required" });
+    }
+
+    await db.markMessageAsRead(id, currentUser.id);
+    return res.json({ message: "Message marked as read" });
+  } catch (err) {
+    console.error("Mark message read error:", err);
+    return res.status(500).json({ error: "Internal server error" });
+  }
+});
+
+// Get unread message count
+app.get("/api/messages/unread-count", async (req, res) => {
+  try {
+    // Get current user
+    let currentUser = null;
+    try {
+      const s = (req.headers['x-current-user'] || "").toString().trim();
+      if (s) currentUser = JSON.parse(s);
+    } catch {
+      // ignore
+    }
+
+    if (!currentUser || !currentUser.id) {
+      return res.status(401).json({ error: "Authentication required" });
+    }
+
+    const count = await db.getUnreadMessageCount(currentUser.id);
+    return res.json({ unreadCount: count });
+  } catch (err) {
+    console.error("Get unread count error:", err);
     return res.status(500).json({ error: "Internal server error" });
   }
 });
