@@ -45,12 +45,16 @@ function RegisterUser() {
     allowMobileContact: false,
     facebookUrl: "",
     linkedinUrl: "",
+    startingPrice: "",
+    negotiable: false,
+    currencyCode: "USD",
   });
 
   const [photoDataUrl, setPhotoDataUrl] = useState("");
   const fileInputRef = useRef(null);
   const [photoError, setPhotoError] = useState("");
   const [categories, setCategories] = useState([]);
+  const [countriesWithCodes, setCountriesWithCodes] = useState([]);
   const [fieldErrors, setFieldErrors] = useState({});
   const [confirmInfo, setConfirmInfo] = useState(false);
 
@@ -67,11 +71,40 @@ function RegisterUser() {
         // ignore fetch errors
       }
     }
+
+    async function loadCountriesWithCodes() {
+      try {
+        const res = await fetch(`${API_BASE}/api/countries-with-codes`);
+        const data = await res.json().catch(() => ({}));
+        if (res.ok && Array.isArray(data.countries) && !ignore) {
+          setCountriesWithCodes(data.countries);
+        }
+      } catch {
+        // ignore fetch errors
+      }
+    }
+
     loadCategories();
+    loadCountriesWithCodes();
     return () => {
       ignore = true;
     };
   }, []);
+
+  // Auto-set currency code based on selected country
+  useEffect(() => {
+    if (form.country && countriesWithCodes.length > 0) {
+      const selectedCountry = countriesWithCodes.find(
+        (c) => c.name === form.country,
+      );
+      if (selectedCountry && selectedCountry.currencyCode) {
+        setForm((prev) => ({
+          ...prev,
+          currencyCode: selectedCountry.currencyCode,
+        }));
+      }
+    }
+  }, [form.country, countriesWithCodes]);
 
   const onChange = (e) => {
     const { name, value, type, checked } = e.target;
@@ -383,6 +416,112 @@ function RegisterUser() {
 
                   <div className="panel panel-body no-left-right-padding">
                     <div className="panel panel-title">
+                      <h3>My Location</h3>
+                    </div>
+
+                    <div className="form-group row">
+                      <div className="col-md-6">
+                        <div className="panel panel-default">
+                          <div className="panel-heading">Address Line1</div>
+                          <input
+                            type="text"
+                            name="addressLine1"
+                            id="addressLine1"
+                            className="form-control input-lg"
+                            placeholder="Address Line1"
+                            value={form.addressLine1}
+                            onChange={onChange}
+                          />
+                        </div>
+                      </div>
+                      <div className="col-md-6">
+                        <div className="panel panel-default">
+                          <div className="panel-heading">Address Line2</div>
+                          <input
+                            type="text"
+                            name="addressLine2"
+                            id="addressLine2"
+                            className="form-control input-lg"
+                            placeholder="Address Line 2"
+                            value={form.addressLine2}
+                            onChange={onChange}
+                          />
+                        </div>
+                      </div>
+                    </div>
+
+                    <div className="form-group row">
+                      <div className="col-md-6">
+                        <div className="panel panel-default">
+                          <div className="panel-heading">City</div>
+                          <input
+                            type="text"
+                            name="city"
+                            id="city"
+                            className="form-control input-lg"
+                            placeholder="City"
+                            value={form.city}
+                            onChange={onChange}
+                          />
+                        </div>
+                      </div>
+                      <div className="col-md-6">
+                        <div className="panel panel-default">
+                          <div className="panel-heading">State</div>
+                          <input
+                            type="text"
+                            name="state"
+                            id="state"
+                            className="form-control input-lg"
+                            placeholder="State"
+                            value={form.state}
+                            onChange={onChange}
+                          />
+                        </div>
+                      </div>
+                    </div>
+
+                    <div className="form-group row">
+                      <div className="col-md-6">
+                        <div className="panel panel-default">
+                          <div className="panel-heading">Postcode</div>
+                          <input
+                            type="text"
+                            name="postcode"
+                            id="postcode"
+                            className="form-control input-lg"
+                            placeholder="PostCode"
+                            value={form.postcode}
+                            onChange={onChange}
+                          />
+                        </div>
+                      </div>
+                      <div className="col-md-6">
+                        <div className="panel panel-default">
+                          <div className="panel-heading">Country</div>
+                          <select
+                            id="country"
+                            name="country"
+                            className="custom-select"
+                            value={form.country}
+                            onChange={onChange}
+                          >
+                            <option value="">Select...</option>
+                            {countries
+                              .filter((c) => c.enabled === "Y")
+                              .map((c) => (
+                                <option key={c.code} value={c.name}>
+                                  {c.name}
+                                </option>
+                              ))}
+                          </select>
+                        </div>
+                      </div>
+                    </div>
+                  </div>
+
+                  <div className="panel panel-body no-left-right-padding">
+                    <div className="panel panel-title">
                       <h3>My Contact Details</h3>
                     </div>
 
@@ -476,7 +615,10 @@ function RegisterUser() {
                             </small>
                           )}
                           <div className="mt-2">
-                            <div className="form-check">
+                            <div
+                              className="form-check"
+                              style={{ margin: "10px" }}
+                            >
                               <input
                                 className="form-check-input"
                                 type="checkbox"
@@ -519,7 +661,10 @@ function RegisterUser() {
                           <div className="panel-heading">
                             Contact Preferences
                           </div>
-                          <div className="form-check">
+                          <div
+                            className="form-check"
+                            style={{ margin: "10px" }}
+                          >
                             <input
                               className="form-check-input"
                               type="checkbox"
@@ -630,7 +775,7 @@ function RegisterUser() {
                       <div className="col-md-6">
                         <div className="panel panel-default">
                           <div className="panel-heading">
-                            Describe yourself in 5 words
+                            Tags * (Add up to 5 relevant tags)
                           </div>
                           <input
                             type="text"
@@ -714,6 +859,79 @@ function RegisterUser() {
 
                   <div className="panel panel-body no-left-right-padding">
                     <div className="panel panel-title">
+                      <h3>My Pricing</h3>
+                    </div>
+
+                    <div className="form-group row">
+                      <div className="col-md-6">
+                        <div className="panel panel-default">
+                          <div className="panel-heading">Starting Price</div>
+                          <div className="input-group">
+                            <div className="input-group-prepend">
+                              <select
+                                name="currencyCode"
+                                className="custom-select"
+                                value={form.currencyCode}
+                                onChange={onChange}
+                                style={{ minWidth: "80px" }}
+                              >
+                                <option value="USD">USD</option>
+                                <option value="EUR">EUR</option>
+                                <option value="GBP">GBP</option>
+                                <option value="INR">INR</option>
+                                <option value="SGD">SGD</option>
+                                <option value="AUD">AUD</option>
+                                <option value="CAD">CAD</option>
+                              </select>
+                            </div>
+                            <input
+                              type="number"
+                              name="startingPrice"
+                              className="form-control"
+                              placeholder="Enter starting price"
+                              value={form.startingPrice}
+                              onChange={onChange}
+                              min="0"
+                              step="0.01"
+                            />
+                          </div>
+                          <small className="form-text text-muted">
+                            Your minimum hourly/daily rate
+                          </small>
+                        </div>
+                      </div>
+                      <div className="col-md-6">
+                        <div className="panel panel-default">
+                          <div className="panel-heading">Negotiable</div>
+                          <div style={{ padding: "10px" }}>
+                            <div className="form-check">
+                              <input
+                                className="form-check-input"
+                                type="checkbox"
+                                name="negotiable"
+                                id="negotiable"
+                                checked={form.negotiable}
+                                onChange={onChange}
+                              />
+                              <label
+                                className="form-check-label"
+                                htmlFor="negotiable"
+                              >
+                                Price is negotiable
+                              </label>
+                            </div>
+                            <small className="form-text text-muted">
+                              Check if you&apos;re open to negotiating your
+                              rates
+                            </small>
+                          </div>
+                        </div>
+                      </div>
+                    </div>
+                  </div>
+
+                  <div className="panel panel-body no-left-right-padding">
+                    <div className="panel panel-title">
                       <h3>My Availability</h3>
                     </div>
 
@@ -767,112 +985,6 @@ function RegisterUser() {
                             <option value="In 1 month">In 1 month</option>
                             <option value="In 2 months">In 2 months</option>
                             <option value="In 3 months">In 3 months</option>
-                          </select>
-                        </div>
-                      </div>
-                    </div>
-                  </div>
-
-                  <div className="panel panel-body no-left-right-padding">
-                    <div className="panel panel-title">
-                      <h3>My Location</h3>
-                    </div>
-
-                    <div className="form-group row">
-                      <div className="col-md-6">
-                        <div className="panel panel-default">
-                          <div className="panel-heading">Address Line1</div>
-                          <input
-                            type="text"
-                            name="addressLine1"
-                            id="addressLine1"
-                            className="form-control input-lg"
-                            placeholder="Address Line1"
-                            value={form.addressLine1}
-                            onChange={onChange}
-                          />
-                        </div>
-                      </div>
-                      <div className="col-md-6">
-                        <div className="panel panel-default">
-                          <div className="panel-heading">Address Line2</div>
-                          <input
-                            type="text"
-                            name="addressLine2"
-                            id="addressLine2"
-                            className="form-control input-lg"
-                            placeholder="Address Line 2"
-                            value={form.addressLine2}
-                            onChange={onChange}
-                          />
-                        </div>
-                      </div>
-                    </div>
-
-                    <div className="form-group row">
-                      <div className="col-md-6">
-                        <div className="panel panel-default">
-                          <div className="panel-heading">City</div>
-                          <input
-                            type="text"
-                            name="city"
-                            id="city"
-                            className="form-control input-lg"
-                            placeholder="City"
-                            value={form.city}
-                            onChange={onChange}
-                          />
-                        </div>
-                      </div>
-                      <div className="col-md-6">
-                        <div className="panel panel-default">
-                          <div className="panel-heading">State</div>
-                          <input
-                            type="text"
-                            name="state"
-                            id="state"
-                            className="form-control input-lg"
-                            placeholder="State"
-                            value={form.state}
-                            onChange={onChange}
-                          />
-                        </div>
-                      </div>
-                    </div>
-
-                    <div className="form-group row">
-                      <div className="col-md-6">
-                        <div className="panel panel-default">
-                          <div className="panel-heading">Postcode</div>
-                          <input
-                            type="text"
-                            name="postcode"
-                            id="postcode"
-                            className="form-control input-lg"
-                            placeholder="PostCode"
-                            value={form.postcode}
-                            onChange={onChange}
-                          />
-                        </div>
-                      </div>
-                      <div className="col-md-6">
-                        <div className="panel panel-default">
-                          <div className="panel-heading">Country</div>
-                          <select
-                            id="country"
-                            name="country"
-                            className="custom-select"
-                            value={form.country}
-                            onChange={onChange}
-                          >
-                            <option value="">Select...</option>
-                            {countries
-                              .filter((c) => c.enabled === "Y")
-                              .map((c) => (
-                                <option key={c.code} value={c.name}>
-                                  {c.name}
-                                </option>
-                              ))}
                           </select>
                         </div>
                       </div>

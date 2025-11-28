@@ -71,6 +71,9 @@ async function initSchema() {
       availability            VARCHAR(20),
       facebook_url            VARCHAR(255),
       linkedin_url            VARCHAR(255),
+      starting_price          DECIMAL(10,2),
+      negotiable              TINYINT(1) NOT NULL DEFAULT 0,
+      currency_code           VARCHAR(3),
       created_at              DATETIME NOT NULL,
       INDEX (email_id)
     ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;`);
@@ -150,6 +153,7 @@ async function initSchema() {
       name VARCHAR(100) NOT NULL UNIQUE,
       code VARCHAR(3) NOT NULL UNIQUE,
       phone_code VARCHAR(10) NOT NULL DEFAULT '',
+      currency_code VARCHAR(3) DEFAULT '',
       enabled TINYINT(1) NOT NULL DEFAULT 1,
       created_at DATETIME NOT NULL
     ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;`);
@@ -455,9 +459,11 @@ async function createUser(u) {
       allow_email_contact, allow_mobile_contact,
       email_id, secondary_email, password_hash,
       summary, work_preference, traveling, availability,
-      facebook_url, linkedin_url, created_at,
+      facebook_url, linkedin_url,
+      starting_price, negotiable, currency_code,
+      created_at,
       role_type, category, show_in_dashboard, show_photo
-    ) VALUES (?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?)`,
+    ) VALUES (?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?)`,
     [
       u.id,
       u.name || null,
@@ -480,6 +486,9 @@ async function createUser(u) {
       u.availability || null,
       u.facebookUrl || null,
       u.linkedinUrl || null,
+      u.startingPrice || null,
+      u.negotiable ? 1 : 0,
+      u.currencyCode || null,
       u.createdAt,
       u.roleType || "user",
       u.category || null,
@@ -514,6 +523,9 @@ async function updateUserFields(id, patch) {
     workPreference: "work_preference",
     traveling: "traveling",
     availability: "availability",
+    startingPrice: "starting_price",
+    negotiable: "negotiable",
+    currencyCode: "currency_code",
     roleType: "role_type",
     category: "category",
     showInDashboard: "show_in_dashboard",
@@ -747,31 +759,32 @@ async function deleteCategory(id) {
 
 async function listCountries() {
   const [rows] = await pool.execute(
-    `SELECT name, code, phone_code FROM countries WHERE enabled = 1 ORDER BY name`,
+    `SELECT name, code, phone_code, currency_code FROM countries WHERE enabled = 1 ORDER BY name`,
   );
-  return rows.map((r) => ({ name: r.name, code: r.code, phoneCode: r.phone_code }));
+  return rows.map((r) => ({ name: r.name, code: r.code, phoneCode: r.phone_code, currencyCode: r.currency_code }));
 }
 
 async function listAllCountries() {
   const [rows] = await pool.execute(
-    `SELECT id, name, code, phone_code, enabled, created_at FROM countries ORDER BY name`,
+    `SELECT id, name, code, phone_code, currency_code, enabled, created_at FROM countries ORDER BY name`,
   );
   return rows.map((r) => ({
     id: r.id,
     name: r.name,
     code: r.code,
     phoneCode: r.phone_code,
+    currencyCode: r.currency_code,
     enabled: r.enabled === 1,
     createdAt:
       r.created_at instanceof Date ? r.created_at.toISOString() : r.created_at,
   }));
 }
 
-async function createCountry({ name, code, phoneCode = '', enabled = true }) {
+async function createCountry({ name, code, phoneCode = '', currencyCode = '', enabled = true }) {
   const now = new Date();
   await pool.execute(
-    `INSERT INTO countries (name, code, phone_code, enabled, created_at) VALUES (?,?,?,?,?)`,
-    [name, code.toUpperCase(), phoneCode, enabled ? 1 : 0, now],
+    `INSERT INTO countries (name, code, phone_code, currency_code, enabled, created_at) VALUES (?,?,?,?,?,?)`,
+    [name, code.toUpperCase(), phoneCode, currencyCode.toUpperCase(), enabled ? 1 : 0, now],
   );
 }
 
@@ -789,6 +802,10 @@ async function updateCountry(id, patch) {
   if (Object.prototype.hasOwnProperty.call(patch, "phoneCode")) {
     sets.push("phone_code = ?");
     vals.push(patch.phoneCode);
+  }
+  if (Object.prototype.hasOwnProperty.call(patch, "currencyCode")) {
+    sets.push("currency_code = ?");
+    vals.push(patch.currencyCode.toUpperCase());
   }
   if (Object.prototype.hasOwnProperty.call(patch, "enabled")) {
     sets.push("enabled = ?");

@@ -13,6 +13,7 @@ function AdminCountries() {
     name: "",
     code: "",
     phoneCode: "",
+    currencyCode: "",
     enabled: true,
   });
 
@@ -110,6 +111,7 @@ function AdminCountries() {
           name: newCountry.name.trim(),
           code: newCountry.code.trim().toUpperCase(),
           phoneCode: newCountry.phoneCode.trim(),
+          currencyCode: newCountry.currencyCode.trim().toUpperCase(),
           enabled: !!newCountry.enabled,
         }),
       });
@@ -117,7 +119,13 @@ function AdminCountries() {
       if (!res.ok) {
         throw new Error(data?.error || `Create failed (${res.status})`);
       }
-      setNewCountry({ name: "", code: "", phoneCode: "", enabled: true });
+      setNewCountry({
+        name: "",
+        code: "",
+        phoneCode: "",
+        currencyCode: "",
+        enabled: true,
+      });
       await load();
     } catch (e) {
       setErr(e.message || "Create failed");
@@ -202,7 +210,7 @@ function AdminCountries() {
           <div className="card-body">
             <form onSubmit={handleAdd}>
               <div className="form-row">
-                <div className="form-group col-md-3">
+                <div className="form-group col-md-2">
                   <label>Name</label>
                   <input
                     type="text"
@@ -241,6 +249,22 @@ function AdminCountries() {
                       setNewCountry((p) => ({
                         ...p,
                         phoneCode: e.target.value,
+                      }))
+                    }
+                    disabled={disabled || adding}
+                  />
+                </div>
+                <div className="form-group col-md-2">
+                  <label>Currency Code</label>
+                  <input
+                    type="text"
+                    className="form-control"
+                    maxLength={3}
+                    value={newCountry.currencyCode}
+                    onChange={(e) =>
+                      setNewCountry((p) => ({
+                        ...p,
+                        currencyCode: e.target.value.toUpperCase(),
                       }))
                     }
                     disabled={disabled || adding}
@@ -296,18 +320,19 @@ function AdminCountries() {
                 <table className="table table-sm table-bordered">
                   <thead>
                     <tr>
-                      <th style={{ width: 180 }}>Name</th>
-                      <th style={{ width: 60 }}>Code</th>
+                      <th style={{ width: 140 }}>Name</th>
+                      <th style={{ width: 50 }}>Code</th>
                       <th style={{ width: 70 }}>Phone Code</th>
-                      <th style={{ width: 60 }}>Enabled</th>
-                      <th style={{ width: 120 }}>Created</th>
+                      <th style={{ width: 70 }}>Currency Code</th>
+                      <th style={{ width: 50 }}>Enabled</th>
+                      <th style={{ width: 100 }}>Created</th>
                       <th style={{ width: 100 }}>Actions</th>
                     </tr>
                   </thead>
                   <tbody>
                     {countries.length === 0 ? (
                       <tr>
-                        <td colSpan={6} className="text-center">
+                        <td colSpan={7} className="text-center">
                           No countries
                         </td>
                       </tr>
@@ -375,6 +400,27 @@ function AdminCountries() {
                                 disabled={disabled}
                               />
                             </td>
+                            <td>
+                              <input
+                                type="text"
+                                className="form-control form-control-sm"
+                                maxLength={3}
+                                value={c.currencyCode || ""}
+                                onChange={(e) => {
+                                  const currencyCode =
+                                    e.target.value.toUpperCase();
+                                  setCountries((prev) =>
+                                    prev.map((row) => {
+                                      if (row.id === c.id) {
+                                        return { ...row, currencyCode };
+                                      }
+                                      return row;
+                                    }),
+                                  );
+                                }}
+                                disabled={disabled}
+                              />
+                            </td>
                             <td className="text-center">
                               <input
                                 type="checkbox"
@@ -415,6 +461,7 @@ function AdminCountries() {
                                       name: c.name,
                                       code: c.code,
                                       phoneCode: c.phoneCode,
+                                      currencyCode: c.currencyCode,
                                       enabled:
                                         c.enabled === 1 ||
                                         c.enabled === true ||

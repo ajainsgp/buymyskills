@@ -621,7 +621,8 @@
     "name": "India",
     "code": "IN",
     "enabled": "Y",
-    "phoneCode": "+91"
+    "phoneCode": "+91",
+    "currencyCode": "INR"
   },
   {
     "name": "Indonesia",
@@ -645,7 +646,8 @@
     "name": "Ireland",
     "code": "IE",
     "enabled": "Y",
-    "phoneCode": "+353"
+    "phoneCode": "+353",
+    "currencyCode": "EUR"
   },
   {
     "name": "Isle of Man",
@@ -1203,7 +1205,8 @@
     "name": "Singapore",
     "code": "SG",
     "enabled": "Y",
-    "phoneCode": "+65"
+    "phoneCode": "+65",
+    "currencyCode": "SGD"
   },
   {
     "name": "Sint Maarten (Dutch part)",
@@ -1407,13 +1410,15 @@
     "name": "United Kingdom",
     "code": "GB",
     "enabled": "Y",
-    "phoneCode": "+44"
+    "phoneCode": "+44",
+    "currencyCode": "GBP"
   },
   {
     "name": "United States",
     "code": "US",
     "enabled": "Y",
-    "phoneCode": "+1"
+    "phoneCode": "+1",
+    "currencyCode": "USD"
   },
   {
     "name": "United States Minor Outlying Islands",
