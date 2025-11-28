@@ -1948,7 +1948,8 @@ app.put("/api/buyer-engaged/:id/rating", async (req, res) => {
 /**
  * Messaging endpoints
  * - POST /api/messages - send a message
- * - GET /api/messages - get user's messages
+ * - GET /api/messages - get user's messages (legacy)
+ * - GET /api/messages/conversations - get conversations grouped by contact
  * - PUT /api/messages/:id/read - mark message as read
  * - GET /api/messages/unread-count - get unread message count
  */
@@ -1985,7 +1986,7 @@ app.post("/api/messages", async (req, res) => {
   }
 });
 
-// Get user's messages
+// Get user's messages (legacy)
 app.get("/api/messages", async (req, res) => {
   try {
     // Get current user
@@ -2005,6 +2006,30 @@ app.get("/api/messages", async (req, res) => {
     return res.json({ messages });
   } catch (err) {
     console.error("Get messages error:", err);
+    return res.status(500).json({ error: "Internal server error" });
+  }
+});
+
+// Get conversations grouped by contact (WhatsApp-style)
+app.get("/api/messages/conversations", async (req, res) => {
+  try {
+    // Get current user
+    let currentUser = null;
+    try {
+      const s = (req.headers['x-current-user'] || "").toString().trim();
+      if (s) currentUser = JSON.parse(s);
+    } catch {
+      // ignore
+    }
+
+    if (!currentUser || !currentUser.id) {
+      return res.status(401).json({ error: "Authentication required" });
+    }
+
+    const conversations = await db.getUserConversations(currentUser.id);
+    return res.json({ conversations });
+  } catch (err) {
+    console.error("Get conversations error:", err);
     return res.status(500).json({ error: "Internal server error" });
   }
 });
