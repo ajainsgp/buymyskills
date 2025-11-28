@@ -546,6 +546,7 @@ function mapDbUserRowToApiUser(row) {
     workPreference: row.work_preference || "",
     traveling: row.traveling || "",
     availability: row.availability || "",
+    category: row.category || "",
     startingPrice: row.starting_price ? parseFloat(row.starting_price) : null,
     negotiable: !!row.negotiable,
     currencyCode: row.currency_code || "",

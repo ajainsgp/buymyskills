@@ -322,6 +322,8 @@ function Profile() {
         mobile: form.mobile,
         isWhatsappAvailable: form.isWhatsappAvailable,
         whatsappNumber: form.whatsappNumber,
+        allowEmailContact: form.allowEmailContact,
+        allowMobileContact: form.allowMobileContact,
         facebookUrl: form.facebookUrl,
         linkedinUrl: form.linkedinUrl,
         category: form.category,

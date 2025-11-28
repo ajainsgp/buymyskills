@@ -417,9 +417,25 @@ function UpdatePassword() {
                     <button
                       type="button"
                       className="btn btn-primary"
-                      onClick={() => navigate("/home")}
+                      onClick={() => {
+                        // Log out the user by clearing stored user data
+                        localStorage.removeItem("currentUser");
+                        sessionStorage.removeItem("currentUser");
+                        localStorage.removeItem("rememberMe");
+
+                        // Notify other components about logout
+                        if (
+                          typeof window !== "undefined" &&
+                          window.dispatchEvent
+                        ) {
+                          window.dispatchEvent(new Event("auth-changed"));
+                        }
+
+                        // Navigate to login page
+                        navigate("/login");
+                      }}
                     >
-                      Close
+                      Log Out
                     </button>
                   ) : (
                     <>
