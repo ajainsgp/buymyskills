@@ -165,6 +165,11 @@ function UserProfile({ userProfiles, showSensitive = false }) {
         setShowMessageForm(null);
         setMessageSubject("");
         setMessageContent("");
+
+        // Notify other components that messages have been updated
+        if (typeof window !== "undefined" && window.dispatchEvent) {
+          window.dispatchEvent(new Event("message-updated"));
+        }
       } else {
         alert("Failed to send message");
       }
