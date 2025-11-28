@@ -31,13 +31,19 @@
     grid-template-columns: 4fr 1fr;
   }
 
-  .header-front,
   .header-back {
+    height: 3rem;
+  }
+
+  .header-front {
     min-height: 4rem;
     max-height: 5rem;
   }
 
-  .body-front,
+  .body-front {
+    height: 7rem;
+  }
+
   .body-back {
    height: auto;
   }
