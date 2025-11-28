@@ -103,7 +103,7 @@ function Messages() {
               (msg.sender.id === currentUser.id &&
                 msg.receiver.id === contactId),
           )
-          .sort((a, b) => new Date(a.createdAt) - new Date(b.createdAt));
+          .sort((a, b) => new Date(a.createdAt) - new Date(b.createdAt)); // Sort ascending (oldest first)
 
         setMessages(conversationMessages);
 
