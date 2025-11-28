@@ -1221,24 +1221,16 @@ async function getUserConversations(userId) {
        u.nick_name as contact_nick_name,
        COUNT(CASE WHEN m.is_read = 0 AND m.receiver_id = ? THEN 1 END) as unread_count,
        MAX(m.created_at) as last_message_time,
-       (
-         SELECT content
-         FROM messages
-         WHERE (sender_id = ? AND receiver_id = contact_id) OR (sender_id = contact_id AND receiver_id = ?)
-         ORDER BY created_at DESC
-         LIMIT 1
-       ) as last_message_content
+       MAX(m.content) as last_message_content
      FROM messages m
      JOIN users u ON (
-       CASE
-         WHEN m.sender_id = ? THEN m.receiver_id = u.id
-         ELSE m.sender_id = u.id
-       END
+       (m.sender_id = ? AND u.id = m.receiver_id) OR
+       (m.receiver_id = ? AND u.id = m.sender_id)
      )
      WHERE m.sender_id = ? OR m.receiver_id = ?
-     GROUP BY contact_id
-     ORDER BY last_message_time DESC`,
-    [userId, userId, userId, userId, userId, userId, userId]
+     GROUP BY contact_id, u.id, u.name, u.first_name, u.last_name, u.nick_name
+     ORDER BY contact_name ASC`,
+    [userId, userId, userId, userId, userId, userId]
   );
 
   return rows.map(row => ({
