@@ -354,9 +354,32 @@ function UserProfile({ userProfiles, showSensitive = false }) {
               </p>
             )}
             {showSensitive && currentUser && currentUser.id !== profile.id && (
-              <div className="mt-2">
+              <div className="d-flex align-items-center">
+                <strong style={{ fontSize: "14px" }}>
+                  Did you hire {getGenderPronoun(profile.gender)}?
+                </strong>
+                <div className="btn-group btn-group-sm ml-2">
+                  <button
+                    className="btn btn-success btn-sm"
+                    style={{ lineHeight: "0.75" }}
+                    onClick={(e) => handleEngagement(profile.id, true, e)}
+                  >
+                    Yes
+                  </button>
+                  <button
+                    className="btn btn-secondary btn-sm"
+                    style={{ lineHeight: "0.75" }}
+                    onClick={(e) => handleEngagement(profile.id, false, e)}
+                  >
+                    No
+                  </button>
+                </div>
+              </div>
+            )}
+            {showSensitive && currentUser && currentUser.id !== profile.id && (
+              <div>
                 <button
-                  className="btn btn-primary btn-sm mr-2"
+                  className="mt-1 btn btn-primary btn-sm mr-2"
                   onClick={(e) => {
                     e.stopPropagation();
                     setShowMessageForm(
@@ -368,27 +391,6 @@ function UserProfile({ userProfiles, showSensitive = false }) {
                   <i className="fa fa-envelope mr-1"></i>
                   Send Message
                 </button>
-              </div>
-            )}
-            {showSensitive && currentUser && currentUser.id !== profile.id && (
-              <div className="mt-2 d-flex align-items-center">
-                <strong style={{ fontSize: "14px" }}>
-                  Did you hire {getGenderPronoun(profile.gender)}?
-                </strong>
-                <div className="btn-group btn-group-sm ml-2">
-                  <button
-                    className="btn btn-success btn-sm"
-                    onClick={(e) => handleEngagement(profile.id, true, e)}
-                  >
-                    Yes
-                  </button>
-                  <button
-                    className="btn btn-secondary btn-sm"
-                    onClick={(e) => handleEngagement(profile.id, false, e)}
-                  >
-                    No
-                  </button>
-                </div>
               </div>
             )}
             {showMessageForm === profile.id && (
@@ -442,36 +444,38 @@ function UserProfile({ userProfiles, showSensitive = false }) {
               </div>
             )}
           </div>
-          <div className="card-footer bg-transparent">
-            <div className="card-footer-grid">
-              <div>
-                <strong>Availability:</strong>{" "}
-                {profile.availability === "0"
-                  ? "Immediate"
-                  : profile.availability === "1"
-                    ? "In 1 month"
-                    : profile.availability === "2"
-                      ? "In 2 months"
-                      : profile.availability === "3"
-                        ? "In 3 months"
-                        : profile.availability}
-              </div>
-              <div>
-                <strong>Location:</strong> {profile.address?.city || "N/A"},{" "}
-                {profile.address?.country || "N/A"}
+          {showMessageForm !== profile.id && (
+            <div className="card-footer bg-transparent">
+              <div className="card-footer-grid">
+                <div>
+                  <strong>Availability:</strong>{" "}
+                  {profile.availability === "0"
+                    ? "Immediate"
+                    : profile.availability === "1"
+                      ? "In 1 month"
+                      : profile.availability === "2"
+                        ? "In 2 months"
+                        : profile.availability === "3"
+                          ? "In 3 months"
+                          : profile.availability}
+                </div>
+                <div>
+                  <strong>Location:</strong> {profile.address?.city || "N/A"},{" "}
+                  {profile.address?.country || "N/A"}
+                </div>
+                <div>
+                  <strong>Work Preference:</strong>{" "}
+                  {profile.workPreference === "R"
+                    ? "Remote"
+                    : profile.workPreference === "OS"
+                      ? "On Site"
+                      : profile.workPreference === "H"
+                        ? "Hybrid"
+                        : profile.workPreference}
+                </div>
               </div>
             </div>
-            <p>
-              Preference:{" "}
-              {profile.workPreference === "R"
-                ? "Remote"
-                : profile.workPreference === "OS"
-                  ? "On Site"
-                  : profile.workPreference === "H"
-                    ? "Hybrid"
-                    : profile.workPreference}
-            </p>
-          </div>
+          )}
         </div>
       </div>
     );
