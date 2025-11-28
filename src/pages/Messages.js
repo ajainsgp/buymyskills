@@ -81,6 +81,11 @@ function Messages() {
           msg.id === messageId ? { ...msg, isRead: true } : msg,
         ),
       );
+
+      // Notify other components that messages have been updated
+      if (typeof window !== "undefined" && window.dispatchEvent) {
+        window.dispatchEvent(new Event("message-updated"));
+      }
     } catch (error) {
       console.error("Mark as read error:", error);
     }

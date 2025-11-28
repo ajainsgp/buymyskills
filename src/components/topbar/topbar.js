@@ -1,10 +1,10 @@
 /* eslint-disable prettier/prettier */
 import React, { useState, useEffect } from "react";
+import API_BASE from "../../utils/apiBase";
 
 function Topbar() {
   const [currentUser, setCurrentUser] = useState(null);
   const [dropdownOpen, setDropdownOpen] = useState(false);
-  // eslint-disable-next-line no-unused-vars
   const [unreadCount, setUnreadCount] = useState(0);
 
   useEffect(() => {
@@ -60,6 +60,67 @@ function Topbar() {
       window.location.href = "/home";
     }
   };
+
+  // Fetch unread message count
+  const fetchUnreadCount = async (user) => {
+    if (!user || !user.id) {
+      setUnreadCount(0);
+      return;
+    }
+
+    try {
+      const response = await fetch(`${API_BASE}/api/messages/unread-count`, {
+        method: 'GET',
+        headers: {
+          'x-current-user': JSON.stringify(user),
+        },
+      });
+
+      if (response.ok) {
+        const data = await response.json();
+        setUnreadCount(data.unreadCount || 0);
+      } else {
+        setUnreadCount(0);
+      }
+    } catch (error) {
+      console.error('Failed to fetch unread message count:', error);
+      setUnreadCount(0);
+    }
+  };
+
+  // Update unread count when user changes
+  useEffect(() => {
+    if (currentUser) {
+      fetchUnreadCount(currentUser);
+      // Set up periodic updates every 30 seconds
+      const interval = setInterval(() => {
+        fetchUnreadCount(currentUser);
+      }, 30000);
+
+      return () => clearInterval(interval);
+    } else {
+      setUnreadCount(0);
+    }
+  }, [currentUser]);
+
+  // Listen for message updates
+  useEffect(() => {
+    const handleMessageUpdate = () => {
+      if (currentUser) {
+        fetchUnreadCount(currentUser);
+      }
+    };
+
+    if (typeof window !== "undefined") {
+      window.addEventListener("message-updated", handleMessageUpdate);
+    }
+
+    return () => {
+      if (typeof window !== "undefined") {
+        window.removeEventListener("message-updated", handleMessageUpdate);
+      }
+    };
+  }, [currentUser]);
 
   const isAdmin = currentUser && (String(currentUser.roleType || "").toLowerCase() === "administrative" ||
                   String(currentUser.roleType || "").toLowerCase() === "administrator");
