@@ -1207,6 +1207,49 @@ async function getUnreadMessageCount(userId) {
   return rows[0] ? rows[0].unread_count : 0;
 }
 
+// Get conversations grouped by contact (WhatsApp-style)
+async function getUserConversations(userId) {
+  const [rows] = await pool.execute(
+    `SELECT
+       CASE
+         WHEN m.sender_id = ? THEN m.receiver_id
+         ELSE m.sender_id
+       END as contact_id,
+       u.name as contact_name,
+       u.first_name as contact_first_name,
+       u.last_name as contact_last_name,
+       u.nick_name as contact_nick_name,
+       COUNT(CASE WHEN m.is_read = 0 AND m.receiver_id = ? THEN 1 END) as unread_count,
+       MAX(m.created_at) as last_message_time,
+       (
+         SELECT content
+         FROM messages
+         WHERE (sender_id = ? AND receiver_id = contact_id) OR (sender_id = contact_id AND receiver_id = ?)
+         ORDER BY created_at DESC
+         LIMIT 1
+       ) as last_message_content
+     FROM messages m
+     JOIN users u ON (
+       CASE
+         WHEN m.sender_id = ? THEN m.receiver_id = u.id
+         ELSE m.sender_id = u.id
+       END
+     )
+     WHERE m.sender_id = ? OR m.receiver_id = ?
+     GROUP BY contact_id
+     ORDER BY last_message_time DESC`,
+    [userId, userId, userId, userId, userId, userId, userId]
+  );
+
+  return rows.map(row => ({
+    contactId: row.contact_id,
+    contactName: [row.contact_first_name, row.contact_last_name].filter(Boolean).join(" ").trim() || row.contact_nick_name || row.contact_name,
+    unreadCount: row.unread_count || 0,
+    lastMessageTime: row.last_message_time instanceof Date ? row.last_message_time.toISOString() : row.last_message_time,
+    lastMessageContent: row.last_message_content || "",
+  }));
+}
+
 
 module.exports = {
   pool,
@@ -1268,6 +1311,7 @@ module.exports = {
   // messages
   sendMessage,
   getUserMessages,
+  getUserConversations,
   markMessageAsRead,
   getUnreadMessageCount,
 };
