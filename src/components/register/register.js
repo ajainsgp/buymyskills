@@ -39,8 +39,10 @@ function RegisterUser() {
     category: "",
     showInDashboard: true,
     showPhoto: true,
-    isWhatsappAvailable: true,
+    isWhatsappAvailable: false,
     whatsappNumber: "",
+    allowEmailContact: false,
+    allowMobileContact: false,
     facebookUrl: "",
     linkedinUrl: "",
   });
@@ -412,6 +414,29 @@ function RegisterUser() {
                       </div>
                       <div className="col-sm-6">
                         <div className="panel panel-info">
+                          <div className="panel-heading">
+                            Secondary email Id to contact (optional)
+                          </div>
+                          <input
+                            type="email"
+                            name="secondaryEmail"
+                            id="secondaryEmail"
+                            className="form-control input-lg"
+                            placeholder="secondary@example.com"
+                            value={form.secondaryEmail}
+                            onChange={onChange}
+                          />
+                          <small className="form-text text-muted">
+                            if left blank then your primary email id will be
+                            used by users to contact you
+                          </small>
+                        </div>
+                      </div>
+                    </div>
+
+                    <div className="form-group row">
+                      <div className="col-sm-6">
+                        <div className="panel panel-info">
                           <div className="panel-heading">Mobile</div>
                           <div className="row">
                             <div className="col-4">
@@ -491,6 +516,69 @@ function RegisterUser() {
                     <div className="form-group row">
                       <div className="col-sm-6">
                         <div className="panel panel-info">
+                          <div className="panel-heading">
+                            Contact Preferences
+                          </div>
+                          <div className="form-check">
+                            <input
+                              className="form-check-input"
+                              type="checkbox"
+                              name="allowEmailContact"
+                              id="allowEmailContact"
+                              checked={form.allowEmailContact}
+                              onChange={onChange}
+                            />
+                            <label
+                              className="form-check-label"
+                              htmlFor="allowEmailContact"
+                            >
+                              Allow public to contact me on my email address
+                            </label>
+                          </div>
+                        </div>
+                      </div>
+                      <div className="col-sm-6">
+                        <div className="panel panel-info">
+                          <div className="panel-heading">
+                            Contact Preferences
+                          </div>
+                          <div className="form-check">
+                            <input
+                              className="form-check-input"
+                              type="checkbox"
+                              name="allowMobileContact"
+                              id="allowMobileContact"
+                              checked={form.allowMobileContact}
+                              onChange={onChange}
+                            />
+                            <label
+                              className="form-check-label"
+                              htmlFor="allowMobileContact"
+                            >
+                              Allow public to contact me on my mobile number
+                            </label>
+                          </div>
+                        </div>
+                      </div>
+                    </div>
+
+                    {!form.allowEmailContact && !form.allowMobileContact && (
+                      <div className="form-group row">
+                        <div className="col-12">
+                          <div className="alert alert-warning" role="alert">
+                            <small>
+                              <strong>Warning:</strong> You have disabled both
+                              email and mobile contact options. Public users can
+                              only send messages within this app to contact you.
+                            </small>
+                          </div>
+                        </div>
+                      </div>
+                    )}
+
+                    <div className="form-group row">
+                      <div className="col-sm-6">
+                        <div className="panel panel-info">
                           <div className="panel-heading">Password</div>
                           <input
                             type="password"
@@ -505,26 +593,6 @@ function RegisterUser() {
                             Password must be at least 8 characters long and
                             contain at least one number and one special
                             character.
-                          </small>
-                        </div>
-                      </div>
-                      <div className="col-sm-6">
-                        <div className="panel panel-info">
-                          <div className="panel-heading">
-                            Secondary email Id to contact (optional)
-                          </div>
-                          <input
-                            type="email"
-                            name="secondaryEmail"
-                            id="secondaryEmail"
-                            className="form-control input-lg"
-                            placeholder="secondary@example.com"
-                            value={form.secondaryEmail}
-                            onChange={onChange}
-                          />
-                          <small className="form-text text-muted">
-                            if left blank then your primary email id will be
-                            used by users to contact you
                           </small>
                         </div>
                       </div>

@@ -20,6 +20,8 @@
       "countryCode": "+353",
       "isWhatsappAvailable": true,
       "whatsappNumber": "",
+      "allowEmailContact": false,
+      "allowMobileContact": false,
       "linkedinUrl": "https://linkedin.com/abhishek15",
       "facebookUrl": "https://facebook.com/abhi15"
     },
@@ -39,7 +41,9 @@
       "workPreference": "Remote",
       "traveling": "No Traveling",
       "availability": "Immediate",
-      "createdAt": "2025-09-16T22:14:17.158Z"
+      "createdAt": "2025-09-16T22:14:17.158Z",
+      "allowEmailContact": false,
+      "allowMobileContact": false
     },
     {
       "id": "u_mfsxzcoq_0mjou1",
@@ -60,7 +64,9 @@
       "createdAt": "2025-09-21T00:11:14.828Z",
       "category": "",
       "showInDashboard": 0,
-      "showPhoto": 0
+      "showPhoto": 0,
+      "allowEmailContact": false,
+      "allowMobileContact": false
     },
     {
       "id": "u_mfsyjp1l_puhfyi",
@@ -81,7 +87,9 @@
       "createdAt": "2025-09-21T00:27:03.963Z",
       "category": "",
       "showInDashboard": true,
-      "showPhoto": false
+      "showPhoto": false,
+      "allowEmailContact": false,
+      "allowMobileContact": false
     }
   ]
 }
