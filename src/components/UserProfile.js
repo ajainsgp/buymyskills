@@ -301,30 +301,34 @@ function UserProfile({ userProfiles, showSensitive = false }) {
             <h5 className="card-title">Contact Details</h5>
           </div>
           <div className="card-body body-back">
-            <p style={{ marginBottom: 0 }}>
-              Email: {showSensitive ? profile.emailId : "Login to view"}
-            </p>
-            <p style={{ marginBottom: 0 }}>
-              Mobile:{" "}
-              {showSensitive ? (
-                showMobile[profile.id] ? (
-                  profile.mobile || "N/A"
+            {profile.allowEmailContact && (
+              <p style={{ marginBottom: 0 }}>
+                Email: {showSensitive ? profile.emailId : "Login to view"}
+              </p>
+            )}
+            {profile.allowMobileContact && (
+              <p style={{ marginBottom: 0 }}>
+                Mobile:{" "}
+                {showSensitive ? (
+                  showMobile[profile.id] ? (
+                    profile.mobile || "N/A"
+                  ) : (
+                    <button
+                      className="btn btn-link p-0"
+                      onClick={(e) => handleContactClick(profile.id, e)}
+                      style={{ textDecoration: "none", color: "#007bff" }}
+                    >
+                      Contact{" "}
+                      {profile.firstName ||
+                        profile.name?.split(" ")[0] ||
+                        "him/her"}
+                    </button>
+                  )
                 ) : (
-                  <button
-                    className="btn btn-link p-0"
-                    onClick={(e) => handleContactClick(profile.id, e)}
-                    style={{ textDecoration: "none", color: "#007bff" }}
-                  >
-                    Contact{" "}
-                    {profile.firstName ||
-                      profile.name?.split(" ")[0] ||
-                      "him/her"}
-                  </button>
-                )
-              ) : (
-                "Login to view"
-              )}
-            </p>
+                  "Login to view"
+                )}
+              </p>
+            )}
             {showSensitive && profile.facebookUrl && (
               <p style={{ marginBottom: 0 }}>
                 Facebook:{" "}

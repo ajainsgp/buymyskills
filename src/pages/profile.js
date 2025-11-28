@@ -35,6 +35,8 @@ function Profile() {
     },
     isWhatsappAvailable: false,
     whatsappNumber: "",
+    allowEmailContact: false,
+    allowMobileContact: false,
     facebookUrl: "",
     linkedinUrl: "",
   });
@@ -549,6 +551,64 @@ function Profile() {
                     </div>
                   </div>
                 </div>
+
+                <div className="form-group row">
+                  <div className="col-sm-6">
+                    <div className="panel panel-info">
+                      <div className="panel-heading">Contact Preferences</div>
+                      <div className="form-check">
+                        <input
+                          className="form-check-input"
+                          type="checkbox"
+                          name="allowEmailContact"
+                          id="allowEmailContact"
+                          checked={form.allowEmailContact}
+                          onChange={(e) => setForm(prev => ({
+                            ...prev,
+                            allowEmailContact: e.target.checked
+                          }))}
+                        />
+                        <label className="form-check-label" htmlFor="allowEmailContact">
+                          Allow public to contact me on my email address
+                        </label>
+                      </div>
+                    </div>
+                  </div>
+                  <div className="col-sm-6">
+                    <div className="panel panel-info">
+                      <div className="panel-heading">Contact Preferences</div>
+                      <div className="form-check">
+                        <input
+                          className="form-check-input"
+                          type="checkbox"
+                          name="allowMobileContact"
+                          id="allowMobileContact"
+                          checked={form.allowMobileContact}
+                          onChange={(e) => setForm(prev => ({
+                            ...prev,
+                            allowMobileContact: e.target.checked
+                          }))}
+                        />
+                        <label className="form-check-label" htmlFor="allowMobileContact">
+                          Allow public to contact me on my mobile number
+                        </label>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+
+                {!form.allowEmailContact && !form.allowMobileContact && (
+                  <div className="form-group row">
+                    <div className="col-12">
+                      <div className="alert alert-warning" role="alert">
+                        <small>
+                          <strong>Warning:</strong> You have disabled both email and mobile contact options.
+                          Public users can only send messages within this app to contact you.
+                        </small>
+                      </div>
+                    </div>
+                  </div>
+                )}
 
                 <div className="form-group row">
                   <div className="col-md-6">
