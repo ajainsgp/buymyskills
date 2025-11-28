@@ -306,15 +306,18 @@ function UserProfile({ userProfiles, showSensitive = false }) {
             <h5 className="card-title">Contact Details</h5>
           </div>
           <div className="card-body body-back">
-            {profile.allowEmailContact && (
-              <p style={{ marginBottom: 0 }}>
-                Email: {showSensitive ? profile.emailId : "Login to view"}
-              </p>
-            )}
-            {profile.allowMobileContact && (
-              <p style={{ marginBottom: 0 }}>
-                Mobile:{" "}
-                {showSensitive ? (
+            <p style={{ marginBottom: 0 }}>
+              Email:{" "}
+              {showSensitive
+                ? profile.allowEmailContact
+                  ? profile.emailId
+                  : "Hide"
+                : "Login to view"}
+            </p>
+            <p style={{ marginBottom: 0 }}>
+              Mobile:{" "}
+              {showSensitive ? (
+                profile.allowMobileContact ? (
                   showMobile[profile.id] ? (
                     profile.mobile || "N/A"
                   ) : (
@@ -330,10 +333,12 @@ function UserProfile({ userProfiles, showSensitive = false }) {
                     </button>
                   )
                 ) : (
-                  "Login to view"
-                )}
-              </p>
-            )}
+                  "Hide"
+                )
+              ) : (
+                "Login to view"
+              )}
+            </p>
             {showSensitive && profile.facebookUrl && (
               <p style={{ marginBottom: 0 }}>
                 Facebook:{" "}
@@ -360,6 +365,21 @@ function UserProfile({ userProfiles, showSensitive = false }) {
                 >
                   {profile.linkedinUrl}
                 </a>
+              </p>
+            )}
+            {showSensitive && (profile.startingPrice || profile.negotiable) && (
+              <p style={{ marginBottom: 0 }}>
+                <strong>Price:</strong>{" "}
+                {profile.startingPrice && profile.currencyCode
+                  ? `${profile.currencyCode} ${parseFloat(profile.startingPrice).toFixed(2)}`
+                  : ""}
+                {profile.negotiable && (
+                  <span
+                    style={{ marginLeft: profile.startingPrice ? "10px" : "0" }}
+                  >
+                    (Negotiable)
+                  </span>
+                )}
               </p>
             )}
             {showSensitive && currentUser && currentUser.id !== profile.id && (
