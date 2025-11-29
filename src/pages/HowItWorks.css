@@ -1,0 +1,80 @@
+/* How It Works Page Styles */
+
+.how-it-works-hero {
+  padding-left: 0px;
+  padding-right: 0px;
+}
+
+.how-it-works-main {
+  padding: 2rem 0;
+}
+
+.how-it-works-title {
+  color: #042C76;
+}
+
+.feature-icon {
+  font-size: 3rem;
+  margin-bottom: 1rem;
+}
+
+.feature-icon-home {
+  color: #042C76;
+}
+
+.feature-icon-flexible {
+  color: #28a745;
+}
+
+.feature-icon-security {
+  color: #dc3545;
+}
+
+.step-icon {
+  font-size: 3rem;
+  margin-bottom: 1rem;
+}
+
+.step-icon-1 {
+  color: #28a745;
+}
+
+.step-icon-2 {
+  color: #ffc107;
+}
+
+.step-icon-3 {
+  color: #17a2b8;
+}
+
+.why-choose-icon {
+  font-size: 2rem;
+  margin-right: 1rem;
+}
+
+.why-choose-icon-global {
+  color: #28a745;
+}
+
+.why-choose-icon-flexible {
+  color: #007bff;
+}
+
+.why-choose-icon-secure {
+  color: #ffc107;
+}
+
+.why-choose-icon-compensation {
+  color: #dc3545;
+}
+
+.success-story-icon {
+  font-size: 2rem;
+  margin-bottom: 0.5rem;
+}
+
+.call-to-action-card {
+  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+  color: white;
+  border: none;
+}

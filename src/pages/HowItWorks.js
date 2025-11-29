@@ -1,14 +1,12 @@
 import React from "react";
 import { Link } from "react-router-dom";
+import "./HowItWorks.css";
 
 function HowItWorks() {
   return (
     <div>
       {/* Hero Section - Same as About and Feedback pages */}
-      <section
-        className="hero-section bg-gradient-primary text-white py-5"
-        style={{ paddingLeft: "0px", paddingRight: "0px" }}
-      >
+      <section className="hero-section bg-gradient-primary text-white py-5 how-it-works-hero">
         <div className="about-us-fluid">
           <div className="text-center">
             <h1 className="display-4 font-weight-bold mb-4">How It Works</h1>
@@ -21,25 +19,48 @@ function HowItWorks() {
       </section>
 
       {/* Main Content */}
-      <div style={{ padding: "2rem 0" }}>
+      <div className="how-it-works-main">
         <div className="row">
           <div className="col-lg-8 mx-auto">
             {/* Introduction */}
             <div className="card shadow mb-4">
               <div className="card-body p-3">
-                <h2
-                  className="card-title text-center mb-3"
-                  style={{ color: "#042C76" }}
-                >
+                <h2 className="card-title text-center mb-3 how-it-works-title">
                   🚀 Offer Your Expertise to the World
                 </h2>
                 <p className="card-text lead text-center mb-3">
-                  <strong>Buy My Skills</strong> is your gateway to connecting
-                  with clients worldwide. Whether you&apos;re a developer,
-                  designer, consultant, or expert in any field, our platform
-                  makes it simple to showcase your skills and find meaningful
-                  work.
+                  <strong>Buy My Skills</strong> connects your local expertise
+                  with your local community, city, and country. Whether
+                  developer, designer, consultant, or expert in any field, our
+                  intelligent regional filtering system ensures you connect with
+                  relevant opportunities while protecting your data privacy.
                 </p>
+                <div className="row mt-4">
+                  <div className="col-md-4 text-center mb-3">
+                    <div className="feature-icon feature-icon-home">🏠</div>
+                    <h5>Local Community Focus</h5>
+                    <p className="medium">
+                      Connect with clients in your region for easier
+                      collaboration and local opportunities.
+                    </p>
+                  </div>
+                  <div className="col-md-4 text-center mb-3">
+                    <div className="feature-icon feature-icon-flexible">🔄</div>
+                    <h5>Flexible Regional Reach</h5>
+                    <p className="medium">
+                      Expand within your region while maintaining local
+                      connections and cultural understanding.
+                    </p>
+                  </div>
+                  <div className="col-md-4 text-center mb-3">
+                    <div className="feature-icon feature-icon-security">🛡️</div>
+                    <h5>Data Protection</h5>
+                    <p className="medium">
+                      Region-based filtering keeps your information secure
+                      within trusted geographic boundaries.
+                    </p>
+                  </div>
+                </div>
                 <div className="text-center">
                   <Link
                     to="/register"
@@ -63,15 +84,7 @@ function HowItWorks() {
               <div className="card-body">
                 <div className="row">
                   <div className="col-md-4 text-center mb-4">
-                    <div
-                      style={{
-                        fontSize: "3rem",
-                        color: "#28a745",
-                        marginBottom: "1rem",
-                      }}
-                    >
-                      📝
-                    </div>
+                    <div className="step-icon step-icon-1">📝</div>
                     <h4 className="mb-3">1. Create Your Profile</h4>
                     <p>
                       Sign up and create a compelling profile showcasing your
@@ -80,15 +93,7 @@ function HowItWorks() {
                     </p>
                   </div>
                   <div className="col-md-4 text-center mb-4">
-                    <div
-                      style={{
-                        fontSize: "3rem",
-                        color: "#ffc107",
-                        marginBottom: "1rem",
-                      }}
-                    >
-                      🎯
-                    </div>
+                    <div className="step-icon step-icon-2">🎯</div>
                     <h4 className="mb-3">2. Set Your Availability</h4>
                     <p>
                       Choose your preferred work style (remote, on-site, or
@@ -98,15 +103,7 @@ function HowItWorks() {
                     </p>
                   </div>
                   <div className="col-md-4 text-center mb-4">
-                    <div
-                      style={{
-                        fontSize: "3rem",
-                        color: "#17a2b8",
-                        marginBottom: "1rem",
-                      }}
-                    >
-                      🤝
-                    </div>
+                    <div className="step-icon step-icon-3">🤝</div>
                     <h4 className="mb-3">3. Connect & Collaborate</h4>
                     <p>
                       Get discovered by clients browsing our platform. Respond
@@ -130,13 +127,7 @@ function HowItWorks() {
                 <div className="row">
                   <div className="col-md-6 mb-3">
                     <div className="d-flex align-items-start">
-                      <div
-                        style={{
-                          fontSize: "2rem",
-                          marginRight: "1rem",
-                          color: "#28a745",
-                        }}
-                      >
+                      <div className="why-choose-icon why-choose-icon-global">
                         🌍
                       </div>
                       <div>
@@ -150,13 +141,7 @@ function HowItWorks() {
                   </div>
                   <div className="col-md-6 mb-3">
                     <div className="d-flex align-items-start">
-                      <div
-                        style={{
-                          fontSize: "2rem",
-                          marginRight: "1rem",
-                          color: "#007bff",
-                        }}
-                      >
+                      <div className="why-choose-icon why-choose-icon-flexible">
                         💼
                       </div>
                       <div>
@@ -170,13 +155,7 @@ function HowItWorks() {
                   </div>
                   <div className="col-md-6 mb-3">
                     <div className="d-flex align-items-start">
-                      <div
-                        style={{
-                          fontSize: "2rem",
-                          marginRight: "1rem",
-                          color: "#ffc107",
-                        }}
-                      >
+                      <div className="why-choose-icon why-choose-icon-secure">
                         🔒
                       </div>
                       <div>
@@ -190,13 +169,7 @@ function HowItWorks() {
                   </div>
                   <div className="col-md-6 mb-3">
                     <div className="d-flex align-items-start">
-                      <div
-                        style={{
-                          fontSize: "2rem",
-                          marginRight: "1rem",
-                          color: "#dc3545",
-                        }}
-                      >
+                      <div className="why-choose-icon why-choose-icon-compensation">
                         💰
                       </div>
                       <div>
@@ -258,14 +231,7 @@ function HowItWorks() {
             </div>
 
             {/* Call to Action */}
-            <div
-              className="card shadow mb-4"
-              style={{
-                background: "linear-gradient(135deg, #667eea 0%, #764ba2 100%)",
-                color: "white",
-                border: "none",
-              }}
-            >
+            <div className="card shadow mb-4 call-to-action-card">
               <div className="card-body text-center p-5">
                 <h3 className="mb-3">Ready to Start Your Journey?</h3>
                 <p className="lead mb-4">

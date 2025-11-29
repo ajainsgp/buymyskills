@@ -58,6 +58,8 @@ function RegisterUser() {
   const [countriesWithCodes, setCountriesWithCodes] = useState([]);
   const [fieldErrors, setFieldErrors] = useState({});
   const [confirmInfo, setConfirmInfo] = useState(false);
+  const [categoryPriceRange, setCategoryPriceRange] = useState(null);
+  const [loadingPriceRange, setLoadingPriceRange] = useState(false);
 
   useEffect(() => {
     let ignore = false;
@@ -92,20 +94,59 @@ function RegisterUser() {
     };
   }, []);
 
-  // Auto-set currency code based on selected country
+  // Auto-set currency code and mobile country code based on selected country
   useEffect(() => {
     if (form.country && countriesWithCodes.length > 0) {
       const selectedCountry = countriesWithCodes.find(
         (c) => c.name === form.country,
       );
-      if (selectedCountry && selectedCountry.currencyCode) {
-        setForm((prev) => ({
-          ...prev,
-          currencyCode: selectedCountry.currencyCode,
-        }));
+      if (selectedCountry) {
+        // Auto-set currency code
+        if (selectedCountry.currencyCode) {
+          setForm((prev) => ({
+            ...prev,
+            currencyCode: selectedCountry.currencyCode,
+          }));
+        }
+        // Auto-set mobile country code
+        if (selectedCountry.phoneCode) {
+          setForm((prev) => ({
+            ...prev,
+            countryCode: selectedCountry.phoneCode,
+          }));
+        }
       }
     }
   }, [form.country, countriesWithCodes]);
+
+  // Fetch price range when category changes
+  useEffect(() => {
+    const fetchPriceRange = async () => {
+      if (form.category) {
+        setLoadingPriceRange(true);
+        try {
+          const response = await fetch(
+            `${API_BASE}/api/categories/${encodeURIComponent(form.category)}/price-range`,
+          );
+          if (response.ok) {
+            const data = await response.json();
+            setCategoryPriceRange(data);
+          } else {
+            setCategoryPriceRange(null);
+          }
+        } catch (error) {
+          console.error("Error fetching price range:", error);
+          setCategoryPriceRange(null);
+        } finally {
+          setLoadingPriceRange(false);
+        }
+      } else {
+        setCategoryPriceRange(null);
+      }
+    };
+
+    fetchPriceRange();
+  }, [form.category]);
 
   const onChange = (e) => {
     const { name, value, type, checked } = e.target;
@@ -585,6 +626,7 @@ function RegisterUser() {
                                 className="form-control"
                                 value={form.countryCode}
                                 onChange={onChange}
+                                disabled
                               >
                                 {countryCodes
                                   .filter((country) => country.enabled === "Y")
@@ -712,11 +754,11 @@ function RegisterUser() {
                       <div className="form-group row">
                         <div className="col-12">
                           <div className="alert alert-warning" role="alert">
-                            <small>
+                            <medium>
                               <strong>Warning:</strong> You have disabled both
-                              email and mobile contact options. Public users can
-                              only send messages within this app to contact you.
-                            </small>
+                              email and mobile contact options. Users can only
+                              send messages within this app to contact you.
+                            </medium>
                           </div>
                         </div>
                       </div>
@@ -867,84 +909,170 @@ function RegisterUser() {
                       <div className="col-md-6">
                         <div className="panel panel-default">
                           <div className="panel-heading">Starting Price</div>
-                          <div className="input-group">
-                            <div className="input-group-prepend">
-                              <select
-                                name="currencyCode"
-                                className="custom-select"
-                                value={form.currencyCode}
-                                onChange={onChange}
-                                style={{ minWidth: "80px" }}
-                              >
-                                <option value="USD">USD</option>
-                                <option value="EUR">EUR</option>
-                                <option value="GBP">GBP</option>
-                                <option value="INR">INR</option>
-                                <option value="SGD">SGD</option>
-                                <option value="AUD">AUD</option>
-                                <option value="CAD">CAD</option>
-                              </select>
+                          <div className="row">
+                            <div className="col-md-8">
+                              <div className="input-group">
+                                <div className="input-group-prepend">
+                                  <select
+                                    name="currencyCode"
+                                    className="custom-select"
+                                    value={form.currencyCode}
+                                    onChange={onChange}
+                                    disabled
+                                    style={{ minWidth: "80px" }}
+                                  >
+                                    <option value="USD">USD</option>
+                                    <option value="EUR">EUR</option>
+                                    <option value="GBP">GBP</option>
+                                    <option value="INR">INR</option>
+                                    <option value="SGD">SGD</option>
+                                    <option value="AUD">AUD</option>
+                                    <option value="CAD">CAD</option>
+                                  </select>
+                                </div>
+                                <input
+                                  type="number"
+                                  name="startingPrice"
+                                  className="form-control"
+                                  placeholder="Enter starting price"
+                                  value={form.startingPrice}
+                                  onChange={onChange}
+                                  min="0"
+                                  step="0.01"
+                                />
+                              </div>
                             </div>
-                            <input
-                              type="number"
-                              name="startingPrice"
-                              className="form-control"
-                              placeholder="Enter starting price"
-                              value={form.startingPrice}
-                              onChange={onChange}
-                              min="0"
-                              step="0.01"
-                            />
+                            <div className="col-md-4">
+                              <div
+                                className="form-check form-check-inline"
+                                style={{ marginRight: "15px" }}
+                              >
+                                <input
+                                  className="form-check-input"
+                                  type="radio"
+                                  name="rateType"
+                                  id="hourly"
+                                  value="H"
+                                  checked={form.rateType === "H"}
+                                  onChange={(e) =>
+                                    setForm((prev) => ({
+                                      ...prev,
+                                      rateType: e.target.value,
+                                    }))
+                                  }
+                                />
+                                <label
+                                  className="form-check-label"
+                                  htmlFor="hourly"
+                                >
+                                  Hourly
+                                </label>
+                              </div>
+                              <div className="form-check form-check-inline">
+                                <input
+                                  className="form-check-input"
+                                  type="radio"
+                                  name="rateType"
+                                  id="daily"
+                                  value="D"
+                                  checked={form.rateType === "D"}
+                                  onChange={(e) =>
+                                    setForm((prev) => ({
+                                      ...prev,
+                                      rateType: e.target.value,
+                                    }))
+                                  }
+                                />
+                                <label
+                                  className="form-check-label"
+                                  htmlFor="daily"
+                                >
+                                  Daily
+                                </label>
+                              </div>
+                            </div>
                           </div>
-                          <small className="form-text text-muted">
+                          {/* <small className="form-text text-muted">
                             Your minimum hourly/daily rate
-                          </small>
-                          <div style={{ marginTop: "10px" }}>
-                            <div className="form-check form-check-inline">
-                              <input
-                                className="form-check-input"
-                                type="radio"
-                                name="rateType"
-                                id="hourly"
-                                value="H"
-                                checked={form.rateType === "H"}
-                                onChange={(e) =>
-                                  setForm((prev) => ({
-                                    ...prev,
-                                    rateType: e.target.value,
-                                  }))
-                                }
-                              />
-                              <label
-                                className="form-check-label"
-                                htmlFor="hourly"
+                          </small> */}
+                          {/* Price Range Display */}
+                          {form.category && categoryPriceRange && (
+                            <div
+                              style={{
+                                marginTop: "10px",
+                                padding: "8px",
+                                backgroundColor: "#f8f9fa",
+                                borderRadius: "4px",
+                                border: "1px solid #dee2e6",
+                              }}
+                            >
+                              <small
+                                style={{ color: "#495057", fontWeight: "bold" }}
                               >
-                                Hourly
-                              </label>
+                                💰 Market Rate Range for {form.category}:
+                              </small>
+                              <div style={{ marginTop: "4px" }}>
+                                {categoryPriceRange.hourly.min !== null &&
+                                  categoryPriceRange.hourly.max !== null && (
+                                    <div
+                                      style={{
+                                        fontSize: "12px",
+                                        color: "#6c757d",
+                                      }}
+                                    >
+                                      <strong>Hourly:</strong>{" "}
+                                      {form.currencyCode}{" "}
+                                      {categoryPriceRange.hourly.min} -{" "}
+                                      {form.currencyCode}{" "}
+                                      {categoryPriceRange.hourly.max}
+                                    </div>
+                                  )}
+                                {categoryPriceRange.daily.min !== null &&
+                                  categoryPriceRange.daily.max !== null && (
+                                    <div
+                                      style={{
+                                        fontSize: "12px",
+                                        color: "#6c757d",
+                                        marginTop: "2px",
+                                      }}
+                                    >
+                                      <strong>Daily:</strong>{" "}
+                                      {form.currencyCode}{" "}
+                                      {categoryPriceRange.daily.min} -{" "}
+                                      {form.currencyCode}{" "}
+                                      {categoryPriceRange.daily.max}
+                                    </div>
+                                  )}
+                                {(categoryPriceRange.hourly.min === null ||
+                                  categoryPriceRange.daily.min === null) && (
+                                  <div
+                                    style={{
+                                      fontSize: "11px",
+                                      color: "#868e96",
+                                      fontStyle: "italic",
+                                      marginTop: "2px",
+                                    }}
+                                  >
+                                    Limited data available for this category
+                                  </div>
+                                )}
+                              </div>
                             </div>
-                            <div className="form-check form-check-inline">
-                              <input
-                                className="form-check-input"
-                                type="radio"
-                                name="rateType"
-                                id="daily"
-                                value="D"
-                                checked={form.rateType === "D"}
-                                onChange={(e) =>
-                                  setForm((prev) => ({
-                                    ...prev,
-                                    rateType: e.target.value,
-                                  }))
-                                }
-                              />
-                              <label
-                                className="form-check-label"
-                                htmlFor="daily"
-                              >
-                                Daily
-                              </label>
+                          )}
+                          {loadingPriceRange && form.category && (
+                            <div
+                              style={{
+                                marginTop: "10px",
+                                padding: "8px",
+                                backgroundColor: "#f8f9fa",
+                                borderRadius: "4px",
+                              }}
+                            >
+                              <small style={{ color: "#6c757d" }}>
+                                Loading market rates...
+                              </small>
                             </div>
-                          </div>
+                          )}
                         </div>
                       </div>
                       <div className="col-md-6">

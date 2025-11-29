@@ -50,7 +50,10 @@ body {
 }
 
 .img-radius {
-    border-radius: 5px;
+    border-radius: 50%;
+    width: 100px;
+    height: 100px;
+    object-fit: cover;
 }
 
 
@@ -134,5 +137,3 @@ p {
     -webkit-transition: all 0.3s ease-in-out;
     transition: all 0.3s ease-in-out;
 }
-
-
