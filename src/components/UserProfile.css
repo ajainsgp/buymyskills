@@ -17,6 +17,29 @@
   padding: 0 !important;
 } */
 
+  .user-profile-skills-rating-row {
+    display: flex;
+    gap: 0.5rem;
+    align-items: center;
+    margin-bottom: 0.5rem;
+  }
+
+  .skill-bubble,
+  .rating-bubble {
+    background-color: #042c76;
+    color: white;
+    border-radius: 0.7rem;
+    padding: 0.2rem 0.5rem;
+    display: inline-flex;
+    align-items: center;
+    font-size: 14px;
+    font-weight: bold;
+  }
+
+  .rating-bubble {
+    padding: 0.2rem 0.4rem;
+  }
+
   .user-profile-skills {
     background-color: #042c76;
     color: white;

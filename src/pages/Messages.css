@@ -141,10 +141,30 @@
   font-size: 0.75rem;
 }
 
+/* Message Container */
+.message-container {
+  margin-bottom: 0.5rem;
+}
+
+.message-sender-label {
+  display: flex;
+  justify-content: flex-end;
+  margin-bottom: 0.25rem;
+  margin-right: 0.75rem;
+}
+
+.message-sender-label small {
+  color: #6c757d;
+  font-size: 11px;
+  font-weight: 600;
+  background-color: #f8f9fa;
+  padding: 2px 6px;
+  border-radius: 8px;
+}
+
 /* Message Bubbles */
 .message-bubble {
   display: flex;
-  margin-bottom: 0.5rem;
 }
 
 .message-bubble.sent {

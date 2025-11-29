@@ -550,6 +550,7 @@ function mapDbUserRowToApiUser(row) {
     startingPrice: row.starting_price ? parseFloat(row.starting_price) : null,
     negotiable: !!row.negotiable,
     currencyCode: row.currency_code || "",
+    rateType: row.rate_type || "",
     roleType: rt,
     createdAt,
   };
@@ -2095,8 +2096,20 @@ app.get("/api/messages/unread-count", async (req, res) => {
 app.get("/api/users/:id/rating", async (req, res) => {
   try {
     const { id } = req.params || {};
-    const rating = await db.getUserAverageRating(id);
-    return res.json({ rating });
+
+    if (USE_DB) {
+      const rating = await db.getUserAverageRating(id);
+      return res.json({ rating });
+    }
+
+    // FS mode: Return default rating (filesystem doesn't have ratings system)
+    // In a real implementation, you'd store ratings in a separate JSON file
+    return res.json({
+      rating: {
+        averageRating: null, // No ratings in filesystem mode
+        totalRatings: 0
+      }
+    });
   } catch (err) {
     console.error("Get user rating error:", err);
     return res.status(500).json({ error: "Internal server error" });

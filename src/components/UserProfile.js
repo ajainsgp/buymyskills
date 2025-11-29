@@ -38,6 +38,7 @@ function UserProfile({ userProfiles, showSensitive = false }) {
   useEffect(() => {
     let cancelled = false;
 
+    // eslint-disable-next-line no-unused-vars
     async function loadPhotos() {
       try {
         const entries = await Promise.all(
@@ -75,10 +76,12 @@ function UserProfile({ userProfiles, showSensitive = false }) {
             if (!p || !p.id) return [null, null];
             try {
               const res = await fetch(`${API_BASE}/api/users/${p.id}/rating`);
-              if (!res.ok) return [p.id, null];
+              if (!res.ok) {
+                return [p.id, null];
+              }
               const data = await res.json().catch(() => ({}));
               return [p.id, data.rating];
-            } catch {
+            } catch (error) {
               return [p.id, null];
             }
           }),
@@ -90,7 +93,8 @@ function UserProfile({ userProfiles, showSensitive = false }) {
           }
           setRatings(ratingMap);
         }
-      } catch {
+      } catch (error) {
+        console.log("Error in loadRatings:", error);
         // ignore
       }
     }
@@ -194,7 +198,24 @@ function UserProfile({ userProfiles, showSensitive = false }) {
   };
 
   const renderStars = (rating) => {
-    if (!rating || !rating.averageRating) return null;
+    if (!rating) return null;
+
+    // If user has no ratings yet, show message
+    if (rating.averageRating === null || rating.totalRatings === 0) {
+      return (
+        <div
+          className="no-ratings-text"
+          style={{
+            fontSize: "12px",
+            color: "#f5f7f9ff",
+            fontStyle: "italic",
+            fontWeight: "500",
+          }}
+        >
+          No ratings yet
+        </div>
+      );
+    }
 
     return (
       <div
@@ -208,7 +229,9 @@ function UserProfile({ userProfiles, showSensitive = false }) {
             style={{ fontSize: "14px" }}
           ></i>
         ))}
-        <span style={{ fontSize: "12px", marginLeft: "4px", color: "#6c757d" }}>
+        <span
+          style={{ fontSize: "12px", marginLeft: "4px", color: "#eff2f5ff" }}
+        >
           ({rating.totalRatings})
         </span>
       </div>
@@ -258,9 +281,15 @@ function UserProfile({ userProfiles, showSensitive = false }) {
             </div>
           </div>
           <div className="card-body body-front">
-            <div className="user-profile-skills">
-              <strong>Skills</strong>
-              {ratings[profile.id] && renderStars(ratings[profile.id])}
+            <div className="user-profile-skills-rating-row">
+              <div className="skill-bubble">
+                <strong>Skills</strong>
+              </div>
+              {ratings[profile.id] && (
+                <div className="rating-bubble">
+                  {renderStars(ratings[profile.id])}
+                </div>
+              )}
             </div>
             <p className="card-text">{profile.summary}</p>
           </div>
@@ -373,9 +402,19 @@ function UserProfile({ userProfiles, showSensitive = false }) {
                 {profile.startingPrice && profile.currencyCode
                   ? `${profile.currencyCode} ${parseFloat(profile.startingPrice).toFixed(2)}`
                   : ""}
+                {profile.rateType && (
+                  <span
+                    style={{ marginLeft: profile.startingPrice ? "5px" : "0" }}
+                  >
+                    ({profile.rateType === "H" ? "Hourly" : "Daily"})
+                  </span>
+                )}
                 {profile.negotiable && (
                   <span
-                    style={{ marginLeft: profile.startingPrice ? "10px" : "0" }}
+                    style={{
+                      marginLeft:
+                        profile.startingPrice || profile.rateType ? "5px" : "0",
+                    }}
                   >
                     (Negotiable)
                   </span>

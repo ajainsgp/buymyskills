@@ -42,6 +42,7 @@ function Profile() {
     startingPrice: "",
     negotiable: false,
     currencyCode: "USD",
+    rateType: "D",
   });
 
   const [photoUrl, setPhotoUrl] = useState("");
@@ -330,6 +331,10 @@ function Profile() {
         summary: form.summary,
         workPreference: form.workPreference,
         availability: form.availability,
+        startingPrice: form.startingPrice,
+        negotiable: form.negotiable,
+        currencyCode: form.currencyCode,
+        rateType: form.rateType,
         address: { ...form.address },
       };
       const res = await fetch(`${API_BASE}/api/users/${userId}`, {
@@ -801,6 +806,42 @@ function Profile() {
                       <small className="form-text text-muted">
                         Your minimum hourly/daily rate
                       </small>
+                      <div style={{ marginTop: "10px" }}>
+                        <div className="form-check form-check-inline">
+                          <input
+                            className="form-check-input"
+                            type="radio"
+                            name="rateType"
+                            id="hourly"
+                            value="H"
+                            checked={form.rateType === "H"}
+                            onChange={(e) => setForm(prev => ({
+                              ...prev,
+                              rateType: e.target.value
+                            }))}
+                          />
+                          <label className="form-check-label" htmlFor="hourly">
+                            Hourly
+                          </label>
+                        </div>
+                        <div className="form-check form-check-inline">
+                          <input
+                            className="form-check-input"
+                            type="radio"
+                            name="rateType"
+                            id="daily"
+                            value="D"
+                            checked={form.rateType === "D"}
+                            onChange={(e) => setForm(prev => ({
+                              ...prev,
+                              rateType: e.target.value
+                            }))}
+                          />
+                          <label className="form-check-label" htmlFor="daily">
+                            Daily
+                          </label>
+                        </div>
+                      </div>
                     </div>
                   </div>
                   <div className="col-md-6">

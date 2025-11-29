@@ -390,16 +390,25 @@ function Messages() {
                             {dateMessages.map((message) => (
                               <div
                                 key={message.id}
-                                className={`message-bubble ${
-                                  message.isSentByMe ? "sent" : "received"
-                                }`}
+                                className="message-container"
                               >
-                                <div className="message-content">
-                                  <div className="message-text">
-                                    {message.content}
+                                {message.isSentByMe && (
+                                  <div className="message-sender-label">
+                                    <small>You</small>
                                   </div>
-                                  <div className="message-time">
-                                    {formatMessageDate(message.createdAt)}
+                                )}
+                                <div
+                                  className={`message-bubble ${
+                                    message.isSentByMe ? "sent" : "received"
+                                  }`}
+                                >
+                                  <div className="message-content">
+                                    <div className="message-text">
+                                      {message.content}
+                                    </div>
+                                    <div className="message-time">
+                                      {formatMessageDate(message.createdAt)}
+                                    </div>
                                   </div>
                                 </div>
                               </div>
