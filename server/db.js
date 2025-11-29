@@ -74,6 +74,8 @@ async function initSchema() {
       starting_price          DECIMAL(10,2),
       negotiable              TINYINT(1) NOT NULL DEFAULT 0,
       currency_code           VARCHAR(3),
+      start_date              DATETIME NOT NULL,
+      end_date                DATETIME,
       created_at              DATETIME NOT NULL,
       INDEX (email_id)
     ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;`);
@@ -338,30 +340,44 @@ async function initSchema() {
       console.warn("landing page cards seed warning:", e.message);
     }
 
-    // Ensure new columns exist on 'users' table for category, role and consents
+    // Ensure ALL required columns exist on 'users' table
     try {
       const [cols] = await conn.query(
         "SELECT COLUMN_NAME FROM INFORMATION_SCHEMA.COLUMNS WHERE TABLE_SCHEMA = DATABASE() AND TABLE_NAME = 'users'"
       );
       const names = new Set(cols.map(c => String(c.COLUMN_NAME).toLowerCase()));
-      if (!names.has("category")) {
-        await conn.query("ALTER TABLE users ADD COLUMN category VARCHAR(100) NULL");
+      console.log("Existing users table columns:", Array.from(names));
+
+      // Add missing columns
+      const columnsToAdd = [
+        { name: "is_whatsapp_available", sql: "ALTER TABLE users ADD COLUMN is_whatsapp_available TINYINT(1) NOT NULL DEFAULT 0" },
+        { name: "whatsapp_number", sql: "ALTER TABLE users ADD COLUMN whatsapp_number VARCHAR(32) NULL" },
+        { name: "allow_email_contact", sql: "ALTER TABLE users ADD COLUMN allow_email_contact TINYINT(1) NOT NULL DEFAULT 0" },
+        { name: "allow_mobile_contact", sql: "ALTER TABLE users ADD COLUMN allow_mobile_contact TINYINT(1) NOT NULL DEFAULT 0" },
+        { name: "facebook_url", sql: "ALTER TABLE users ADD COLUMN facebook_url VARCHAR(255) NULL" },
+        { name: "linkedin_url", sql: "ALTER TABLE users ADD COLUMN linkedin_url VARCHAR(255) NULL" },
+        { name: "starting_price", sql: "ALTER TABLE users ADD COLUMN starting_price DECIMAL(10,2) NULL" },
+        { name: "negotiable", sql: "ALTER TABLE users ADD COLUMN negotiable TINYINT(1) NOT NULL DEFAULT 0" },
+        { name: "currency_code", sql: "ALTER TABLE users ADD COLUMN currency_code VARCHAR(3) NULL" },
+        { name: "rate_type", sql: "ALTER TABLE users ADD COLUMN rate_type VARCHAR(1) NULL" },
+        { name: "category", sql: "ALTER TABLE users ADD COLUMN category VARCHAR(100) NULL" },
+        { name: "role_type", sql: "ALTER TABLE users ADD COLUMN role_type VARCHAR(64) NULL" },
+        { name: "country_code", sql: "ALTER TABLE users ADD COLUMN country_code VARCHAR(10) NULL" },
+        { name: "show_in_dashboard", sql: "ALTER TABLE users ADD COLUMN show_in_dashboard TINYINT(1) NOT NULL DEFAULT 0" },
+        { name: "show_photo", sql: "ALTER TABLE users ADD COLUMN show_photo TINYINT(1) NOT NULL DEFAULT 0" },
+      ];
+
+      for (const col of columnsToAdd) {
+        if (!names.has(col.name.toLowerCase())) {
+          console.log(`Adding ${col.name} column to users table`);
+          await conn.query(col.sql);
+        }
       }
-      if (!names.has("role_type")) {
-        await conn.query("ALTER TABLE users ADD COLUMN role_type VARCHAR(64) NULL");
-      }
-      if (!names.has("country_code")) {
-        await conn.query("ALTER TABLE users ADD COLUMN country_code VARCHAR(10) NULL");
-      }
-      if (!names.has("show_in_dashboard")) {
-        await conn.query("ALTER TABLE users ADD COLUMN show_in_dashboard TINYINT(1) NOT NULL DEFAULT 0");
-      }
-      if (!names.has("show_photo")) {
-        await conn.query("ALTER TABLE users ADD COLUMN show_photo TINYINT(1) NOT NULL DEFAULT 0");
-      }
+
+      console.log("Users table column check completed");
     } catch (e) {
       // Non-fatal: some MySQL versions/users may lack ALTER privileges in certain environments
-      console.warn("users column ensure warning:", e.message);
+      console.error("users column ensure error:", e.message);
     }
 
     // Seed default regions and country mappings if empty
@@ -526,6 +542,7 @@ async function updateUserFields(id, patch) {
     startingPrice: "starting_price",
     negotiable: "negotiable",
     currencyCode: "currency_code",
+    rateType: "rate_type",
     roleType: "role_type",
     category: "category",
     showInDashboard: "show_in_dashboard",
@@ -1007,17 +1024,35 @@ async function updateEngagedRating(engagedId, rating) {
 }
 
 async function getUserAverageRating(userId) {
-  const [rows] = await pool.execute(
-    `SELECT AVG(rating) as average_rating, COUNT(*) as total_ratings
-     FROM buyer_engaged_list
-     WHERE seller_user_id = ? AND rating IS NOT NULL`,
-    [userId],
-  );
-  const result = rows[0];
-  return {
-    averageRating: result.average_rating ? parseFloat(result.average_rating.toFixed(1)) : null,
-    totalRatings: result.total_ratings || 0,
-  };
+  try {
+    const [rows] = await pool.execute(
+      `SELECT AVG(rating) as average_rating, COUNT(*) as total_ratings
+       FROM buyer_engaged_list
+       WHERE seller_user_id = ? AND rating IS NOT NULL`,
+      [userId],
+    );
+    const result = rows[0] || { average_rating: null, total_ratings: 0 };
+
+    let averageRating = null;
+    if (result.average_rating !== null && result.average_rating !== undefined) {
+      const numValue = Number(result.average_rating);
+      if (!isNaN(numValue) && isFinite(numValue)) {
+        averageRating = Math.round(numValue * 10) / 10; // Round to 1 decimal place
+      }
+    }
+
+    return {
+      averageRating,
+      totalRatings: Number(result.total_ratings) || 0,
+    };
+  } catch (error) {
+    console.error('Error in getUserAverageRating for user', userId, ':', error);
+    // Return safe defaults on error
+    return {
+      averageRating: null,
+      totalRatings: 0,
+    };
+  }
 }
 
 /* ========== REGIONS ========== */
