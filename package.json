@@ -28,6 +28,11 @@
     "server": "node server/index.js",
     "build": "react-scripts build",
     "test": "react-scripts test",
+    "test:watch": "react-scripts test --watchAll=false",
+    "test:coverage": "react-scripts test --coverage --watchAll=false",
+    "test:unit": "react-scripts test --testPathPattern=src/utils --watchAll=false",
+    "test:components": "react-scripts test --testPathPattern=src/components --watchAll=false",
+    "test:api": "react-scripts test --testPathPattern=src/__tests__ --watchAll=false",
     "eject": "react-scripts eject",
     "lint": "eslint src"
   },
