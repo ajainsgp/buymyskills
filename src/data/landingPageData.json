@@ -84,9 +84,9 @@
         "sectionText": "Discover the most sought-after skills on our platform",
         "cards": [
           {
-            "icon": "fab fa-react fa-2x",
+            "icon": "fas fa-laptop-code fa-2x",
             "icon_color": "#042C76",
-            "cardTitle": "React Development",
+            "cardTitle": "Education",
             "cardText": ""
           },
           {

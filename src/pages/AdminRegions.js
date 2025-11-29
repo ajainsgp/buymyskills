@@ -4,6 +4,7 @@ import API_BASE from "../utils/apiBase";
 function AdminRegions() {
   const [regions, setRegions] = useState([]);
   const [mappings, setMappings] = useState([]);
+  const [countries, setCountries] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState("");
   const [success, setSuccess] = useState("");
@@ -34,20 +35,25 @@ function AdminRegions() {
   const loadData = async () => {
     try {
       setLoading(true);
-      const [regionsRes, mappingsRes] = await Promise.all([
+      const [regionsRes, mappingsRes, countriesRes] = await Promise.all([
         fetch(`${API_BASE}/api/admin/regions`, {
           headers: { "x-admin": "true" },
         }),
         fetch(`${API_BASE}/api/admin/country-region-mappings`, {
           headers: { "x-admin": "true" },
         }),
+        fetch(`${API_BASE}/api/admin/countries`, {
+          headers: { "x-admin": "true" },
+        }),
       ]);
 
-      if (regionsRes.ok && mappingsRes.ok) {
+      if (regionsRes.ok && mappingsRes.ok && countriesRes.ok) {
         const regionsData = await regionsRes.json();
         const mappingsData = await mappingsRes.json();
+        const countriesData = await countriesRes.json();
         setRegions(regionsData.regions || []);
         setMappings(mappingsData.mappings || []);
+        setCountries(countriesData.countries || []);
       } else {
         setError("Failed to load data");
       }
@@ -492,36 +498,44 @@ function AdminRegions() {
                   <form onSubmit={handleMappingSubmit}>
                     <div className="modal-body">
                       <div className="form-group">
+                        <label>Country</label>
+                        <select
+                          className="form-control"
+                          value={mappingForm.countryName}
+                          onChange={(e) => {
+                            const selectedCountryName = e.target.value;
+                            const selectedCountry = countries.find(
+                              (c) => c.name === selectedCountryName,
+                            );
+                            setMappingForm((prev) => ({
+                              ...prev,
+                              countryName: selectedCountryName,
+                              countryCode: selectedCountry
+                                ? selectedCountry.code
+                                : "",
+                            }));
+                          }}
+                          required
+                        >
+                          <option value="">Select Country</option>
+                          {countries
+                            .filter((c) => c.enabled)
+                            .sort((a, b) => a.name.localeCompare(b.name))
+                            .map((country) => (
+                              <option key={country.code} value={country.name}>
+                                {country.name}
+                              </option>
+                            ))}
+                        </select>
+                      </div>
+                      <div className="form-group">
                         <label>Country Code</label>
                         <input
                           type="text"
                           className="form-control"
                           value={mappingForm.countryCode}
-                          onChange={(e) =>
-                            setMappingForm((prev) => ({
-                              ...prev,
-                              countryCode: e.target.value.toUpperCase(),
-                            }))
-                          }
-                          placeholder="e.g., IN, GB, SG"
-                          maxLength={3}
-                          required
-                        />
-                      </div>
-                      <div className="form-group">
-                        <label>Country Name</label>
-                        <input
-                          type="text"
-                          className="form-control"
-                          value={mappingForm.countryName}
-                          onChange={(e) =>
-                            setMappingForm((prev) => ({
-                              ...prev,
-                              countryName: e.target.value,
-                            }))
-                          }
-                          placeholder="e.g., India, United Kingdom"
-                          required
+                          readOnly
+                          placeholder="Auto-populated from country selection"
                         />
                       </div>
                       <div className="form-group">

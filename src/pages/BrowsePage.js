@@ -29,6 +29,7 @@ function BrowsePage() {
   const [selectedCountry, setSelectedCountry] = useState("all");
   const [categories, setCategories] = useState([]);
   const [countries, setCountries] = useState([]);
+  const [regionCountries, setRegionCountries] = useState([]);
   const [locationDetected, setLocationDetected] = useState(false);
 
   useEffect(() => {
@@ -92,6 +93,49 @@ function BrowsePage() {
     setCountries(countriesData.filter(c => c.enabled === "Y").map(c => c.name).sort());
   }, [searchParams]);
 
+  // Load user region and filter countries when user is logged in
+  useEffect(() => {
+    const loadUserRegion = async () => {
+      if (currentUser && currentUser.id) {
+        try {
+          // Get user's region
+          const regionRes = await fetch(`${API_BASE}/api/users/region`, {
+            headers: {
+              'x-current-user': JSON.stringify(currentUser)
+            }
+          });
+          const regionData = await regionRes.json();
+          if (regionData.region) {
+            // Get countries in user's region using the new public endpoint
+            const regionCountriesRes = await fetch(`${API_BASE}/api/user-region/countries`, {
+              headers: {
+                'x-current-user': JSON.stringify(currentUser)
+              }
+            });
+            const regionCountriesData = await regionCountriesRes.json();
+            if (regionCountriesData.countries) {
+              setRegionCountries(regionCountriesData.countries);
+
+              // If current selection is not in region countries, reset to first available
+              if (selectedCountry !== "all" && !regionCountriesData.countries.includes(selectedCountry)) {
+                const firstRegionCountry = regionCountriesData.countries.length > 0 ? regionCountriesData.countries[0] : "all";
+                setSelectedCountry(firstRegionCountry);
+                setCountryFilter(firstRegionCountry === "all" ? "" : firstRegionCountry);
+              }
+            }
+          }
+        } catch (err) {
+          console.error("Error loading user region:", err);
+        }
+      } else {
+        // User not logged in - reset region data only on logout, not on selection changes
+        setRegionCountries([]);
+      }
+    };
+
+    loadUserRegion();
+  }, [currentUser]); // Removed selectedCountry dependency to prevent reset on user selection
+
   const handleCategoryChange = (e) => {
     const value = e.target.value;
     setSelectedCategory(value);
@@ -149,10 +193,14 @@ function BrowsePage() {
         } catch (e) {
           /* ignore */
         }
-        const res = await fetch(
-          `${API_BASE}/api/users?roleType=${encodeURIComponent(rt)}`,
-          { cache: "no-store" },
-        );
+        // Use /api/users/public for logged-in users (region-filtered), /api/users for admins
+        const endpoint = currentUser ? `${API_BASE}/api/users/public` : `${API_BASE}/api/users?roleType=${encodeURIComponent(rt)}`;
+        const res = await fetch(endpoint, {
+          cache: "no-store",
+          headers: currentUser ? {
+            'x-current-user': JSON.stringify(currentUser)
+          } : {}
+        });
         const data = await res.json().catch(() => ({}));
         if (!res.ok) {
           const errMsg =
@@ -195,7 +243,7 @@ function BrowsePage() {
         window.removeEventListener("storage", handleStorage);
       }
     };
-  }, []);
+  }, [currentUser]);
 
   // Reload when route changes (e.g., after login redirects)
   useEffect(() => {
@@ -301,39 +349,46 @@ function BrowsePage() {
               </div>
             </div>
             <div className="mt-4">
-              <button className="btn btn-light btn-lg mr-3 mb-2">
-                <i className="fas fa-star"></i> Popular Skills
-              </button>
-              <select
-                className="form-control form-control-lg d-inline-block w-auto mr-3 mb-2"
-                value={selectedCategory}
-                onChange={handleCategoryChange}
-                style={{ maxWidth: '200px' }}
-              >
-                <option value="all">All Categories</option>
-                {categories.map(name => (
-                  <option key={name} value={name}>{name}</option>
-                ))}
-              </select>
-              <select
-                className="form-control form-control-lg d-inline-block w-auto mr-3"
-                value={selectedCountry}
-                onChange={handleCountryChange}
-                style={{ maxWidth: '200px' }}
-              >
-                <option value="all">All Countries</option>
-                {countries.map(name => (
-                  <option key={name} value={name}>{name}</option>
-                ))}
-              </select>
-              <input
-                type="text"
-                className="form-control form-control-lg d-inline-block w-auto"
-                placeholder="City"
-                value={cityFilter}
-                onChange={handleCityChange}
-                style={{ maxWidth: '200px' }}
-              />
+              <div className="row">
+                <div className="col-12 col-sm-6 col-md-3 mb-3">
+                  <button className="btn btn-light btn-lg w-100">
+                    <i className="fas fa-star"></i> Popular Skills
+                  </button>
+                </div>
+                <div className="col-12 col-sm-6 col-md-3 mb-3">
+                  <select
+                    className="form-control form-control-lg w-100"
+                    value={selectedCategory}
+                    onChange={handleCategoryChange}
+                  >
+                    <option value="all">All Categories</option>
+                    {categories.map(name => (
+                      <option key={name} value={name}>{name}</option>
+                    ))}
+                  </select>
+                </div>
+                <div className="col-12 col-sm-6 col-md-3 mb-3">
+                  <select
+                    className="form-control form-control-lg w-100"
+                    value={selectedCountry}
+                    onChange={handleCountryChange}
+                  >
+                    {!currentUser && <option value="all">All Countries</option>}
+                    {(currentUser ? regionCountries : countries).map(name => (
+                      <option key={name} value={name}>{name}</option>
+                    ))}
+                  </select>
+                </div>
+                <div className="col-12 col-sm-6 col-md-3 mb-3">
+                  <input
+                    type="text"
+                    className="form-control form-control-lg w-100"
+                    placeholder="City"
+                    value={cityFilter}
+                    onChange={handleCityChange}
+                  />
+                </div>
+              </div>
             </div>
           </div>
         </div>

@@ -52,10 +52,37 @@ function Profile() {
   const MAX_IMAGE_BYTES = 250 * 1024;
   const ALLOWED_TYPES = new Set(["image/jpeg", "image/png", "image/gif"]);
   const [categories, setCategories] = useState([]);
+  const [countriesWithCodes, setCountriesWithCodes] = useState([]);
   const [fieldErrors, setFieldErrors] = useState({});
+
+  // Auto-set currency code and mobile country code based on selected country
+  useEffect(() => {
+    if (form.address.country && countriesWithCodes.length > 0) {
+      const selectedCountry = countriesWithCodes.find(
+        (c) => c.name === form.address.country,
+      );
+      if (selectedCountry) {
+        // Auto-set currency code
+        if (selectedCountry.currencyCode) {
+          setForm((prev) => ({
+            ...prev,
+            currencyCode: selectedCountry.currencyCode,
+          }));
+        }
+        // Auto-set mobile country code
+        if (selectedCountry.phoneCode) {
+          setForm((prev) => ({
+            ...prev,
+            countryCode: selectedCountry.phoneCode,
+          }));
+        }
+      }
+    }
+  }, [form.address.country, countriesWithCodes]);
 
   // Load current user (from localStorage first, then refresh from API)
   useEffect(() => {
+    let ignore = false;
     async function init() {
       setError("");
       setNotice("");
@@ -207,7 +234,22 @@ function Profile() {
         // ignore
       }
     }
+
+    // Load countries with codes
+    async function loadCountriesWithCodes() {
+      try {
+        const res = await fetch(`${API_BASE}/api/countries-with-codes`);
+        const data = await res.json().catch(() => ({}));
+        if (res.ok && Array.isArray(data.countries) && !ignore) {
+          setCountriesWithCodes(data.countries);
+        }
+      } catch {
+        // ignore fetch errors
+      }
+    }
+
     loadCategories();
+    loadCountriesWithCodes();
   }, [navigate]);
 
   const onChange = (e) => {
@@ -590,6 +632,7 @@ function Profile() {
                             className="form-control"
                             value={form.countryCode || "+1"}
                             onChange={onChange}
+                            disabled
                           >
                             {countryCodes.filter((country) => country.enabled === "Y").map((country) => (
                               <option key={country.iso} value={country.code}>
@@ -781,6 +824,7 @@ function Profile() {
                             className="custom-select"
                             value={form.currencyCode}
                             onChange={onChange}
+                            disabled
                             style={{ minWidth: "80px" }}
                           >
                             <option value="USD">USD</option>

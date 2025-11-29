@@ -578,6 +578,80 @@ app.get("/api/categories", async (_req, res) => {
 });
 
 /**
+ * GET /api/categories/:category/price-range
+ * Returns min/max hourly and daily rates for users in the specified category
+ */
+app.get("/api/categories/:category/price-range", async (req, res) => {
+  try {
+    const { category } = req.params || {};
+    if (!category || !String(category).trim()) {
+      return res.status(400).json({ error: "Category is required" });
+    }
+
+    const categoryName = String(category).trim();
+
+    if (USE_DB) {
+      // Get min/max rates for the category from users table
+      const [rows] = await db.pool.execute(`
+        SELECT
+          MIN(CASE WHEN rate_type = 'H' THEN starting_price END) as min_hourly,
+          MAX(CASE WHEN rate_type = 'H' THEN starting_price END) as max_hourly,
+          MIN(CASE WHEN rate_type = 'D' THEN starting_price END) as min_daily,
+          MAX(CASE WHEN rate_type = 'D' THEN starting_price END) as max_daily
+        FROM users
+        WHERE category = ? AND starting_price IS NOT NULL AND starting_price > 0
+          AND show_in_dashboard = 1
+      `, [categoryName]);
+
+      const result = rows[0] || {};
+      return res.json({
+        category: categoryName,
+        hourly: {
+          min: result.min_hourly ? parseFloat(result.min_hourly) : null,
+          max: result.max_hourly ? parseFloat(result.max_hourly) : null
+        },
+        daily: {
+          min: result.min_daily ? parseFloat(result.min_daily) : null,
+          max: result.max_daily ? parseFloat(result.max_daily) : null
+        }
+      });
+    }
+
+    // FS mode: Get price range from users in filesystem
+    const store = await readUsersFS();
+    const categoryUsers = store.users.filter(u =>
+      u.category === categoryName &&
+      u.startingPrice &&
+      u.showInDashboard
+    );
+
+    let minHourly = null, maxHourly = null, minDaily = null, maxDaily = null;
+
+    categoryUsers.forEach(user => {
+      const price = parseFloat(user.startingPrice);
+      if (!isNaN(price) && price > 0) {
+        if (user.rateType === 'H') {
+          minHourly = minHourly === null ? price : Math.min(minHourly, price);
+          maxHourly = maxHourly === null ? price : Math.max(maxHourly, price);
+        } else if (user.rateType === 'D') {
+          minDaily = minDaily === null ? price : Math.min(minDaily, price);
+          maxDaily = maxDaily === null ? price : Math.max(maxDaily, price);
+        }
+      }
+    });
+
+    return res.json({
+      category: categoryName,
+      hourly: { min: minHourly, max: maxHourly },
+      daily: { min: minDaily, max: maxDaily }
+    });
+  } catch (err) {
+    console.error("Category price range error:", err);
+    return res.status(500).json({ error: "Internal server error" });
+  }
+});
+
+/**
  * GET /api/countries
  * - DB mode: list active countries from DB
  * - FS mode: list from countries.json (created if missing) with sensible defaults
@@ -1250,11 +1324,138 @@ app.get("/api/users", async (_req, res) => {
 });
 
 /**
+ * GET /api/users/region - get current user's region
+ */
+app.get("/api/users/region", async (req, res) => {
+  try {
+    // Get current user
+    let currentUser = null;
+    try {
+      const s = (req.headers['x-current-user'] || "").toString().trim();
+      if (s) currentUser = JSON.parse(s);
+    } catch {
+      // ignore
+    }
+
+    if (!currentUser || !currentUser.id) {
+      return res.status(401).json({ error: "Authentication required" });
+    }
+
+    const region = await db.getUserRegion(currentUser.id);
+    return res.json({ region });
+  } catch (err) {
+    console.error("Get user region error:", err);
+    return res.status(500).json({ error: "Internal server error" });
+  }
+});
+
+
+
+
+
+/**
+ * GET /api/users/public?category=Software%20Engineer
+ * Returns only users who consented to be shown in the dashboard (and optional category filter)
+ * REGION-RESTRICTED: Users can only see sellers from their own region
+ */
+app.get("/api/users/public", async (req, res) => {
+  try {
+    const category = (req.query.category || "").toString().trim();
+
+    // Get current user to determine their region
+    let currentUser = null;
+    try {
+      const s = (req.headers['x-current-user'] || "").toString().trim();
+      if (s) currentUser = JSON.parse(s);
+    } catch {
+      // ignore
+    }
+
+    if (!currentUser || !currentUser.id) {
+      return res.status(401).json({ error: "Authentication required" });
+    }
+
+    if (USE_DB) {
+      // Get user's region first
+      const userRegion = await db.getUserRegion(currentUser.id);
+      if (!userRegion) {
+        return res.json({ users: [] }); // No region found, return empty
+      }
+
+      const rows = await db.listPublicUsersInRegion(userRegion.id, category || null);
+      const users = rows.map((r) => {
+        const u = mapDbUserRowToApiUser(r);
+        const addr =
+          r.address_line1 || r.address_line2 || r.city || r.state || r.postcode || r.country
+            ? {
+                addressLine1: r.address_line1 || "",
+                addressLine2: r.address_line2 || "",
+                city: r.city || "",
+                state: r.state || "",
+                postcode: r.postcode || "",
+                country: r.country || "",
+              }
+            : {};
+        return {
+          ...sanitizeUser(u),
+          category: r.category || "",
+          showInDashboard: r.show_in_dashboard === 1,
+          showPhoto: r.show_photo === 1,
+          address: addr,
+          photoPresent: !!r.photo_present,
+        };
+      });
+      return res.json({ users, region: userRegion.name });
+    }
+
+    // FS flow - For now, return all users (region filtering not implemented for FS mode)
+    // TODO: Implement region filtering for filesystem mode
+    const store = await readUsersFS();
+    const addrStore = await readAddressesFS();
+    const photos = await readPhotosFS();
+    const users = store.users
+      .filter((u) => !!u.showInDashboard)
+      .filter((u) => (category ? String(u.category || "").toLowerCase() === category.toLowerCase() : true))
+      .map((u) => {
+        const addrRec = addrStore.addresses.find((a) => a.userId === u.id);
+        const addr = addrRec
+          ? {
+              addressLine1: addrRec.current.addressLine1 || "",
+              addressLine2: addrRec.current.addressLine2 || "",
+              city: addrRec.current.city || "",
+              state: addrRec.current.state || "",
+              postcode: addrRec.current.postcode || "",
+              country: addrRec.current.country || "",
+            }
+          : {};
+        const hasPhoto = photos.photos.some((p) => p.userId === u.id);
+        return {
+          ...sanitizeUser(u),
+          address: addr,
+          category: u.category || "",
+          showInDashboard: !!u.showInDashboard,
+          showPhoto: !!u.showPhoto,
+          photoPresent: hasPhoto,
+        };
+      });
+    return res.json({ users, region: "All Regions (FS Mode)" });
+  } catch (err) {
+    console.error("Public users error:", err);
+    return res.status(500).json({ error: "Internal server error" });
+  }
+});
+
+/**
  * GET /api/users/:id
  */
 app.get("/api/users/:id", async (req, res) => {
   try {
     const { id } = req.params || {};
+    // Skip if this is a request for "region" or "public" - handled by routes above
+    if (id === 'region' || id === 'public') {
+      return res.status(404).json({ error: "Not found" });
+    }
+
     if (USE_DB) {
       const row = await db.getUserById(id);
       if (!row) return res.status(404).json({ error: "User not found" });
@@ -1450,146 +1651,7 @@ app.post("/api/password/reset", async (req, res) => {
   }
 });
 
-/**
- * Photos
- * - POST /api/users/:id/photo  { base64, contentType }
- * - GET  /api/users/:id/photo  -> { contentType, base64 } or 404
- */
-app.post("/api/users/:id/photo", async (req, res) => {
-  try {
-    const { id } = req.params || {};
-    const { base64: rawBase64, contentType: rawContentType } = req.body || {};
-    if (!id) return res.status(400).json({ error: "Missing user id" });
-    if (!rawBase64) return res.status(400).json({ error: "Missing base64" });
 
-    let { base64, contentType } = normalizeBase64DataUrl(rawBase64);
-    if (!contentType && rawContentType) contentType = String(rawContentType);
-    if (!contentType || !ALLOWED_CONTENT_TYPES.has(contentType)) {
-      return res.status(400).json({ error: "Invalid content type. Allowed: image/jpeg, image/png, image/gif" });
-    }
-    const sizeBytes = Math.floor((base64.length * 3) / 4);
-    if (sizeBytes > MAX_IMAGE_BYTES) {
-      return res.status(400).json({ error: "Image too large. Max 150KB" });
-    }
-
-    if (USE_DB) {
-      const row = await db.getUserById(id);
-      if (!row) return res.status(404).json({ error: "User not found" });
-      const buf = Buffer.from(base64, "base64");
-      await db.upsertPhoto(id, contentType, buf);
-      return res.json({ ok: true, uploadedAt: new Date().toISOString() });
-    }
-
-    // FS flow
-    const store = await readUsersFS();
-    const user = store.users.find((u) => u.id === id);
-    if (!user) return res.status(404).json({ error: "User not found" });
-
-    const photos = await readPhotosFS();
-    const idx = photos.photos.findIndex((p) => p.userId === id);
-    const now = new Date().toISOString();
-    const record = { userId: id, contentType, base64, uploadedAt: now };
-    if (idx === -1) photos.photos.push(record);
-    else photos.photos[idx] = record;
-    await writePhotosFS(photos);
-    return res.json({ ok: true, uploadedAt: now });
-  } catch (err) {
-    console.error("Upload photo error:", err);
-    return res.status(500).json({ error: "Internal server error" });
-  }
-});
-
-/**
- * GET /api/users/public?category=Software%20Engineer
- * Returns only users who consented to be shown in the dashboard (and optional category filter)
- * REGION-RESTRICTED: Users can only see sellers from their own region
- */
-app.get("/api/users/public", async (req, res) => {
-  try {
-    const category = (req.query.category || "").toString().trim();
-
-    // Get current user to determine their region
-    let currentUser = null;
-    try {
-      const s = (req.headers['x-current-user'] || "").toString().trim();
-      if (s) currentUser = JSON.parse(s);
-    } catch {
-      // ignore
-    }
-
-    if (!currentUser || !currentUser.id) {
-      return res.status(401).json({ error: "Authentication required" });
-    }
-
-    if (USE_DB) {
-      // Get user's region first
-      const userRegion = await db.getUserRegion(currentUser.id);
-      if (!userRegion) {
-        return res.json({ users: [] }); // No region found, return empty
-      }
-
-      const rows = await db.listPublicUsersInRegion(userRegion.id, category || null);
-      const users = rows.map((r) => {
-        const u = mapDbUserRowToApiUser(r);
-        const addr =
-          r.address_line1 || r.address_line2 || r.city || r.state || r.postcode || r.country
-            ? {
-                addressLine1: r.address_line1 || "",
-                addressLine2: r.address_line2 || "",
-                city: r.city || "",
-                state: r.state || "",
-                postcode: r.postcode || "",
-                country: r.country || "",
-              }
-            : {};
-        return {
-          ...sanitizeUser(u),
-          category: r.category || "",
-          showInDashboard: r.show_in_dashboard === 1,
-          showPhoto: r.show_photo === 1,
-          address: addr,
-          photoPresent: !!r.photo_present,
-        };
-      });
-      return res.json({ users, region: userRegion.name });
-    }
-
-    // FS flow - For now, return all users (region filtering not implemented for FS mode)
-    // TODO: Implement region filtering for filesystem mode
-    const store = await readUsersFS();
-    const addrStore = await readAddressesFS();
-    const photos = await readPhotosFS();
-    const users = store.users
-      .filter((u) => !!u.showInDashboard)
-      .filter((u) => (category ? String(u.category || "").toLowerCase() === category.toLowerCase() : true))
-      .map((u) => {
-        const addrRec = addrStore.addresses.find((a) => a.userId === u.id);
-        const addr = addrRec
-          ? {
-              addressLine1: addrRec.current.addressLine1 || "",
-              addressLine2: addrRec.current.addressLine2 || "",
-              city: addrRec.current.city || "",
-              state: addrRec.current.state || "",
-              postcode: addrRec.current.postcode || "",
-              country: addrRec.current.country || "",
-            }
-          : {};
-        const hasPhoto = photos.photos.some((p) => p.userId === u.id);
-        return {
-          ...sanitizeUser(u),
-          address: addr,
-          category: u.category || "",
-          showInDashboard: !!u.showInDashboard,
-          showPhoto: !!u.showPhoto,
-          photoPresent: hasPhoto,
-        };
-      });
-    return res.json({ users, region: "All Regions (FS Mode)" });
-  } catch (err) {
-    console.error("Public users error:", err);
-    return res.status(500).json({ error: "Internal server error" });
-  }
-});
 
 /**
  * DELETE /api/users/:id/photo - clear/remove user's photo
@@ -1862,6 +1924,134 @@ app.get("/api/users/region", async (req, res) => {
     return res.json({ region });
   } catch (err) {
     console.error("Get user region error:", err);
+    return res.status(500).json({ error: "Internal server error" });
+  }
+});
+
+/**
+ * GET /api/users/public?category=Software%20Engineer
+ * Returns only users who consented to be shown in the dashboard (and optional category filter)
+ * REGION-RESTRICTED: Users can only see sellers from their own region
+ */
+app.get("/api/users/public", async (req, res) => {
+  try {
+    const category = (req.query.category || "").toString().trim();
+
+    // Get current user to determine their region
+    let currentUser = null;
+    try {
+      const s = (req.headers['x-current-user'] || "").toString().trim();
+      if (s) currentUser = JSON.parse(s);
+    } catch {
+      // ignore
+    }
+
+    if (!currentUser || !currentUser.id) {
+      return res.status(401).json({ error: "Authentication required" });
+    }
+
+    if (USE_DB) {
+      // Get user's region first
+      const userRegion = await db.getUserRegion(currentUser.id);
+      if (!userRegion) {
+        return res.json({ users: [] }); // No region found, return empty
+      }
+
+      const rows = await db.listPublicUsersInRegion(userRegion.id, category || null);
+      const users = rows.map((r) => {
+        const u = mapDbUserRowToApiUser(r);
+        const addr =
+          r.address_line1 || r.address_line2 || r.city || r.state || r.postcode || r.country
+            ? {
+                addressLine1: r.address_line1 || "",
+                addressLine2: r.address_line2 || "",
+                city: r.city || "",
+                state: r.state || "",
+                postcode: r.postcode || "",
+                country: r.country || "",
+              }
+            : {};
+        return {
+          ...sanitizeUser(u),
+          category: r.category || "",
+          showInDashboard: r.show_in_dashboard === 1,
+          showPhoto: r.show_photo === 1,
+          address: addr,
+          photoPresent: !!r.photo_present,
+        };
+      });
+      return res.json({ users, region: userRegion.name });
+    }
+
+    // FS flow - For now, return all users (region filtering not implemented for FS mode)
+    // TODO: Implement region filtering for filesystem mode
+    const store = await readUsersFS();
+    const addrStore = await readAddressesFS();
+    const photos = await readPhotosFS();
+    const users = store.users
+      .filter((u) => !!u.showInDashboard)
+      .filter((u) => (category ? String(u.category || "").toLowerCase() === category.toLowerCase() : true))
+      .map((u) => {
+        const addrRec = addrStore.addresses.find((a) => a.userId === u.id);
+        const addr = addrRec
+          ? {
+              addressLine1: addrRec.current.addressLine1 || "",
+              addressLine2: addrRec.current.addressLine2 || "",
+              city: addrRec.current.city || "",
+              state: addrRec.current.state || "",
+              postcode: addrRec.current.postcode || "",
+              country: addrRec.current.country || "",
+            }
+          : {};
+        const hasPhoto = photos.photos.some((p) => p.userId === u.id);
+        return {
+          ...sanitizeUser(u),
+          address: addr,
+          category: u.category || "",
+          showInDashboard: !!u.showInDashboard,
+          showPhoto: !!u.showPhoto,
+          photoPresent: hasPhoto,
+        };
+      });
+    return res.json({ users, region: "All Regions (FS Mode)" });
+  } catch (err) {
+    console.error("Public users error:", err);
+    return res.status(500).json({ error: "Internal server error" });
+  }
+});
+
+
+// Get countries in user's region (public endpoint for logged-in users)
+app.get("/api/user-region/countries", async (req, res) => {
+  try {
+    // Get current user
+    let currentUser = null;
+    try {
+      const s = (req.headers['x-current-user'] || "").toString().trim();
+      if (s) currentUser = JSON.parse(s);
+    } catch {
+      // ignore
+    }
+
+    if (!currentUser || !currentUser.id) {
+      return res.status(401).json({ error: "Authentication required" });
+    }
+
+    // Get user's region first
+    const region = await db.getUserRegion(currentUser.id);
+    if (!region) {
+      return res.json({ countries: [] });
+    }
+
+    // Get all country-region mappings for this region
+    const mappings = await db.listCountryRegionMappings();
+    const regionCountries = mappings
+      .filter(mapping => mapping.regionId === region.id && mapping.enabled)
+      .map(mapping => mapping.countryName);
+
+    return res.json({ countries: regionCountries, region: region.name });
+  } catch (err) {
+    console.error("Get user region countries error:", err);
     return res.status(500).json({ error: "Internal server error" });
   }
 });
