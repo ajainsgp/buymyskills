@@ -19,7 +19,7 @@
     font-weight: 300;
     letter-spacing: 2px;
     text-transform: uppercase;
-    margin: 0 0 55px;
+    margin: 0;
 }
 .form-container .left-content .sub-title{
     color: #fff;
@@ -27,6 +27,7 @@
     font-weight: 300;
     text-transform: uppercase;
     margin: 0;
+    text-align: center;
 }
 .form-container .right-content{
     text-align: center;
@@ -180,6 +181,17 @@
         width: 100%;
         padding: 30px;
     }
-    .form-container .left-content .title{ margin: 0 0 20px; }
+    .title-row{ margin-bottom: 20px; }
     .form-container .left-content .sub-title{ font-size: 40px; }
+}
+.title-row{
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    margin-bottom: 55px;
+}
+.login-icon{
+    width: 80px;
+    height: 80px;
+    margin-right: 20px;
 }

@@ -211,6 +211,18 @@ async function initSchema() {
       CONSTRAINT fk_messages_receiver FOREIGN KEY (receiver_id) REFERENCES users(id) ON DELETE CASCADE
     ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;`);
 
+    await conn.query(`CREATE TABLE IF NOT EXISTS bms_ratings (
+      id INT AUTO_INCREMENT PRIMARY KEY,
+      user_id VARCHAR(64) NOT NULL,
+      name VARCHAR(255) NOT NULL,
+      rating TINYINT NOT NULL CHECK (rating >= 1 AND rating <= 5),
+      comment TEXT NOT NULL,
+      created_at DATETIME NOT NULL,
+      INDEX idx_ratings_user (user_id),
+      INDEX idx_ratings_created (created_at),
+      CONSTRAINT fk_ratings_user FOREIGN KEY (user_id) REFERENCES users(id) ON DELETE CASCADE
+    ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;`);
+
 
 
     await conn.query(`CREATE TABLE IF NOT EXISTS roles (
@@ -1294,6 +1306,24 @@ async function getUserConversations(userId) {
   }));
 }
 
+/* ========== RATINGS ========== */
+
+async function createRating({ userId, name, rating, comment }) {
+  const now = new Date();
+  const [result] = await pool.execute(
+    `INSERT INTO bms_ratings (user_id, name, rating, comment, created_at) VALUES (?, ?, ?, ?, ?)`,
+    [userId, name, rating, comment, now],
+  );
+  return result.insertId;
+}
+
+async function getAverageRating() {
+  const [rows] = await pool.execute(
+    `SELECT ROUND(AVG(rating), 1) as average FROM bms_ratings`,
+  );
+  return rows[0] ? { average: rows[0].average || 0 } : { average: 0 };
+}
+
 
 module.exports = {
   pool,
@@ -1358,4 +1388,7 @@ module.exports = {
   getUserConversations,
   markMessageAsRead,
   getUnreadMessageCount,
+  // ratings
+  createRating,
+  getAverageRating,
 };

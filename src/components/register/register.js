@@ -296,22 +296,25 @@ function RegisterUser() {
     <div className="container-fluid">
       <div style={{ paddingBottom: "1.5rem" }}>
         {/* Page Heading */}
-        <div className="d-sm-flex align-items-center justify-content-between mb-4">
-          <h1 className="h3 mb-0 text-gray-800">Welcome to Buy My Skills</h1>
+        <div className="bg-primary text-white py-3 mb-4">
+          <div className="container">
+            <div className="d-flex align-items-center">
+              <img
+                src="/logo96.png"
+                alt="Buy My Skills Logo"
+                className="register-logo"
+              />
+              <h1 className="h3 mb-0 ml-3">
+                Register your skills to the world of opportunities waiting for
+                you
+              </h1>
+            </div>
+          </div>
         </div>
         <div className="mainbody container-fluid">
           <div className="row">
             <div style={{ paddingTop: "50px" }} />
             <div className="col-lg-3 col-md-3 hidden-sm hidden-xs">
-              <div className="panel panel-default">
-                <div className="panel-body">
-                  <h2 className="panel-title pull-left">
-                    <i className="fa-solid fa-user-gear" aria-hidden="true"></i>{" "}
-                    Register
-                  </h2>
-                </div>
-              </div>
-
               <div className="panel panel-body">
                 <div className="col-md-12 no-left-right-padding">
                   <h3 className="panel-title">My Profile photo</h3>
