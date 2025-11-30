@@ -578,20 +578,25 @@ app.get("/api/categories", async (_req, res) => {
 });
 
 /**
- * GET /api/categories/:category/price-range
- * Returns min/max hourly and daily rates for users in the specified category
+ * GET /api/categories/:category/price-range?currency=USD
+ * Returns min/max hourly and daily rates for users in the specified category and currency
  */
 app.get("/api/categories/:category/price-range", async (req, res) => {
   try {
     const { category } = req.params || {};
+    const { currency } = req.query || {};
     if (!category || !String(category).trim()) {
       return res.status(400).json({ error: "Category is required" });
     }
+    if (!currency || !String(currency).trim()) {
+      return res.status(400).json({ error: "Currency is required" });
+    }
 
     const categoryName = String(category).trim();
+    const currencyCode = String(currency).trim().toUpperCase();
 
     if (USE_DB) {
-      // Get min/max rates for the category from users table
+      // Get min/max rates for the category and currency from users table
       const [rows] = await db.pool.execute(`
         SELECT
           MIN(CASE WHEN rate_type = 'H' THEN starting_price END) as min_hourly,
@@ -599,13 +604,14 @@ app.get("/api/categories/:category/price-range", async (req, res) => {
           MIN(CASE WHEN rate_type = 'D' THEN starting_price END) as min_daily,
           MAX(CASE WHEN rate_type = 'D' THEN starting_price END) as max_daily
         FROM users
-        WHERE category = ? AND starting_price IS NOT NULL AND starting_price > 0
+        WHERE category = ? AND currency_code = ? AND starting_price IS NOT NULL AND starting_price > 0
           AND show_in_dashboard = 1
-      `, [categoryName]);
+      `, [categoryName, currencyCode]);
 
       const result = rows[0] || {};
       return res.json({
         category: categoryName,
+        currency: currencyCode,
         hourly: {
           min: result.min_hourly ? parseFloat(result.min_hourly) : null,
           max: result.max_hourly ? parseFloat(result.max_hourly) : null
@@ -621,6 +627,7 @@ app.get("/api/categories/:category/price-range", async (req, res) => {
     const store = await readUsersFS();
     const categoryUsers = store.users.filter(u =>
       u.category === categoryName &&
+      u.currencyCode === currencyCode &&
       u.startingPrice &&
       u.showInDashboard
     );
@@ -642,6 +649,7 @@ app.get("/api/categories/:category/price-range", async (req, res) => {
 
     return res.json({
       category: categoryName,
+      currency: currencyCode,
       hourly: { min: minHourly, max: maxHourly },
       daily: { min: minDaily, max: maxDaily }
     });

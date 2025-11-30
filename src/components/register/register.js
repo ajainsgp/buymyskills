@@ -126,7 +126,7 @@ function RegisterUser() {
         setLoadingPriceRange(true);
         try {
           const response = await fetch(
-            `${API_BASE}/api/categories/${encodeURIComponent(form.category)}/price-range`,
+            `${API_BASE}/api/categories/${encodeURIComponent(form.category)}/price-range?currency=${encodeURIComponent(form.currencyCode)}`,
           );
           if (response.ok) {
             const data = await response.json();
