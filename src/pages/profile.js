@@ -49,7 +49,7 @@ function Profile() {
   const [photoError, setPhotoError] = useState("");
   const [uploading, setUploading] = useState(false);
   const fileInputRef = useRef(null);
-  const MAX_IMAGE_BYTES = 250 * 1024;
+  const MAX_IMAGE_BYTES = 500 * 1024;
   const ALLOWED_TYPES = new Set(["image/jpeg", "image/png", "image/gif"]);
   const [categories, setCategories] = useState([]);
   const [countriesWithCodes, setCountriesWithCodes] = useState([]);
@@ -212,6 +212,7 @@ function Profile() {
             startingPrice: u.startingPrice || "",
             negotiable: u.negotiable || false,
             currencyCode: u.currencyCode || "USD",
+            rateType: u.rateType || "D",
           });
         }
       } catch (e) {
@@ -302,7 +303,7 @@ function Profile() {
       return;
     }
     if (file.size > MAX_IMAGE_BYTES) {
-      setPhotoError("Image too large. Max 250KB");
+      setPhotoError("Image too large. Max 500KB");
       return;
     }
     const reader = new FileReader();
@@ -319,6 +320,11 @@ function Profile() {
           body: JSON.stringify({ base64: dataUrl }),
         });
         setNotice("Photo uploaded successfully");
+
+        // Notify other components that photo has been updated
+        if (typeof window !== "undefined" && window.dispatchEvent) {
+          window.dispatchEvent(new Event("photo-updated"));
+        }
       } catch (err) {
         setPhotoError("Failed to upload photo");
       } finally {
@@ -1088,7 +1094,7 @@ function Profile() {
                     onChange={onFileChange}
                   />
                   <div style={{ fontSize: 12, color: "#777", marginTop: 8 }}>
-                    Allowed types: .jpg, .jpeg, .png, .gif. Max size: 250KB.
+                    Allowed types: .jpg, .jpeg, .png, .gif. Max size: 500KB.
                   </div>
                   {photoError ? (
                     <div style={{ fontSize: 12, color: "#c00", marginTop: 4 }}>

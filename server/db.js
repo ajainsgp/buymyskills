@@ -114,18 +114,7 @@ async function initSchema() {
       uploaded_at  DATETIME NOT NULL
     ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;`);
 
-    await conn.query(`CREATE TABLE IF NOT EXISTS feedback (
-      id            BIGINT AUTO_INCREMENT PRIMARY KEY,
-      user_id       VARCHAR(64) NOT NULL,
-      query         TEXT NOT NULL,
-      response      TEXT,
-      status        ENUM('pending', 'responded') NOT NULL DEFAULT 'pending',
-      created_at    DATETIME NOT NULL,
-      responded_at  DATETIME,
-      INDEX idx_feedback_user_status (user_id, status),
-      INDEX idx_feedback_status_created (status, created_at),
-      CONSTRAINT fk_feedback_user FOREIGN KEY (user_id) REFERENCES users(id) ON DELETE CASCADE
-    ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;`);
+
 
     await conn.query(`CREATE TABLE IF NOT EXISTS buyer_engaged_list (
       id                BIGINT AUTO_INCREMENT PRIMARY KEY,
@@ -221,6 +210,19 @@ async function initSchema() {
       INDEX idx_ratings_user (user_id),
       INDEX idx_ratings_created (created_at),
       CONSTRAINT fk_ratings_user FOREIGN KEY (user_id) REFERENCES users(id) ON DELETE CASCADE
+    ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;`);
+
+    await conn.query(`CREATE TABLE IF NOT EXISTS bms_feedback (
+      id INT AUTO_INCREMENT PRIMARY KEY,
+      sender_id VARCHAR(64) NOT NULL,
+      receiver_id VARCHAR(64) NOT NULL,
+      content TEXT NOT NULL,
+      is_read TINYINT(1) NOT NULL DEFAULT 0,
+      created_at DATETIME NOT NULL,
+      INDEX idx_feedback_sender (sender_id),
+      INDEX idx_feedback_receiver (receiver_id),
+      INDEX idx_feedback_created (created_at),
+      INDEX idx_feedback_read (is_read)
     ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;`);
 
 
@@ -941,59 +943,7 @@ async function deleteLandingPageCard(id) {
   await pool.execute(`DELETE FROM landing_page_cards WHERE id = ?`, [id]);
 }
 
-/* ========== FEEDBACK ========== */
 
-async function createFeedback(userId, query) {
-  const now = new Date();
-  const [result] = await pool.execute(
-    `INSERT INTO feedback (user_id, query, status, created_at) VALUES (?, ?, 'pending', ?)`,
-    [userId, query, now],
-  );
-  return result.insertId;
-}
-
-async function getUserFeedback(userId) {
-  const [rows] = await pool.execute(
-    `SELECT id, query, response, status, created_at, responded_at FROM feedback WHERE user_id = ? ORDER BY created_at DESC`,
-    [userId],
-  );
-  return rows.map((r) => ({
-    id: r.id,
-    query: r.query,
-    response: r.response,
-    status: r.status,
-    createdAt: r.created_at instanceof Date ? r.created_at.toISOString() : r.created_at,
-    respondedAt: r.responded_at instanceof Date ? r.responded_at.toISOString() : r.responded_at,
-  }));
-}
-
-async function getAllFeedback() {
-  const [rows] = await pool.execute(
-    `SELECT f.id, f.query, f.response, f.status, f.created_at, f.responded_at,
-            u.first_name, u.last_name, u.email_id
-     FROM feedback f
-     JOIN users u ON f.user_id = u.id
-     ORDER BY f.created_at DESC`,
-  );
-  return rows.map((r) => ({
-    id: r.id,
-    query: r.query,
-    response: r.response,
-    status: r.status,
-    createdAt: r.created_at instanceof Date ? r.created_at.toISOString() : r.created_at,
-    respondedAt: r.responded_at instanceof Date ? r.responded_at.toISOString() : r.responded_at,
-    userName: [r.first_name, r.last_name].filter(Boolean).join(" ").trim(),
-    userEmail: r.email_id,
-  }));
-}
-
-async function respondToFeedback(feedbackId, response) {
-  const now = new Date();
-  await pool.execute(
-    `UPDATE feedback SET response = ?, status = 'responded', responded_at = ? WHERE id = ?`,
-    [response, now, feedbackId],
-  );
-}
 
 /* ========== BUYER ENGAGED LIST ========== */
 
@@ -1361,11 +1311,7 @@ module.exports = {
   upsertPhoto,
   getPhoto,
   deletePhoto,
-  // feedback
-  createFeedback,
-  getUserFeedback,
-  getAllFeedback,
-  respondToFeedback,
+
   // buyer engaged list
   createBuyerEngaged,
   getBuyerEngagedList,

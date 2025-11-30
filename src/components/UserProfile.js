@@ -340,7 +340,7 @@ function UserProfile({ userProfiles, showSensitive = false }) {
               {showSensitive
                 ? profile.allowEmailContact
                   ? profile.emailId
-                  : "Hide"
+                  : "Private"
                 : "Login to view"}
             </p>
             <p style={{ marginBottom: 0 }}>
@@ -362,7 +362,7 @@ function UserProfile({ userProfiles, showSensitive = false }) {
                     </button>
                   )
                 ) : (
-                  "Hide"
+                  "Private"
                 )
               ) : (
                 "Login to view"
