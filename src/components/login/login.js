@@ -84,7 +84,14 @@ function LoginApps() {
             <div className="col-md-offset-4 col-md-12 col-sm-offset-3 col-sm-12">
               <div className="form-container row">
                 <div className="left-content col-lg-6">
-                  <h3 className="title">Buy My Skills</h3>
+                  <div className="title-row">
+                    <img
+                      src="/logo96.png"
+                      alt="Buy My Skills Icon"
+                      className="login-icon"
+                    />
+                    <h3 className="title">Buy My Skills</h3>
+                  </div>
                   <h4 className="sub-title">
                     Welcome to the world of opportunities
                   </h4>
@@ -148,10 +155,10 @@ function LoginApps() {
                         navigate("/update-password?mode=reset");
                       }}
                     >
-                      Update password if forgot
+                      Forgot password
                     </a>
                   </form>
-                  <span className="separator">OR</span>
+                  {/* <span className="separator">OR</span>
                   <ul className="social-links">
                     <li>
                       <a href="#" onClick={(e) => e.preventDefault()}>
@@ -164,7 +171,7 @@ function LoginApps() {
                         Facebook
                       </a>
                     </li>
-                  </ul>
+                  </ul> */}
                   <span className="signup-link">
                     Don&#39;t have an account? Sign up{" "}
                     <a href="/register">here</a>

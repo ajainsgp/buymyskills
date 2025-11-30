@@ -2411,6 +2411,40 @@ app.put("/api/admin/feedback/:id", async (req, res) => {
   }
 });
 
+// Ratings endpoints
+// Submit a rating
+app.post("/api/ratings", async (req, res) => {
+  try {
+    const { userId, name, rating, comment } = req.body || {};
+    if (!userId || !name || !rating || !comment) {
+      return res.status(400).json({ error: "userId, name, rating, and comment are required" });
+    }
+    if (rating < 1 || rating > 5) {
+      return res.status(400).json({ error: "Rating must be between 1 and 5" });
+    }
+
+    const ratingId = await db.createRating({ userId, name, rating, comment });
+    return res.status(201).json({
+      ratingId,
+      message: "Rating submitted successfully"
+    });
+  } catch (err) {
+    console.error("Create rating error:", err);
+    return res.status(500).json({ error: "Internal server error" });
+  }
+});
+
+// Get average rating
+app.get("/api/ratings/average", async (req, res) => {
+  try {
+    const average = await db.getAverageRating();
+    return res.json({ average: average.average });
+  } catch (err) {
+    console.error("Get average rating error:", err);
+    return res.status(500).json({ error: "Internal server error" });
+  }
+});
+
 app.get("/api/health", (_req, res) => {
   res.json({ ok: true, mode: USE_DB ? "mysql" : "fs" });
 });

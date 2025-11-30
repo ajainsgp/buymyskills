@@ -24,8 +24,8 @@ function HowItWorks() {
           <div className="col-lg-8 mx-auto">
             {/* Introduction */}
             <div className="card shadow mb-4">
-              <div className="card-body p-3">
-                <h2 className="card-title text-center mb-3 how-it-works-title">
+              <div className="text-center mb-5">
+                <h2 className="display-5 font-weight-bold mb-4">
                   🚀 Offer Your Expertise to the World
                 </h2>
                 <p className="card-text lead text-center mb-3">
@@ -38,7 +38,7 @@ function HowItWorks() {
                 <div className="row mt-4">
                   <div className="col-md-4 text-center mb-3">
                     <div className="feature-icon feature-icon-home">🏠</div>
-                    <h5>Local Community Focus</h5>
+                    <h4>Local Community Focus</h4>
                     <p className="medium">
                       Connect with clients in your region for easier
                       collaboration and local opportunities.
@@ -46,7 +46,7 @@ function HowItWorks() {
                   </div>
                   <div className="col-md-4 text-center mb-3">
                     <div className="feature-icon feature-icon-flexible">🔄</div>
-                    <h5>Flexible Regional Reach</h5>
+                    <h4>Flexible Regional Reach</h4>
                     <p className="medium">
                       Expand within your region while maintaining local
                       connections and cultural understanding.
@@ -54,7 +54,7 @@ function HowItWorks() {
                   </div>
                   <div className="col-md-4 text-center mb-3">
                     <div className="feature-icon feature-icon-security">🛡️</div>
-                    <h5>Data Protection</h5>
+                    <h4>Data Protection</h4>
                     <p className="medium">
                       Region-based filtering keeps your information secure
                       within trusted geographic boundaries.
@@ -131,7 +131,7 @@ function HowItWorks() {
                         🌍
                       </div>
                       <div>
-                        <h5>Global Reach</h5>
+                        <h4>Global Reach</h4>
                         <p>
                           Connect with clients from around the world. No
                           geographical boundaries limit your opportunities.
@@ -145,7 +145,7 @@ function HowItWorks() {
                         💼
                       </div>
                       <div>
-                        <h5>Flexible Work</h5>
+                        <h4>Flexible Work</h4>
                         <p>
                           Set your own schedule and work preferences. Choose
                           projects that fit your lifestyle and expertise.
@@ -159,7 +159,7 @@ function HowItWorks() {
                         🔒
                       </div>
                       <div>
-                        <h5>Secure Platform</h5>
+                        <h4>Secure Platform</h4>
                         <p>
                           Your data is protected with industry-standard
                           security. Safe and reliable transactions.
@@ -173,7 +173,7 @@ function HowItWorks() {
                         💰
                       </div>
                       <div>
-                        <h5>Fair Compensation</h5>
+                        <h4>Fair Compensation</h4>
                         <p>
                           Set competitive rates for your services. Get paid for
                           the value you provide to clients.
@@ -199,8 +199,8 @@ function HowItWorks() {
                     <div style={{ fontSize: "2rem", marginBottom: "0.5rem" }}>
                       👨‍💻
                     </div>
-                    <h6>Sarah - Software Developer</h6>
-                    <p className="small">
+                    <h5>Sarah - Software Developer</h5>
+                    <p className="medium">
                       &quot;Found 3 major projects in my first month. The
                       platform platform platform platform made it easy to
                       showcase my React expertise.&quot;
@@ -210,8 +210,8 @@ function HowItWorks() {
                     <div style={{ fontSize: "2rem", marginBottom: "0.5rem" }}>
                       🎨
                     </div>
-                    <h6>Mike - UI/UX Designer</h6>
-                    <p className="small">
+                    <h5>Mike - UI/UX Designer</h5>
+                    <p className="medium">
                       &quot;Connected with international clients. The profile
                       system helped me stand out from the competition.&quot;
                     </p>
@@ -220,8 +220,8 @@ function HowItWorks() {
                     <div style={{ fontSize: "2rem", marginBottom: "0.5rem" }}>
                       📊
                     </div>
-                    <h6>Anna - Data Analyst</h6>
-                    <p className="small">
+                    <h5>Anna - Data Analyst</h5>
+                    <p className="medium">
                       &quot;Perfect for consultants! Found steady work analyzing
                       data for businesses across different industries.&quot;
                     </p>
@@ -233,7 +233,7 @@ function HowItWorks() {
             {/* Call to Action */}
             <div className="card shadow mb-4 call-to-action-card">
               <div className="card-body text-center p-5">
-                <h3 className="mb-3">Ready to Start Your Journey?</h3>
+                <h4 className="mb-3">Ready to Start Your Journey?</h4>
                 <p className="lead mb-4">
                   Join thousands of professionals who are already earning
                   through their expertise. Your next big opportunity is just a
@@ -267,7 +267,7 @@ function HowItWorks() {
                 <div className="accordion" id="faqAccordion">
                   <div className="card">
                     <div className="card-header" id="faq1">
-                      <h5 className="mb-0">
+                      <h4 className="mb-0">
                         <button
                           className="btn btn-link text-left w-100"
                           type="button"
@@ -276,7 +276,7 @@ function HowItWorks() {
                         >
                           How much does it cost to join?
                         </button>
-                      </h5>
+                      </h4>
                     </div>
                     <div
                       id="collapse1"
@@ -291,7 +291,7 @@ function HowItWorks() {
                   </div>
                   <div className="card">
                     <div className="card-header" id="faq2">
-                      <h5 className="mb-0">
+                      <h4 className="mb-0">
                         <button
                           className="btn btn-link text-left w-100 collapsed"
                           type="button"
@@ -300,7 +300,7 @@ function HowItWorks() {
                         >
                           What types of skills are in demand?
                         </button>
-                      </h5>
+                      </h4>
                     </div>
                     <div
                       id="collapse2"

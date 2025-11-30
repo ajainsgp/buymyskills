@@ -30,10 +30,10 @@ function AboutUs() {
                 <p className="lead mb-4">
                   At Buy My Skills, we believe talent should have no boundaries. Our platform connects individuals with unique skills to businesses and people who need them. Whether you&#39;re a freelancer looking to showcase your expertise or an employer searching for the right talent, Buy My Skills makes it simple, transparent, and effective.
                 </p>
-                <p className="mb-4">
+                <p className="lead mb-4">
                   From technical services to creative arts, from business consulting to everyday tasks — every skill has value, and we&#39;re here to help you share it with the world.
                 </p>
-                <p className="mb-4">
+                <p className="lead mb-4">
                   Our mission is to empower individuals, support businesses, and build a community where skills become opportunities.
                 </p>
               </div>
