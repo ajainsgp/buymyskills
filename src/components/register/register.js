@@ -185,7 +185,7 @@ function RegisterUser() {
     }
   };
 
-  const MAX_IMAGE_BYTES = 250 * 1024;
+  const MAX_IMAGE_BYTES = 500 * 1024;
   const ALLOWED_TYPES = new Set(["image/jpeg", "image/png", "image/gif"]);
 
   const onPickPhoto = (e) => {
@@ -205,7 +205,7 @@ function RegisterUser() {
       return;
     }
     if (file.size > MAX_IMAGE_BYTES) {
-      setPhotoError("Image too large. Max 250KB");
+      setPhotoError("Image too large. Max 500KB");
       return;
     }
     const reader = new FileReader();
@@ -368,7 +368,7 @@ function RegisterUser() {
                       <div
                         style={{ fontSize: 12, color: "#777", marginTop: 8 }}
                       >
-                        Allowed types: .jpg, .jpeg, .png, .gif. Max size: 250KB.
+                        Allowed types: .jpg, .jpeg, .png, .gif. Max size: 500KB.
                       </div>
                       {photoError ? (
                         <div

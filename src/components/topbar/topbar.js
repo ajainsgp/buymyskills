@@ -6,6 +6,7 @@ function Topbar() {
   const [currentUser, setCurrentUser] = useState(null);
   const [dropdownOpen, setDropdownOpen] = useState(false);
   const [unreadCount, setUnreadCount] = useState(0);
+  const [unreadFeedbackCount, setUnreadFeedbackCount] = useState(0);
 
   useEffect(() => {
     const getCurrentUser = () => {
@@ -88,18 +89,48 @@ function Topbar() {
     }
   };
 
+  // Fetch unread feedback count
+  const fetchUnreadFeedbackCount = async (user) => {
+    if (!user || !user.id) {
+      setUnreadFeedbackCount(0);
+      return;
+    }
+
+    try {
+      const response = await fetch(`${API_BASE}/api/feedback/unread-count`, {
+        method: 'GET',
+        headers: {
+          'x-current-user': JSON.stringify(user),
+        },
+      });
+
+      if (response.ok) {
+        const data = await response.json();
+        setUnreadFeedbackCount(data.unreadCount || 0);
+      } else {
+        setUnreadFeedbackCount(0);
+      }
+    } catch (error) {
+      console.error('Failed to fetch unread feedback count:', error);
+      setUnreadFeedbackCount(0);
+    }
+  };
+
   // Update unread count when user changes
   useEffect(() => {
     if (currentUser) {
       fetchUnreadCount(currentUser);
+      fetchUnreadFeedbackCount(currentUser);
       // Set up periodic updates every 30 seconds
       const interval = setInterval(() => {
         fetchUnreadCount(currentUser);
+        fetchUnreadFeedbackCount(currentUser);
       }, 30000);
 
       return () => clearInterval(interval);
     } else {
       setUnreadCount(0);
+      setUnreadFeedbackCount(0);
     }
   }, [currentUser]);
 
@@ -111,13 +142,21 @@ function Topbar() {
       }
     };
 
+    const handleFeedbackUpdate = () => {
+      if (currentUser) {
+        fetchUnreadFeedbackCount(currentUser);
+      }
+    };
+
     if (typeof window !== "undefined") {
       window.addEventListener("message-updated", handleMessageUpdate);
+      window.addEventListener("feedback-updated", handleFeedbackUpdate);
     }
 
     return () => {
       if (typeof window !== "undefined") {
         window.removeEventListener("message-updated", handleMessageUpdate);
+        window.removeEventListener("feedback-updated", handleFeedbackUpdate);
       }
     };
   }, [currentUser]);
@@ -171,6 +210,11 @@ function Topbar() {
                 <li className="nav-item">
                   <a className="nav-link text-dark" href="/feedback">
                     Support
+                    {unreadFeedbackCount > 0 && (
+                      <span className="badge badge-danger ml-1" style={{ fontSize: '10px' }}>
+                        {unreadFeedbackCount}
+                      </span>
+                    )}
                   </a>
                 </li>
                 <li className="nav-item">

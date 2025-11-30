@@ -156,7 +156,7 @@ async function verifyPassword(password, stored) {
 }
 
 // Photos constraints
-const MAX_IMAGE_BYTES = 150 * 1024;
+const MAX_IMAGE_BYTES = 500 * 1024;
 const ALLOWED_CONTENT_TYPES = new Set(["image/jpeg", "image/png", "image/gif"]);
 
 // ========== Filesystem Implementation (default) ==========
@@ -1687,6 +1687,60 @@ app.delete("/api/users/:id/photo", async (req, res) => {
   }
 });
 
+app.post("/api/users/:id/photo", async (req, res) => {
+  try {
+    const { id } = req.params || {};
+    const { base64 } = req.body || {};
+    if (!id || !base64) {
+      return res.status(400).json({ error: "id and base64 are required" });
+    }
+
+    // Parse the base64 data URL
+    const { base64: data, contentType } = normalizeBase64DataUrl(base64);
+    if (!data || !contentType) {
+      return res.status(400).json({ error: "Invalid base64 data" });
+    }
+
+    // Validate file size
+    const buffer = Buffer.from(data, "base64");
+    if (buffer.length > MAX_IMAGE_BYTES) {
+      return res.status(400).json({ error: `Image too large. Max ${MAX_IMAGE_BYTES / 1024}KB` });
+    }
+
+    // Validate content type
+    if (!ALLOWED_CONTENT_TYPES.has(contentType)) {
+      return res.status(400).json({ error: "Invalid file type. Allowed: JPG, PNG, GIF" });
+    }
+
+    if (USE_DB) {
+      await db.upsertPhoto(id, contentType, buffer);
+      return res.json({ message: "Photo uploaded successfully" });
+    }
+
+    // FS flow
+    const photos = await readPhotosFS();
+    const existingIndex = photos.photos.findIndex((p) => p.userId === id);
+    const photoRecord = {
+      userId: id,
+      contentType,
+      base64: data,
+      uploadedAt: new Date().toISOString(),
+    };
+
+    if (existingIndex !== -1) {
+      photos.photos[existingIndex] = photoRecord;
+    } else {
+      photos.photos.push(photoRecord);
+    }
+
+    await writePhotosFS(photos);
+    return res.json({ message: "Photo uploaded successfully" });
+  } catch (err) {
+    console.error("Upload photo error:", err);
+    return res.status(500).json({ error: "Internal server error" });
+  }
+});
+
 app.get("/api/users/:id/photo", async (req, res) => {
   try {
     const { id } = req.params || {};
@@ -1714,11 +1768,12 @@ app.get("/api/users/:id/photo", async (req, res) => {
 });
 
 /**
- * Feedback endpoints
- * - GET /api/feedback - get current user's feedback
- * - POST /api/feedback - submit new feedback
- * - GET /api/admin/feedback - get all feedback (admin only)
- * - PUT /api/admin/feedback/:id - respond to feedback (admin only)
+ * Feedback conversation endpoints (like messages but with admin)
+ * - GET /api/feedback/conversations - get conversations for current user
+ * - GET /api/feedback/messages - get messages for a conversation
+ * - POST /api/feedback - send feedback message
+ * - PUT /api/feedback/:messageId/read - mark message as read
+ * - GET /api/feedback/unread-count - get unread feedback count
  */
 
 /**
@@ -2314,110 +2369,7 @@ app.get("/api/users/:id/rating", async (req, res) => {
   }
 });
 
-// Get user's own feedback
-app.get("/api/feedback", async (req, res) => {
-  try {
-    // Get current user from session/localStorage or from a token (simplified for now)
-    // In a real app, you'd use JWT or session middleware
-    let currentUser = null;
-    try {
-      const s = (req.headers['x-current-user'] || "").toString().trim();
-      if (s) currentUser = JSON.parse(s);
-    } catch {
-      // ignore
-    }
 
-    if (!currentUser || !currentUser.id) {
-      return res.status(401).json({ error: "Authentication required" });
-    }
-
-    const feedback = await db.getUserFeedback(currentUser.id);
-    return res.json({ feedback });
-  } catch (err) {
-    console.error("Get feedback error:", err);
-    return res.status(500).json({ error: "Internal server error" });
-  }
-});
-
-// Submit new feedback
-app.post("/api/feedback", async (req, res) => {
-  try {
-    const { query } = req.body || {};
-    if (!query || !String(query).trim()) {
-      return res.status(400).json({ error: "Query is required" });
-    }
-
-    // Get current user
-    let currentUser = null;
-    try {
-      const s = (req.headers['x-current-user'] || "").toString().trim();
-      if (s) currentUser = JSON.parse(s);
-    } catch {
-      // ignore
-    }
-
-    if (!currentUser || !currentUser.id) {
-      return res.status(401).json({ error: "Authentication required" });
-    }
-
-    const feedbackId = await db.createFeedback(currentUser.id, String(query).trim());
-    return res.status(201).json({
-      feedbackId,
-      message: "Feedback submitted successfully. We'll respond to your query soon."
-    });
-  } catch (err) {
-    console.error("Create feedback error:", err);
-    return res.status(500).json({ error: "Internal server error" });
-  }
-});
-
-// Admin: Get all feedback
-app.get("/api/admin/feedback", async (req, res) => {
-  try {
-    // Simple admin check - in real app use proper authentication
-    const isAdmin = req.headers['x-admin'] === 'true';
-    if (!isAdmin) {
-      return res.status(403).json({ error: "Admin access required" });
-    }
-
-    const feedback = await db.getAllFeedback();
-    return res.json({ feedback });
-  } catch (err) {
-    console.error("Get all feedback error:", err);
-    return res.status(500).json({ error: "Internal server error" });
-  }
-});
-
-// Admin: Respond to feedback
-app.put("/api/admin/feedback/:id", async (req, res) => {
-  try {
-    const { id } = req.params || {};
-    const { response } = req.body || {};
-
-    if (!response || !String(response).trim()) {
-      return res.status(400).json({ error: "Response is required" });
-    }
-
-    // Simple admin check
-    const isAdmin = req.headers['x-admin'] === 'true';
-    if (!isAdmin) {
-      return res.status(403).json({ error: "Admin access required" });
-    }
-
-    await db.respondToFeedback(id, String(response).trim());
-
-    // TODO: Send email notification to user
-    // const feedback = await db.getFeedbackById(id);
-    // if (feedback) {
-    //   await sendEmailNotification(feedback.userEmail, feedback.response);
-    // }
-
-    return res.json({ message: "Response sent successfully" });
-  } catch (err) {
-    console.error("Respond to feedback error:", err);
-    return res.status(500).json({ error: "Internal server error" });
-  }
-});
 
 // Ratings endpoints
 // Submit a rating
@@ -2449,6 +2401,308 @@ app.get("/api/ratings/average", async (req, res) => {
     return res.json({ average: average.average });
   } catch (err) {
     console.error("Get average rating error:", err);
+    return res.status(500).json({ error: "Internal server error" });
+  }
+});
+
+// Feedback conversation endpoints (like messages but with admin)
+// Get feedback conversations for current user
+app.get("/api/feedback/conversations", async (req, res) => {
+  try {
+    // Get current user
+    let currentUser = null;
+    try {
+      const s = (req.headers['x-current-user'] || "").toString().trim();
+      if (s) currentUser = JSON.parse(s);
+    } catch {
+      // ignore
+    }
+
+    if (!currentUser || !currentUser.id) {
+      return res.status(401).json({ error: "Authentication required" });
+    }
+
+    if (USE_DB) {
+      // Check if user is admin
+      const user = await db.getUserById(currentUser.id);
+      const isAdmin = user && String(user.role_type || "").toLowerCase() === "administrator";
+
+      if (isAdmin) {
+        // Admin sees all users who have feedback
+        const [rows] = await db.pool.execute(`
+          SELECT DISTINCT
+            f.sender_id as contactId,
+            u.name as contactName,
+            MAX(f.created_at) as lastMessageTime,
+            (
+              SELECT content
+              FROM bms_feedback
+              WHERE (sender_id = f.sender_id AND receiver_id = 'admin') OR (sender_id = 'admin' AND receiver_id = f.sender_id)
+              ORDER BY created_at DESC
+              LIMIT 1
+            ) as lastMessageContent,
+            (
+              SELECT COUNT(*)
+              FROM bms_feedback
+              WHERE sender_id = f.sender_id AND receiver_id = 'admin' AND is_read = 0
+            ) as unreadCount
+          FROM bms_feedback f
+          JOIN users u ON f.sender_id = u.id
+          WHERE f.receiver_id = 'admin' AND f.sender_id != 'admin'
+          GROUP BY f.sender_id, u.name
+          ORDER BY CASE WHEN unreadCount > 0 THEN 0 ELSE 1 END, lastMessageTime DESC
+        `);
+
+        const conversations = rows.map(row => ({
+          contactId: row.contactId,
+          contactName: row.contactName || "Unknown User",
+          lastMessageTime: row.lastMessageTime,
+          lastMessageContent: row.lastMessageContent || "No messages yet",
+          unreadCount: row.unreadCount || 0,
+        }));
+
+        return res.json({ conversations });
+      } else {
+        // Regular user sees only "Admin" as contact
+        const [rows] = await db.pool.execute(`
+          SELECT
+            MAX(f.created_at) as lastMessageTime,
+            (
+              SELECT content
+              FROM bms_feedback
+              WHERE (sender_id = ? AND receiver_id = 'admin') OR (sender_id = 'admin' AND receiver_id = ?)
+              ORDER BY created_at DESC
+              LIMIT 1
+            ) as lastMessageContent,
+            (
+              SELECT COUNT(*)
+              FROM bms_feedback
+              WHERE sender_id = 'admin' AND receiver_id = ? AND is_read = 0
+            ) as unreadCount
+          FROM bms_feedback f
+          WHERE (f.sender_id = ? AND f.receiver_id = 'admin') OR (f.sender_id = 'admin' AND f.receiver_id = ?)
+        `, [currentUser.id, currentUser.id, currentUser.id, currentUser.id, currentUser.id]);
+
+        const conversations = [{
+          contactId: "admin",
+          contactName: "Support Team",
+          lastMessageTime: rows[0]?.lastMessageTime || null,
+          lastMessageContent: rows[0]?.lastMessageContent || "No messages yet",
+          unreadCount: rows[0]?.unreadCount || 0,
+        }];
+
+        return res.json({ conversations });
+      }
+    }
+  } catch (err) {
+    console.error("Get feedback conversations error:", err);
+    return res.status(500).json({ error: "Internal server error" });
+  }
+});
+
+// Get feedback messages for a conversation
+app.get("/api/feedback/messages", async (req, res) => {
+  try {
+    // Get current user
+    let currentUser = null;
+    try {
+      const s = (req.headers['x-current-user'] || "").toString().trim();
+      if (s) currentUser = JSON.parse(s);
+    } catch {
+      // ignore
+    }
+
+    if (!currentUser || !currentUser.id) {
+      return res.status(401).json({ error: "Authentication required" });
+    }
+
+    if (USE_DB) {
+      // Check if user is admin
+      const user = await db.getUserById(currentUser.id);
+      const isAdmin = user && String(user.role_type || "").toLowerCase() === "administrator";
+
+      // For admin, get all messages involving 'admin' as sender or receiver
+      // For regular users, get messages between them and 'admin'
+      let query, params;
+
+      if (isAdmin) {
+        query = `
+          SELECT
+            f.id,
+            f.sender_id as senderId,
+            f.receiver_id as receiverId,
+            f.content,
+            f.created_at as createdAt,
+            f.is_read as isRead,
+            CASE WHEN f.sender_id = 'admin' THEN 1 ELSE 0 END as isSentByMe,
+            u.name as senderName
+          FROM bms_feedback f
+          LEFT JOIN users u ON f.sender_id = u.id
+          WHERE f.sender_id = 'admin' OR f.receiver_id = 'admin'
+          ORDER BY f.created_at ASC
+        `;
+        params = [];
+      } else {
+        query = `
+          SELECT
+            f.id,
+            f.sender_id as senderId,
+            f.receiver_id as receiverId,
+            f.content,
+            f.created_at as createdAt,
+            f.is_read as isRead,
+            CASE WHEN f.sender_id = ? THEN 1 ELSE 0 END as isSentByMe,
+            u.name as senderName
+          FROM bms_feedback f
+          LEFT JOIN users u ON f.sender_id = u.id
+          WHERE (f.sender_id = ? AND f.receiver_id = 'admin') OR (f.sender_id = 'admin' AND f.receiver_id = ?)
+          ORDER BY f.created_at ASC
+        `;
+        params = [currentUser.id, currentUser.id, currentUser.id];
+      }
+
+      const [rows] = await db.pool.execute(query, params);
+
+      const messages = rows.map(row => ({
+        id: row.id,
+        sender: {
+          id: row.senderId,
+          name: row.senderName || (row.senderId === 'admin' ? 'Support Team' : 'Unknown'),
+        },
+        receiver: {
+          id: row.receiverId,
+        },
+        content: row.content,
+        createdAt: row.createdAt,
+        isRead: row.isRead === 1,
+        isSentByMe: row.isSentByMe === 1,
+      }));
+
+      return res.json({ messages });
+    }
+  } catch (err) {
+    console.error("Get feedback messages error:", err);
+    return res.status(500).json({ error: "Internal server error" });
+  }
+});
+
+// Send feedback message
+app.post("/api/feedback", async (req, res) => {
+  try {
+    const { receiverId, content } = req.body || {};
+    if (!receiverId || !content || !content.trim()) {
+      return res.status(400).json({ error: "receiverId and content are required" });
+    }
+
+    // Get current user
+    let currentUser = null;
+    try {
+      const s = (req.headers['x-current-user'] || "").toString().trim();
+      if (s) currentUser = JSON.parse(s);
+    } catch {
+      // ignore
+    }
+
+    if (!currentUser || !currentUser.id) {
+      return res.status(401).json({ error: "Authentication required" });
+    }
+
+    if (USE_DB) {
+      // For users, receiverId should be 'admin'
+      // For admin, receiverId should be the user ID
+      const actualReceiverId = currentUser.roleType === 'administrator' ? receiverId : 'admin';
+      const actualSenderId = currentUser.roleType === 'administrator' ? 'admin' : currentUser.id;
+
+      const [result] = await db.pool.execute(`
+        INSERT INTO bms_feedback (sender_id, receiver_id, content, created_at, is_read)
+        VALUES (?, ?, ?, NOW(), 0)
+      `, [actualSenderId, actualReceiverId, content.trim()]);
+
+      return res.status(201).json({
+        messageId: result.insertId,
+        message: "Feedback sent successfully"
+      });
+    }
+  } catch (err) {
+    console.error("Send feedback error:", err);
+    return res.status(500).json({ error: "Internal server error" });
+  }
+});
+
+// Mark feedback message as read
+app.put("/api/feedback/:messageId/read", async (req, res) => {
+  try {
+    const { messageId } = req.params || {};
+
+    // Get current user
+    let currentUser = null;
+    try {
+      const s = (req.headers['x-current-user'] || "").toString().trim();
+      if (s) currentUser = JSON.parse(s);
+    } catch {
+      // ignore
+    }
+
+    if (!currentUser || !currentUser.id) {
+      return res.status(401).json({ error: "Authentication required" });
+    }
+
+    if (USE_DB) {
+      // Check if user is admin
+      const user = await db.getUserById(currentUser.id);
+      const isAdmin = user && String(user.role_type || "").toLowerCase() === "administrator";
+
+      // For admin, messages are sent to 'admin', not to admin's user ID
+      // For regular users, messages are sent to their user ID
+      const receiverId = isAdmin ? 'admin' : currentUser.id;
+
+      await db.pool.execute(`
+        UPDATE bms_feedback
+        SET is_read = 1
+        WHERE id = ? AND receiver_id = ?
+      `, [messageId, receiverId]);
+
+      return res.json({ message: "Message marked as read" });
+    }
+  } catch (err) {
+    console.error("Mark feedback read error:", err);
+    return res.status(500).json({ error: "Internal server error" });
+  }
+});
+
+// Get unread feedback count
+app.get("/api/feedback/unread-count", async (req, res) => {
+  try {
+    // Get current user
+    let currentUser = null;
+    try {
+      const s = (req.headers['x-current-user'] || "").toString().trim();
+      if (s) currentUser = JSON.parse(s);
+    } catch {
+      // ignore
+    }
+
+    if (!currentUser || !currentUser.id) {
+      return res.status(401).json({ error: "Authentication required" });
+    }
+
+    if (USE_DB) {
+      // Check if user is admin
+      const user = await db.getUserById(currentUser.id);
+      const isAdmin = user && String(user.role_type || "").toLowerCase() === "administrator";
+
+      // For admin, count messages where receiver_id = 'admin'
+      // For regular users, count messages where receiver_id = user.id
+      const receiverId = isAdmin ? 'admin' : currentUser.id;
+
+      const [rows] = await db.pool.execute(`
+        SELECT COUNT(*) as unread_count FROM bms_feedback WHERE receiver_id = ? AND is_read = 0
+      `, [receiverId]);
+
+      return res.json({ unreadCount: rows[0].unread_count || 0 });
+    }
+  } catch (err) {
+    console.error("Get unread feedback count error:", err);
     return res.status(500).json({ error: "Internal server error" });
   }
 });

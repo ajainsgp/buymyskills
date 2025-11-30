@@ -11,6 +11,8 @@ function UserProfile({ userProfiles, showSensitive = false }) {
     setFlips(newFlips);
   }; */
   const [photos, setPhotos] = useState({});
+  const [photoRefreshKey, setPhotoRefreshKey] = useState(0);
+
   useEffect(() => {
     let cancelled = false;
     async function loadPhotos() {
@@ -19,7 +21,9 @@ function UserProfile({ userProfiles, showSensitive = false }) {
           (userProfiles || []).map(async (p) => {
             if (!p || !p.id) return [null, null];
             try {
-              const res = await fetch(`${API_BASE}/api/users/${p.id}/photo`);
+              const res = await fetch(
+                `${API_BASE}/api/users/${p.id}/photo?t=${photoRefreshKey}`,
+              );
               if (!res.ok) return [p.id, null];
               const data = await res.json().catch(() => ({}));
               if (data && data.contentType && data.base64) {
@@ -46,7 +50,20 @@ function UserProfile({ userProfiles, showSensitive = false }) {
     return () => {
       cancelled = true;
     };
-  }, [userProfiles]);
+  }, [userProfiles, photoRefreshKey]);
+
+  // Listen for photo updates
+  useEffect(() => {
+    const handlePhotoUpdate = () => {
+      setPhotoRefreshKey((prev) => prev + 1);
+    };
+
+    if (typeof window !== "undefined") {
+      window.addEventListener("photo-updated", handlePhotoUpdate);
+      return () =>
+        window.removeEventListener("photo-updated", handlePhotoUpdate);
+    }
+  }, []);
   console.log("userProfiles:", userProfiles);
   return userProfiles.map((profile, index) => {
     console.log("profile:", profile);
@@ -82,15 +99,13 @@ function UserProfile({ userProfiles, showSensitive = false }) {
                       <div className="col-sm-6">
                         <p className="m-b-10 f-w-600">Email</p>
                         <h6 className="text-muted f-w-400">
-                          {showSensitive ? profile.emailId : "Login to view"}
+                          {showSensitive ? profile.emailId : "Private"}
                         </h6>
                       </div>
                       <div className="col-sm-6">
                         <p className="m-b-10 f-w-600">Phone</p>
                         <h6 className="text-muted f-w-400">
-                          {showSensitive
-                            ? profile.mobile || "N/A"
-                            : "Login to view"}
+                          {showSensitive ? profile.mobile || "N/A" : "Private"}
                         </h6>
                       </div>
                     </div>

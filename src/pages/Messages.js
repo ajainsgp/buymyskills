@@ -329,10 +329,6 @@ function Messages() {
                                 </span>
                               )}
                             </div>
-                            <div className="contact-preview">
-                              {conversation.lastMessageContent ||
-                                "No messages yet"}
-                            </div>
                           </div>
                           <small className="contact-time">
                             {formatDate(conversation.lastMessageTime)}
