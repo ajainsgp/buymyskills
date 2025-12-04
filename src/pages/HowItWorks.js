@@ -29,11 +29,11 @@ function HowItWorks() {
                   🚀 Offer Your Expertise to the World
                 </h2>
                 <p className="card-text lead text-center mb-3">
-                  <strong>Buy My Skills</strong> connects your local expertise
-                  with your local community, city, and country. Whether
-                  developer, designer, consultant, or expert in any field, our
-                  intelligent regional filtering system ensures you connect with
-                  relevant opportunities while protecting your data privacy.
+                  <strong>Buy My Skills</strong> connects your skills with your
+                  local community, city, and country. Whether developer,
+                  designer, consultant, or expert in any field, our intelligent
+                  regional filtering system ensures you connect with relevant
+                  opportunities while protecting your data privacy.
                 </p>
                 <div className="row mt-4">
                   <div className="col-md-4 text-center mb-3">

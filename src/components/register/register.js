@@ -49,6 +49,7 @@ function RegisterUser() {
     negotiable: false,
     currencyCode: "USD",
     rateType: "D",
+    userRole: "seller", // "seller", "buyer"
   });
 
   const [photoDataUrl, setPhotoDataUrl] = useState("");
@@ -298,17 +299,9 @@ function RegisterUser() {
         {/* Page Heading */}
         <div className="bg-primary text-white py-3 mb-4">
           <div className="container">
-            <div className="d-flex align-items-center">
-              <img
-                src="/logo96.png"
-                alt="Buy My Skills Logo"
-                className="register-logo"
-              />
-              <h1 className="h3 mb-0 ml-3">
-                Register your skills to the world of opportunities waiting for
-                you
-              </h1>
-            </div>
+            <h1 className="h3 mb-0 text-center">
+              Register your skills to the world of opportunities waiting for you
+            </h1>
           </div>
         </div>
         <div className="mainbody container-fluid">
@@ -392,6 +385,45 @@ function RegisterUser() {
                     </div>
 
                     <div className="form-group row">
+                      <div className="col-sm-12">
+                        <div className="panel panel-info">
+                          <div className="panel-heading">I want to</div>
+                          <div className="form-check form-check-inline">
+                            <input
+                              className="form-check-input"
+                              type="radio"
+                              name="userRole"
+                              id="seller"
+                              value="seller"
+                              checked={form.userRole === "seller"}
+                              onChange={onChange}
+                            />
+                            <label
+                              className="form-check-label"
+                              htmlFor="seller"
+                            >
+                              Become a Seller
+                            </label>
+                          </div>
+                          <div className="form-check form-check-inline">
+                            <input
+                              className="form-check-input"
+                              type="radio"
+                              name="userRole"
+                              id="buyer"
+                              value="buyer"
+                              checked={form.userRole === "buyer"}
+                              onChange={onChange}
+                            />
+                            <label className="form-check-label" htmlFor="buyer">
+                              Become a Buyer
+                            </label>
+                          </div>
+                        </div>
+                      </div>
+                    </div>
+
+                    <div className="form-group row">
                       <div className="col-sm-6">
                         <div className="panel panel-info">
                           <div className="panel-heading">First Name</div>
@@ -437,9 +469,6 @@ function RegisterUser() {
                           />
                         </div>
                       </div>
-                    </div>
-
-                    <div className="form-group row">
                       <div className="col-sm-6">
                         <div className="panel panel-info">
                           <div className="panel-heading">Gender</div>
@@ -790,384 +819,396 @@ function RegisterUser() {
                     </div>
                   </div>
 
-                  <div className="panel panel-body no-left-right-padding">
-                    <div className="panel panel-title">
-                      <h3>My Skills</h3>
-                    </div>
+                  {/* Only show Skills section for sellers */}
+                  {form.userRole === "seller" && (
+                    <div className="panel panel-body no-left-right-padding">
+                      <div className="panel panel-title">
+                        <h3>My Skills</h3>
+                      </div>
 
-                    <div className="form-group row">
-                      <div className="col-md-6">
-                        <div className="panel panel-default">
-                          <div className="panel-heading">Category</div>
-                          <select
-                            id="category"
-                            name="category"
-                            className="custom-select"
-                            value={form.category}
-                            onChange={onChange}
-                          >
-                            <option value="">Select...</option>
-                            {categories.map((name) => (
-                              <option key={name} value={name}>
-                                {name}
-                              </option>
-                            ))}
-                          </select>
+                      <div className="form-group row">
+                        <div className="col-md-6">
+                          <div className="panel panel-default">
+                            <div className="panel-heading">Category</div>
+                            <select
+                              id="category"
+                              name="category"
+                              className="custom-select"
+                              value={form.category}
+                              onChange={onChange}
+                            >
+                              <option value="">Select...</option>
+                              {categories.map((name) => (
+                                <option key={name} value={name}>
+                                  {name}
+                                </option>
+                              ))}
+                            </select>
+                          </div>
                         </div>
                       </div>
-                    </div>
 
-                    <div className="form-group row">
-                      <div className="col-md-6">
-                        <div className="panel panel-default">
-                          <div className="panel-heading">
-                            Tags * (Add up to 5 relevant tags)
+                      <div className="form-group row">
+                        <div className="col-md-6">
+                          <div className="panel panel-default">
+                            <div className="panel-heading">
+                              Tags * (Add up to 5 relevant tags)
+                            </div>
+                            <input
+                              type="text"
+                              className="form-control"
+                              id="keywords"
+                              name="keywords"
+                              placeholder="Like Software Development, Data Migration, AI & LLM Development"
+                              value={form.keywords}
+                              onChange={onChange}
+                            />
                           </div>
-                          <input
-                            type="text"
-                            className="form-control"
-                            id="keywords"
-                            name="keywords"
-                            placeholder="Like Software Development, Data Migration, AI & LLM Development"
-                            value={form.keywords}
-                            onChange={onChange}
-                          />
                         </div>
                       </div>
-                    </div>
 
-                    <div className="form-group row">
-                      <div className="col-md-12">
-                        <div className="panel panel-default">
-                          <div className="panel-heading">
-                            Summary of your skills
-                          </div>
-                          <textarea
-                            name="summary"
-                            className="form-control"
-                            placeholder="Briefly describe your key skills and expertise (max 150 characters)"
-                            value={form.summary}
-                            onChange={onChange}
-                            maxLength={150}
-                            rows={3}
-                          />
-                          <small className="form-text text-muted">
-                            {form.summary.length}/150 characters
-                          </small>
-                          {fieldErrors.summary && (
-                            <small className="form-text text-danger">
-                              {fieldErrors.summary}
+                      <div className="form-group row">
+                        <div className="col-md-12">
+                          <div className="panel panel-default">
+                            <div className="panel-heading">
+                              Summary of your skills
+                            </div>
+                            <textarea
+                              name="summary"
+                              className="form-control"
+                              placeholder="Briefly describe your key skills and expertise (max 150 characters)"
+                              value={form.summary}
+                              onChange={onChange}
+                              maxLength={150}
+                              rows={3}
+                            />
+                            <small className="form-text text-muted">
+                              {form.summary.length}/150 characters
                             </small>
-                          )}
-                        </div>
-                      </div>
-                    </div>
-
-                    <div className="form-group row">
-                      <div className="col-md-6">
-                        <div className="panel panel-default">
-                          <div className="panel-heading">
-                            Facebook URL (optional)
+                            {fieldErrors.summary && (
+                              <small className="form-text text-danger">
+                                {fieldErrors.summary}
+                              </small>
+                            )}
                           </div>
-                          <input
-                            type="url"
-                            name="facebookUrl"
-                            className="form-control"
-                            placeholder="https://facebook.com/yourprofile"
-                            value={form.facebookUrl}
-                            onChange={onChange}
-                          />
-                          <small className="form-text text-muted">
-                            Your Facebook profile or page URL
-                          </small>
                         </div>
                       </div>
-                      <div className="col-md-6">
-                        <div className="panel panel-default">
-                          <div className="panel-heading">
-                            LinkedIn URL (optional)
+
+                      <div className="form-group row">
+                        <div className="col-md-6">
+                          <div className="panel panel-default">
+                            <div className="panel-heading">
+                              Facebook URL (optional)
+                            </div>
+                            <input
+                              type="url"
+                              name="facebookUrl"
+                              className="form-control"
+                              placeholder="https://facebook.com/yourprofile"
+                              value={form.facebookUrl}
+                              onChange={onChange}
+                            />
+                            <small className="form-text text-muted">
+                              Your Facebook profile or page URL
+                            </small>
                           </div>
-                          <input
-                            type="url"
-                            name="linkedinUrl"
-                            className="form-control"
-                            placeholder="https://linkedin.com/in/yourprofile"
-                            value={form.linkedinUrl}
-                            onChange={onChange}
-                          />
-                          <small className="form-text text-muted">
-                            Your LinkedIn profile URL
-                          </small>
+                        </div>
+                        <div className="col-md-6">
+                          <div className="panel panel-default">
+                            <div className="panel-heading">
+                              LinkedIn URL (optional)
+                            </div>
+                            <input
+                              type="url"
+                              name="linkedinUrl"
+                              className="form-control"
+                              placeholder="https://linkedin.com/in/yourprofile"
+                              value={form.linkedinUrl}
+                              onChange={onChange}
+                            />
+                            <small className="form-text text-muted">
+                              Your LinkedIn profile URL
+                            </small>
+                          </div>
                         </div>
                       </div>
                     </div>
-                  </div>
+                  )}
 
-                  <div className="panel panel-body no-left-right-padding">
-                    <div className="panel panel-title">
-                      <h3>My Pricing</h3>
-                    </div>
+                  {/* Only show Pricing section for sellers */}
+                  {form.userRole === "seller" && (
+                    <div className="panel panel-body no-left-right-padding">
+                      <div className="panel panel-title">
+                        <h3>My Pricing</h3>
+                      </div>
 
-                    <div className="form-group row">
-                      <div className="col-md-6">
-                        <div className="panel panel-default">
-                          <div className="panel-heading">Starting Price</div>
-                          <div className="row">
-                            <div className="col-md-8">
-                              <div className="input-group">
-                                <div className="input-group-prepend">
-                                  <select
-                                    name="currencyCode"
-                                    className="custom-select"
-                                    value={form.currencyCode}
+                      <div className="form-group row">
+                        <div className="col-md-6">
+                          <div className="panel panel-default">
+                            <div className="panel-heading">Starting Price</div>
+                            <div className="row">
+                              <div className="col-md-8">
+                                <div className="input-group">
+                                  <div className="input-group-prepend">
+                                    <select
+                                      name="currencyCode"
+                                      className="custom-select"
+                                      value={form.currencyCode}
+                                      onChange={onChange}
+                                      disabled
+                                      style={{ minWidth: "80px" }}
+                                    >
+                                      <option value="USD">USD</option>
+                                      <option value="EUR">EUR</option>
+                                      <option value="GBP">GBP</option>
+                                      <option value="INR">INR</option>
+                                      <option value="SGD">SGD</option>
+                                      <option value="AUD">AUD</option>
+                                      <option value="CAD">CAD</option>
+                                    </select>
+                                  </div>
+                                  <input
+                                    type="number"
+                                    name="startingPrice"
+                                    className="form-control"
+                                    placeholder="Enter starting price"
+                                    value={form.startingPrice}
                                     onChange={onChange}
-                                    disabled
-                                    style={{ minWidth: "80px" }}
-                                  >
-                                    <option value="USD">USD</option>
-                                    <option value="EUR">EUR</option>
-                                    <option value="GBP">GBP</option>
-                                    <option value="INR">INR</option>
-                                    <option value="SGD">SGD</option>
-                                    <option value="AUD">AUD</option>
-                                    <option value="CAD">CAD</option>
-                                  </select>
+                                    min="0"
+                                    step="0.01"
+                                  />
                                 </div>
-                                <input
-                                  type="number"
-                                  name="startingPrice"
-                                  className="form-control"
-                                  placeholder="Enter starting price"
-                                  value={form.startingPrice}
-                                  onChange={onChange}
-                                  min="0"
-                                  step="0.01"
-                                />
+                              </div>
+                              <div className="col-md-4">
+                                <div
+                                  className="form-check form-check-inline"
+                                  style={{ marginRight: "15px" }}
+                                >
+                                  <input
+                                    className="form-check-input"
+                                    type="radio"
+                                    name="rateType"
+                                    id="hourly"
+                                    value="H"
+                                    checked={form.rateType === "H"}
+                                    onChange={(e) =>
+                                      setForm((prev) => ({
+                                        ...prev,
+                                        rateType: e.target.value,
+                                      }))
+                                    }
+                                  />
+                                  <label
+                                    className="form-check-label"
+                                    htmlFor="hourly"
+                                  >
+                                    Hourly
+                                  </label>
+                                </div>
+                                <div className="form-check form-check-inline">
+                                  <input
+                                    className="form-check-input"
+                                    type="radio"
+                                    name="rateType"
+                                    id="daily"
+                                    value="D"
+                                    checked={form.rateType === "D"}
+                                    onChange={(e) =>
+                                      setForm((prev) => ({
+                                        ...prev,
+                                        rateType: e.target.value,
+                                      }))
+                                    }
+                                  />
+                                  <label
+                                    className="form-check-label"
+                                    htmlFor="daily"
+                                  >
+                                    Daily
+                                  </label>
+                                </div>
                               </div>
                             </div>
-                            <div className="col-md-4">
-                              <div
-                                className="form-check form-check-inline"
-                                style={{ marginRight: "15px" }}
-                              >
-                                <input
-                                  className="form-check-input"
-                                  type="radio"
-                                  name="rateType"
-                                  id="hourly"
-                                  value="H"
-                                  checked={form.rateType === "H"}
-                                  onChange={(e) =>
-                                    setForm((prev) => ({
-                                      ...prev,
-                                      rateType: e.target.value,
-                                    }))
-                                  }
-                                />
-                                <label
-                                  className="form-check-label"
-                                  htmlFor="hourly"
-                                >
-                                  Hourly
-                                </label>
-                              </div>
-                              <div className="form-check form-check-inline">
-                                <input
-                                  className="form-check-input"
-                                  type="radio"
-                                  name="rateType"
-                                  id="daily"
-                                  value="D"
-                                  checked={form.rateType === "D"}
-                                  onChange={(e) =>
-                                    setForm((prev) => ({
-                                      ...prev,
-                                      rateType: e.target.value,
-                                    }))
-                                  }
-                                />
-                                <label
-                                  className="form-check-label"
-                                  htmlFor="daily"
-                                >
-                                  Daily
-                                </label>
-                              </div>
-                            </div>
-                          </div>
-                          {/* <small className="form-text text-muted">
+                            {/* <small className="form-text text-muted">
                             Your minimum hourly/daily rate
                           </small> */}
-                          {/* Price Range Display */}
-                          {form.category && categoryPriceRange && (
-                            <div
-                              style={{
-                                marginTop: "10px",
-                                padding: "8px",
-                                backgroundColor: "#f8f9fa",
-                                borderRadius: "4px",
-                                border: "1px solid #dee2e6",
-                              }}
-                            >
-                              <small
-                                style={{ color: "#495057", fontWeight: "bold" }}
+                            {/* Price Range Display */}
+                            {form.category && categoryPriceRange && (
+                              <div
+                                style={{
+                                  marginTop: "10px",
+                                  padding: "8px",
+                                  backgroundColor: "#f8f9fa",
+                                  borderRadius: "4px",
+                                  border: "1px solid #dee2e6",
+                                }}
                               >
-                                💰 Market Rate Range for {form.category}:
-                              </small>
-                              <div style={{ marginTop: "4px" }}>
-                                {categoryPriceRange.hourly.min !== null &&
-                                  categoryPriceRange.hourly.max !== null && (
+                                <small
+                                  style={{
+                                    color: "#495057",
+                                    fontWeight: "bold",
+                                  }}
+                                >
+                                  💰 Market Rate Range for {form.category}:
+                                </small>
+                                <div style={{ marginTop: "4px" }}>
+                                  {categoryPriceRange.hourly.min !== null &&
+                                    categoryPriceRange.hourly.max !== null && (
+                                      <div
+                                        style={{
+                                          fontSize: "12px",
+                                          color: "#6c757d",
+                                        }}
+                                      >
+                                        <strong>Hourly:</strong>{" "}
+                                        {form.currencyCode}{" "}
+                                        {categoryPriceRange.hourly.min} -{" "}
+                                        {form.currencyCode}{" "}
+                                        {categoryPriceRange.hourly.max}
+                                      </div>
+                                    )}
+                                  {categoryPriceRange.daily.min !== null &&
+                                    categoryPriceRange.daily.max !== null && (
+                                      <div
+                                        style={{
+                                          fontSize: "12px",
+                                          color: "#6c757d",
+                                          marginTop: "2px",
+                                        }}
+                                      >
+                                        <strong>Daily:</strong>{" "}
+                                        {form.currencyCode}{" "}
+                                        {categoryPriceRange.daily.min} -{" "}
+                                        {form.currencyCode}{" "}
+                                        {categoryPriceRange.daily.max}
+                                      </div>
+                                    )}
+                                  {(categoryPriceRange.hourly.min === null ||
+                                    categoryPriceRange.daily.min === null) && (
                                     <div
                                       style={{
-                                        fontSize: "12px",
-                                        color: "#6c757d",
-                                      }}
-                                    >
-                                      <strong>Hourly:</strong>{" "}
-                                      {form.currencyCode}{" "}
-                                      {categoryPriceRange.hourly.min} -{" "}
-                                      {form.currencyCode}{" "}
-                                      {categoryPriceRange.hourly.max}
-                                    </div>
-                                  )}
-                                {categoryPriceRange.daily.min !== null &&
-                                  categoryPriceRange.daily.max !== null && (
-                                    <div
-                                      style={{
-                                        fontSize: "12px",
-                                        color: "#6c757d",
+                                        fontSize: "11px",
+                                        color: "#868e96",
+                                        fontStyle: "italic",
                                         marginTop: "2px",
                                       }}
                                     >
-                                      <strong>Daily:</strong>{" "}
-                                      {form.currencyCode}{" "}
-                                      {categoryPriceRange.daily.min} -{" "}
-                                      {form.currencyCode}{" "}
-                                      {categoryPriceRange.daily.max}
+                                      Limited data available for this category
                                     </div>
                                   )}
-                                {(categoryPriceRange.hourly.min === null ||
-                                  categoryPriceRange.daily.min === null) && (
-                                  <div
-                                    style={{
-                                      fontSize: "11px",
-                                      color: "#868e96",
-                                      fontStyle: "italic",
-                                      marginTop: "2px",
-                                    }}
-                                  >
-                                    Limited data available for this category
-                                  </div>
-                                )}
+                                </div>
                               </div>
-                            </div>
-                          )}
-                          {loadingPriceRange && form.category && (
-                            <div
-                              style={{
-                                marginTop: "10px",
-                                padding: "8px",
-                                backgroundColor: "#f8f9fa",
-                                borderRadius: "4px",
-                              }}
-                            >
-                              <small style={{ color: "#6c757d" }}>
-                                Loading market rates...
+                            )}
+                            {loadingPriceRange && form.category && (
+                              <div
+                                style={{
+                                  marginTop: "10px",
+                                  padding: "8px",
+                                  backgroundColor: "#f8f9fa",
+                                  borderRadius: "4px",
+                                }}
+                              >
+                                <small style={{ color: "#6c757d" }}>
+                                  Loading market rates...
+                                </small>
+                              </div>
+                            )}
+                          </div>
+                        </div>
+                        <div className="col-md-6">
+                          <div className="panel panel-default">
+                            <div className="panel-heading">Negotiable</div>
+                            <div style={{ padding: "10px" }}>
+                              <div className="form-check">
+                                <input
+                                  className="form-check-input"
+                                  type="checkbox"
+                                  name="negotiable"
+                                  id="negotiable"
+                                  checked={form.negotiable}
+                                  onChange={onChange}
+                                />
+                                <label
+                                  className="form-check-label"
+                                  htmlFor="negotiable"
+                                >
+                                  Price is negotiable
+                                </label>
+                              </div>
+                              <small className="form-text text-muted">
+                                Check if you&apos;re open to negotiating your
+                                rates
                               </small>
                             </div>
-                          )}
-                        </div>
-                      </div>
-                      <div className="col-md-6">
-                        <div className="panel panel-default">
-                          <div className="panel-heading">Negotiable</div>
-                          <div style={{ padding: "10px" }}>
-                            <div className="form-check">
-                              <input
-                                className="form-check-input"
-                                type="checkbox"
-                                name="negotiable"
-                                id="negotiable"
-                                checked={form.negotiable}
-                                onChange={onChange}
-                              />
-                              <label
-                                className="form-check-label"
-                                htmlFor="negotiable"
-                              >
-                                Price is negotiable
-                              </label>
-                            </div>
-                            <small className="form-text text-muted">
-                              Check if you&apos;re open to negotiating your
-                              rates
-                            </small>
                           </div>
                         </div>
                       </div>
                     </div>
-                  </div>
+                  )}
 
-                  <div className="panel panel-body no-left-right-padding">
-                    <div className="panel panel-title">
-                      <h3>My Availability</h3>
-                    </div>
+                  {/* Only show Availability section for sellers */}
+                  {form.userRole === "seller" && (
+                    <div className="panel panel-body no-left-right-padding">
+                      <div className="panel panel-title">
+                        <h3>My Availability</h3>
+                      </div>
 
-                    <div className="form-group row">
-                      <div className="col-md-6">
-                        <div className="panel panel-default">
-                          <div className="panel-heading">Preference</div>
-                          <select
-                            id="workPreference"
-                            name="workPreference"
-                            className="custom-select"
-                            value={form.workPreference}
-                            onChange={onChange}
-                          >
-                            <option value="Remote">Remote</option>
-                            <option value="On Site">On Site</option>
-                            <option value="Hybrid">Hybrid</option>
-                          </select>
+                      <div className="form-group row">
+                        <div className="col-md-6">
+                          <div className="panel panel-default">
+                            <div className="panel-heading">Preference</div>
+                            <select
+                              id="workPreference"
+                              name="workPreference"
+                              className="custom-select"
+                              value={form.workPreference}
+                              onChange={onChange}
+                            >
+                              <option value="Remote">Remote</option>
+                              <option value="On Site">On Site</option>
+                              <option value="Hybrid">Hybrid</option>
+                            </select>
+                          </div>
+                        </div>
+                        <div className="col-md-6">
+                          <div className="panel panel-default">
+                            <div className="panel-heading">Traveling</div>
+                            <select
+                              id="traveling"
+                              name="traveling"
+                              className="custom-select"
+                              value={form.traveling}
+                              onChange={onChange}
+                            >
+                              <option value="No Traveling">No Traveling</option>
+                              <option value="25%">25%</option>
+                              <option value="50%">50%</option>
+                              <option value="100%">100%</option>
+                            </select>
+                          </div>
                         </div>
                       </div>
-                      <div className="col-md-6">
-                        <div className="panel panel-default">
-                          <div className="panel-heading">Traveling</div>
-                          <select
-                            id="traveling"
-                            name="traveling"
-                            className="custom-select"
-                            value={form.traveling}
-                            onChange={onChange}
-                          >
-                            <option value="No Traveling">No Traveling</option>
-                            <option value="25%">25%</option>
-                            <option value="50%">50%</option>
-                            <option value="100%">100%</option>
-                          </select>
+                      <div className="form-group row">
+                        <div className="col-md-6">
+                          <div className="panel panel-default">
+                            <div className="panel-heading">Available</div>
+                            <select
+                              id="available"
+                              name="available"
+                              className="custom-select"
+                              value={form.available}
+                              onChange={onChange}
+                            >
+                              <option value="Immediate">Immediate</option>
+                              <option value="In 1 month">In 1 month</option>
+                              <option value="In 2 months">In 2 months</option>
+                              <option value="In 3 months">In 3 months</option>
+                            </select>
+                          </div>
                         </div>
                       </div>
                     </div>
-                    <div className="form-group row">
-                      <div className="col-md-6">
-                        <div className="panel panel-default">
-                          <div className="panel-heading">Available</div>
-                          <select
-                            id="available"
-                            name="available"
-                            className="custom-select"
-                            value={form.available}
-                            onChange={onChange}
-                          >
-                            <option value="Immediate">Immediate</option>
-                            <option value="In 1 month">In 1 month</option>
-                            <option value="In 2 months">In 2 months</option>
-                            <option value="In 3 months">In 3 months</option>
-                          </select>
-                        </div>
-                      </div>
-                    </div>
-                  </div>
+                  )}
 
                   {error ? (
                     <div className="panel panel-body no-left-right-padding">
@@ -1269,7 +1310,7 @@ function RegisterUser() {
                         disabled={submitting || !confirmInfo}
                       >
                         <i className="fa fa-fw fa-check" aria-hidden="true"></i>{" "}
-                        {submitting ? "Registering..." : "Register Profile"}
+                        {submitting ? "Registering..." : "Register my Profile"}
                       </button>
                     </div>
                   </div>

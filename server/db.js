@@ -240,7 +240,7 @@ async function initSchema() {
       const [rCntRows] = await conn.query("SELECT COUNT(*) AS c FROM roles");
       const rCount = rCntRows && rCntRows[0] ? Number(rCntRows[0].c || 0) : 0;
       if (rCount === 0) {
-        const defs = ["administrative", "user", "guest"];
+        const defs = ["administrative", "user", "buyer", "guest"];
         for (let i = 0; i < defs.length; i++) {
           const now = new Date();
           await conn.query(

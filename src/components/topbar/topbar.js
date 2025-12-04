@@ -168,10 +168,17 @@ function Topbar() {
     <div className="topbar mb-4 sticky-top" style={{ zIndex: 1020 }}>
       <nav className="navbar navbar-expand-lg navbar-light bg-white shadow position-relative">
         {/* Brand */}
-        <a className="navbar-brand" href="/">
-          <strong>BuyMySkills</strong>
-          <br />
-          <small>Connecting people, powering possibilities</small>
+        <a className="navbar-brand d-flex align-items-center" href="/">
+          <img
+            src="/logo96.png"
+            alt="Buy My Skills Logo"
+            className="mr-2"
+            style={{ height: '60px', width: '60px' }}
+          />
+          <div>
+            <div className="font-weight-bold">Buy My Skills</div>
+            <small className="text-muted">Connecting people, powering possibilities</small>
+          </div>
         </a>
 
         {/* Navbar Toggler for mobile */}
