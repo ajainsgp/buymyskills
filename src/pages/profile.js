@@ -4,6 +4,7 @@ import API_BASE from "../utils/apiBase";
 // import countries from "../data/countries.json";
 import countryCodes from "../data/countryCodes.json";
 import { validateMobile, validateSummary } from "../utils/validation";
+import "./profile.css";
 /* eslint-disable prettier/prettier */
 
 function Profile() {
@@ -26,7 +27,7 @@ function Profile() {
     category: "",
     summary: "",
     workPreference: "",
-    availability: "",
+    available: "",
     address: {
       addressLine1: "",
       addressLine2: "",
@@ -45,6 +46,8 @@ function Profile() {
     negotiable: false,
     currencyCode: "USD",
     rateType: "D",
+    showInDashboard: false,
+    showPhoto: false,
   });
 
   const [photoUrl, setPhotoUrl] = useState("");
@@ -135,7 +138,7 @@ function Profile() {
                 : cu.workPreference === "H"
                   ? "Hybrid"
                   : cu.workPreference || "",
-          availability: cu.availability || "Immediate",
+          available: cu.available || "Immediate",
           traveling: cu.traveling || "No Traveling",
           address: {
             addressLine1: cu.address?.addressLine1 || "",
@@ -156,6 +159,8 @@ function Profile() {
           currencyCode: cu.currencyCode || "USD",
           rateType: cu.rateType || "D",
           roleType: cu.roleType || "user",
+          showInDashboard: cu.showInDashboard,
+          showPhoto: cu.showPhoto,
         }));
 
         // Refresh from backend (source of truth)
@@ -181,7 +186,7 @@ function Profile() {
                   : u.workPreference === "H"
                     ? "Hybrid"
                     : u.workPreference || "",
-            availability: u.availability || "Immediate",
+            available: u.available || "Immediate",
             traveling: u.traveling || "No Traveling",
             address: {
               addressLine1: u.address?.addressLine1 || "",
@@ -202,6 +207,8 @@ function Profile() {
             currencyCode: u.currencyCode || "USD",
             rateType: u.rateType || "D",
             roleType: u.roleType || "user",
+            showInDashboard: u.showInDashboard,
+            showPhoto: u.showPhoto,
           });
         }
       } catch (e) {
@@ -243,25 +250,26 @@ function Profile() {
   }, [navigate]);
 
   const onChange = (e) => {
-    const { name, value } = e.target;
+    const { name, value, type, checked } = e.target;
+    const newValue = type === "checkbox" ? checked : value;
     if (name.startsWith("address.")) {
       const key = name.split(".")[1];
       setForm((prev) => ({
         ...prev,
-        address: { ...prev.address, [key]: value },
+        address: { ...prev.address, [key]: newValue },
       }));
     } else {
-      setForm((prev) => ({ ...prev, [name]: value }));
+      setForm((prev) => ({ ...prev, [name]: newValue }));
 
       // Real-time validation
       if (name === "mobile") {
-        const validation = validateMobile(value, form.countryCode);
+        const validation = validateMobile(newValue, form.countryCode);
         setFieldErrors((prev) => ({
           ...prev,
           mobile: validation.message,
         }));
       } else if (name === "summary") {
-        const validation = validateSummary(value);
+        const validation = validateSummary(newValue);
         setFieldErrors((prev) => ({
           ...prev,
           summary: validation.message,
@@ -367,12 +375,14 @@ function Profile() {
         category: form.category,
         summary: form.summary,
         workPreference: form.workPreference,
-        availability: form.availability,
+        available: form.available,
         traveling: form.traveling,
         startingPrice: form.startingPrice,
         negotiable: form.negotiable,
         currencyCode: form.currencyCode,
         rateType: form.rateType,
+        showInDashboard: form.showInDashboard,
+        showPhoto: form.showPhoto,
         address: { ...form.address },
       };
       const res = await fetch(`${API_BASE}/api/users/${userId}`, {
@@ -419,7 +429,7 @@ function Profile() {
 
   if (loading) {
     return (
-      <div className="container-fluid" style={{ padding: "1rem" }}>
+      <div className="container-fluid profile-loading">
         Loading profile...
       </div>
     );
@@ -427,7 +437,7 @@ function Profile() {
 
   return (
     <div className="container-fluid">
-      <div style={{ paddingBottom: "1.5rem" }}>
+      <div className="profile-container">
         <div className="d-sm-flex align-items-center justify-content-between mb-4">
           <h1 className="h3 mb-0 text-gray-800">My Profile</h1>
         </div>
@@ -438,55 +448,60 @@ function Profile() {
             <div className="col-lg-8">
               <div className="panel panel-body no-left-right-padding">
                 <div className="panel panel-title">
-                  <h3>My basic Profile</h3>
+                  <h3>My Basic Profile</h3>
                 </div>
 
-                <div className="form-group row">
+                    <div className="form-group row set-padding-left-right">
                   <div className="col-sm-12">
                     <div className="panel panel-info">
-                      <div className="panel-heading">My Role</div>
                       {form.roleType === "user" ? (
-                        <div className="form-control-plaintext">
-                          <strong>Seller</strong>
+                        <div className="role-selection-with-label">
+                          <div className="role-label">My Role is</div>
+                          <div className="role-value">
+                            <strong>Seller</strong>
+                          </div>
                         </div>
                       ) : (
-                        <div>
-                          <div className="form-check form-check-inline">
-                            <input
-                              className="form-check-input"
-                              type="radio"
-                              name="roleType"
-                              id="seller"
-                              value="user"
-                              checked={form.roleType === "user"}
-                              onChange={(e) => setForm(prev => ({
-                                ...prev,
-                                roleType: e.target.value
-                              }))}
-                            />
-                            <label
-                              className="form-check-label"
-                              htmlFor="seller"
-                            >
-                              Become a Seller
-                            </label>
-                          </div>
-                          <div className="form-check form-check-inline">
-                            <input
-                              className="form-check-input"
-                              type="radio"
-                              name="roleType"
-                              id="buyer"
-                              value="buyer"
-                              checked={form.roleType === "buyer"}
-                              onChange={(e) => setForm(prev => ({
-                                ...prev,
-                                roleType: e.target.value
-                              }))}
-                            />
-                            <label className="form-check-label" htmlFor="buyer">
-                              Stay as Buyer
-                            </label>
+                        <div className="role-selection-with-label">
+                          <div className="role-label">My Role is</div>
+                          <div className="role-options">
+                            <div className="form-check form-check-inline">
+                              <input
+                                className="form-check-input"
+                                type="radio"
+                                name="roleType"
+                                id="buyer"
+                                value="buyer"
+                                checked={form.roleType === "buyer"}
+                                onChange={(e) => setForm(prev => ({
+                                  ...prev,
+                                  roleType: e.target.value
+                                }))}
+                              />
+                              <label
+                                className="form-check-label"
+                                htmlFor="buyer"
+                              >
+                                Buyer
+                              </label>
+                            </div>
+                            <div className="form-check form-check-inline">
+                              <input
+                                className="form-check-input"
+                                type="radio"
+                                name="roleType"
+                                id="seller"
+                                value="user"
+                                checked={form.roleType === "user"}
+                                onChange={(e) => setForm(prev => ({
+                                  ...prev,
+                                  roleType: e.target.value
+                                }))}
+                              />
+                              <label className="form-check-label" htmlFor="seller">
+                                Seller
+                              </label>
+                            </div>
                           </div>
                         </div>
                       )}
@@ -494,7 +509,7 @@ function Profile() {
                   </div>
                 </div>
 
-                <div className="form-group row">
+                <div className="form-group row set-padding-left-right">
                   <div className="col-sm-6">
                     <div className="panel panel-info">
                       <div className="panel-heading">First Name</div>
@@ -525,7 +540,7 @@ function Profile() {
                   </div>
                 </div>
 
-                <div className="form-group row">
+                <div className="form-group row set-padding-left-right">
                   <div className="col-sm-6">
                     <div className="panel panel-info">
                       <div className="panel-heading">Nick Name</div>
@@ -564,7 +579,7 @@ function Profile() {
                   <h3>My Location</h3>
                 </div>
 
-                <div className="form-group row">
+                <div className="form-group row set-padding-left-right">
                   <div className="col-md-6">
                     <div className="panel panel-default">
                       <div className="panel-heading">Address Line1</div>
@@ -595,7 +610,7 @@ function Profile() {
                   </div>
                 </div>
 
-                <div className="form-group row">
+                <div className="form-group row set-padding-left-right">
                   <div className="col-md-6">
                     <div className="panel panel-default">
                       <div className="panel-heading">City</div>
@@ -626,7 +641,7 @@ function Profile() {
                   </div>
                 </div>
 
-                <div className="form-group row">
+                <div className="form-group row set-padding-left-right">
                   <div className="col-md-6">
                     <div className="panel panel-default">
                       <div className="panel-heading">Postcode</div>
@@ -670,7 +685,7 @@ function Profile() {
                   <h3>My Contact Details</h3>
                 </div>
 
-                <div className="form-group row">
+                <div className="form-group row set-padding-left-right">
                   <div className="col-sm-6">
                     <div className="panel panel-info">
                       <div className="panel-heading">
@@ -693,7 +708,7 @@ function Profile() {
                   </div>
                 </div>
 
-                <div className="form-group row">
+                <div className="form-group row set-padding-left-right">
                   <div className="col-sm-6">
                     <div className="panel panel-info">
                       <div className="panel-heading">Mobile</div>
@@ -737,8 +752,7 @@ function Profile() {
                       )}
                       <div className="mt-2">
                         <div
-                          className="form-check"
-                          style={{ margin: "10px" }}
+                          className="form-check contact-preferences"
                         >
                           <input
                             className="form-check-input"
@@ -776,15 +790,14 @@ function Profile() {
                   </div>
                 </div>
 
-                <div className="form-group row">
+                <div className="form-group row set-padding-left-right">
                   <div className="col-sm-6">
                     <div className="panel panel-info">
                       <div className="panel-heading">
                         Contact Preferences
                       </div>
                       <div
-                        className="form-check"
-                        style={{ margin: "10px" }}
+                        className="form-check contact-preferences"
                       >
                         <input
                           className="form-check-input"
@@ -829,7 +842,7 @@ function Profile() {
                 </div>
 
                 {!form.allowEmailContact && !form.allowMobileContact && (
-                  <div className="form-group row">
+                  <div className="form-group row set-padding-left-right">
                     <div className="col-12">
                       <div className="alert alert-warning" role="alert">
                         <small>
@@ -849,7 +862,7 @@ function Profile() {
                     <h3>My Skills</h3>
                   </div>
 
-                  <div className="form-group row">
+                  <div className="form-group row set-padding-left-right">
                     <div className="col-md-6">
                       <div className="panel panel-default">
                         <div className="panel-heading">Category</div>
@@ -871,7 +884,7 @@ function Profile() {
                     </div>
                   </div>
 
-                  <div className="form-group row">
+                  <div className="form-group row set-padding-left-right">
                     <div className="col-md-6">
                       <div className="panel panel-default">
                         <div className="panel-heading">
@@ -890,7 +903,7 @@ function Profile() {
                     </div>
                   </div>
 
-                  <div className="form-group row">
+                  <div className="form-group row set-padding-left-right">
                     <div className="col-md-12">
                       <div className="panel panel-default">
                         <div className="panel-heading">
@@ -917,7 +930,7 @@ function Profile() {
                     </div>
                   </div>
 
-                  <div className="form-group row">
+                  <div className="form-group row set-padding-left-right">
                     <div className="col-md-6">
                       <div className="panel panel-default">
                         <div className="panel-heading">
@@ -965,7 +978,7 @@ function Profile() {
                     <h3>My Pricing</h3>
                   </div>
 
-                  <div className="form-group row">
+                  <div className="form-group row set-padding-left-right">
                     <div className="col-md-6">
                       <div className="panel panel-default">
                         <div className="panel-heading">Starting Price</div>
@@ -975,11 +988,10 @@ function Profile() {
                               <div className="input-group-prepend">
                                 <select
                                   name="currencyCode"
-                                  className="custom-select"
+                                  className="custom-select currency-select"
                                   value={form.currencyCode}
                                   onChange={onChange}
                                   disabled
-                                  style={{ minWidth: "80px" }}
                                 >
                                   <option value="USD">USD</option>
                                   <option value="EUR">EUR</option>
@@ -1002,10 +1014,9 @@ function Profile() {
                               />
                             </div>
                           </div>
-                          <div className="col-md-4">
+                          <div className="col-md-4 mt-2">
                             <div
-                              className="form-check form-check-inline"
-                              style={{ marginRight: "15px" }}
+                              className="form-check form-check-inline form-check-inline-margin"
                             >
                               <input
                                 className="form-check-input"
@@ -1056,7 +1067,7 @@ function Profile() {
                     <div className="col-md-6">
                       <div className="panel panel-default">
                         <div className="panel-heading">Negotiable</div>
-                        <div style={{ padding: "10px" }}>
+                        <div className="negotiable-checkbox">
                           <div className="form-check">
                             <input
                               className="form-check-input"
@@ -1093,7 +1104,7 @@ function Profile() {
                     <h3>My Availability</h3>
                   </div>
 
-                  <div className="form-group row">
+                  <div className="form-group row set-padding-left-right">
                     <div className="col-md-6">
                       <div className="panel panel-default">
                         <div className="panel-heading">Preference</div>
@@ -1130,7 +1141,7 @@ function Profile() {
                       </div>
                     </div>
                   </div>
-                  <div className="form-group row">
+                  <div className="form-group row set-padding-left-right">
                     <div className="col-md-6">
                       <div className="panel panel-default">
                         <div className="panel-heading">Available</div>
@@ -1155,15 +1166,15 @@ function Profile() {
 
               <div className="panel panel-body no-left-right-padding">
                 <div className="panel panel-title">
-                  <h3>Visibility</h3>
+                  <h3>My Visibility</h3>
                 </div>
-                <div className="form-group row">
+                <div className="form-group row set-padding-left-right">
                   <div className="col-md-6">
                     <div className="panel panel-default">
                       <div className="panel-heading">
                         Show my profile on the public dashboard
                       </div>
-                      <div className="checkbox" style={{ padding: "10px" }}>
+                      <div className="checkbox visibility-checkbox">
                         <label>
                           <input
                             type="checkbox"
@@ -1181,7 +1192,7 @@ function Profile() {
                       <div className="panel-heading">
                         Show my photo publicly
                       </div>
-                      <div className="checkbox" style={{ padding: "10px" }}>
+                      <div className="checkbox visibility-checkbox">
                         <label>
                           <input
                             type="checkbox"
@@ -1208,10 +1219,9 @@ function Profile() {
                     Cancel
                   </button>
                   <button
-                    className="btn btn-primary"
+                    className="btn btn-primary update-button"
                     type="submit"
                     disabled={saving}
-                    style={{ marginLeft: 8 }}
                   >
                     <i className="fa fa-fw fa-check" aria-hidden="true"></i>{" "}
                     {saving ? "Updating..." : "Update"}
@@ -1222,9 +1232,8 @@ function Profile() {
               {error ? (
                 <div className="panel panel-body no-left-right-padding">
                   <div
-                    className="alert alert-danger"
+                    className="alert alert-danger alert-margin-bottom"
                     role="alert"
-                    style={{ marginBottom: 0 }}
                   >
                     {error}
                   </div>
@@ -1233,9 +1242,8 @@ function Profile() {
               {notice ? (
                 <div className="panel panel-body no-left-right-padding">
                   <div
-                    className="alert alert-success"
+                    className="alert alert-success alert-margin-bottom"
                     role="alert"
-                    style={{ marginBottom: 0 }}
                   >
                     {notice}
                   </div>
@@ -1254,12 +1262,11 @@ function Profile() {
                       photoUrl ||
                       "http://ssl.gstatic.com/accounts/ui/avatar_2x.png"
                     }
-                    className="avatar img-circle img-thumbnail"
+                    className="avatar img-circle img-thumbnail profile-photo"
                     alt="avatar"
-                    style={{ maxWidth: 160 }}
                   />
                 </div>
-                <div className="text-center" style={{ marginTop: 12 }}>
+                <div className="text-center upload-button-container">
                   <button
                     className="btn btn-primary"
                     type="button"
@@ -1270,7 +1277,7 @@ function Profile() {
                   </button>
                   {photoUrl && photoUrl !== "http://ssl.gstatic.com/accounts/ui/avatar_2x.png" && (
                     <button
-                      className="btn btn-danger"
+                      className="btn btn-danger remove-button"
                       type="button"
                       onClick={async () => {
                         try {
@@ -1293,7 +1300,6 @@ function Profile() {
                         }
                       }}
                       disabled={uploading || saving}
-                      style={{ marginLeft: "10px" }}
                     >
                       <i className="fa fa-trash" aria-hidden="true"></i>{" "}
                       Remove Photo
@@ -1306,11 +1312,11 @@ function Profile() {
                     style={{ display: "none" }}
                     onChange={onFileChange}
                   />
-                  <div style={{ fontSize: 12, color: "#777", marginTop: 8 }}>
+                  <div className="file-info">
                     Allowed types: .jpg, .jpeg, .png, .gif. Max size: 500KB.
                   </div>
                   {photoError ? (
-                    <div style={{ fontSize: 12, color: "#c00", marginTop: 4 }}>
+                    <div className="photo-error">
                       {photoError}
                     </div>
                   ) : null}

@@ -47,3 +47,55 @@
   height: 80px;
   margin-right: 20px;
 }
+
+.set-padding-left-right {
+  padding-left: .5rem;
+  padding-right: .5rem;
+}
+
+.role-selection {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 1rem;
+}
+
+.role-selection .form-check {
+  margin-bottom: 0;
+  display: flex !important;
+  align-items: center;
+}
+
+.role-selection .form-check-inline {
+  display: flex !important;
+  align-items: center;
+  margin-right: 1rem;
+}
+
+.role-selection-with-label {
+  display: flex;
+  align-items: center;
+  gap: 1rem;
+}
+
+.role-label {
+  font-weight: bold;
+  white-space: nowrap;
+}
+
+.role-options {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 1rem;
+}
+
+.role-options .form-check {
+  margin-bottom: 0;
+  display: flex !important;
+  align-items: center;
+}
+
+.role-options .form-check-inline {
+  display: flex !important;
+  align-items: center;
+  margin-right: 1rem;
+}
