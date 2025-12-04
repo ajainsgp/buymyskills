@@ -1,7 +1,7 @@
 import React, { useEffect, useState, useRef } from "react";
 import { useNavigate } from "react-router-dom";
 import API_BASE from "../utils/apiBase";
-import countries from "../data/countries.json";
+// import countries from "../data/countries.json";
 import countryCodes from "../data/countryCodes.json";
 import { validateMobile, validateSummary } from "../utils/validation";
 /* eslint-disable prettier/prettier */
@@ -10,7 +10,9 @@ function Profile() {
   const navigate = useNavigate();
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
+  // eslint-disable-next-line no-unused-vars
   const [error, setError] = useState("");
+  // eslint-disable-next-line no-unused-vars
   const [notice, setNotice] = useState("");
   const [userId, setUserId] = useState("");
   const [form, setForm] = useState({
@@ -133,16 +135,8 @@ function Profile() {
                 : cu.workPreference === "H"
                   ? "Hybrid"
                   : cu.workPreference || "",
-          availability:
-            cu.availability === "0"
-              ? "Immediate"
-              : cu.availability === "1"
-                ? "In 1 month"
-                : cu.availability === "2"
-                  ? "In 2 months"
-                  : cu.availability === "3"
-                    ? "In 3 months"
-                    : cu.availability || "",
+          availability: cu.availability || "Immediate",
+          traveling: cu.traveling || "No Traveling",
           address: {
             addressLine1: cu.address?.addressLine1 || "",
             addressLine2: cu.address?.addressLine2 || "",
@@ -160,6 +154,8 @@ function Profile() {
           startingPrice: cu.startingPrice || "",
           negotiable: cu.negotiable || false,
           currencyCode: cu.currencyCode || "USD",
+          rateType: cu.rateType || "D",
+          roleType: cu.roleType || "user",
         }));
 
         // Refresh from backend (source of truth)
@@ -185,16 +181,8 @@ function Profile() {
                   : u.workPreference === "H"
                     ? "Hybrid"
                     : u.workPreference || "",
-            availability:
-              u.availability === "0"
-                ? "Immediate"
-                : u.availability === "1"
-                  ? "In 1 month"
-                  : u.availability === "2"
-                    ? "In 2 months"
-                    : u.availability === "3"
-                      ? "In 3 months"
-                      : u.availability || "",
+            availability: u.availability || "Immediate",
+            traveling: u.traveling || "No Traveling",
             address: {
               addressLine1: u.address?.addressLine1 || "",
               addressLine2: u.address?.addressLine2 || "",
@@ -213,6 +201,7 @@ function Profile() {
             negotiable: u.negotiable || false,
             currencyCode: u.currencyCode || "USD",
             rateType: u.rateType || "D",
+            roleType: u.roleType || "user",
           });
         }
       } catch (e) {
@@ -379,6 +368,7 @@ function Profile() {
         summary: form.summary,
         workPreference: form.workPreference,
         availability: form.availability,
+        traveling: form.traveling,
         startingPrice: form.startingPrice,
         negotiable: form.negotiable,
         currencyCode: form.currencyCode,
@@ -443,23 +433,65 @@ function Profile() {
         </div>
 
         <form onSubmit={onSave}>
-          {error ? (
-            <div className="alert alert-danger" role="alert">
-              {error}
-            </div>
-          ) : null}
-          {notice ? (
-            <div className="alert alert-success" role="alert">
-              {notice}
-            </div>
-          ) : null}
 
           <div className="row">
             <div className="col-lg-8">
-
-              <div className="panel panel-body">
+              <div className="panel panel-body no-left-right-padding">
                 <div className="panel panel-title">
-                  <h3>Basic Info</h3>
+                  <h3>My basic Profile</h3>
+                </div>
+
+                <div className="form-group row">
+                  <div className="col-sm-12">
+                    <div className="panel panel-info">
+                      <div className="panel-heading">My Role</div>
+                      {form.roleType === "user" ? (
+                        <div className="form-control-plaintext">
+                          <strong>Seller</strong>
+                        </div>
+                      ) : (
+                        <div>
+                          <div className="form-check form-check-inline">
+                            <input
+                              className="form-check-input"
+                              type="radio"
+                              name="roleType"
+                              id="seller"
+                              value="user"
+                              checked={form.roleType === "user"}
+                              onChange={(e) => setForm(prev => ({
+                                ...prev,
+                                roleType: e.target.value
+                              }))}
+                            />
+                            <label
+                              className="form-check-label"
+                              htmlFor="seller"
+                            >
+                              Become a Seller
+                            </label>
+                          </div>
+                          <div className="form-check form-check-inline">
+                            <input
+                              className="form-check-input"
+                              type="radio"
+                              name="roleType"
+                              id="buyer"
+                              value="buyer"
+                              checked={form.roleType === "buyer"}
+                              onChange={(e) => setForm(prev => ({
+                                ...prev,
+                                roleType: e.target.value
+                              }))}
+                            />
+                            <label className="form-check-label" htmlFor="buyer">
+                              Stay as Buyer
+                            </label>
+                          </div>
+                        </div>
+                      )}
+                    </div>
+                  </div>
                 </div>
 
                 <div className="form-group row">
@@ -469,9 +501,9 @@ function Profile() {
                       <input
                         type="text"
                         name="firstName"
+                        id="first_name"
                         className="form-control input-lg"
                         placeholder="First Name"
-                        readOnly
                         value={form.firstName}
                         onChange={onChange}
                       />
@@ -483,9 +515,9 @@ function Profile() {
                       <input
                         type="text"
                         name="lastName"
+                        id="last_name"
                         className="form-control input-lg"
                         placeholder="Last Name"
-                        readOnly
                         value={form.lastName}
                         onChange={onChange}
                       />
@@ -500,27 +532,48 @@ function Profile() {
                       <input
                         type="text"
                         name="nickName"
+                        id="nick_name"
                         className="form-control input-lg"
-                        placeholder="Nick Name"
+                        placeholder="Nick Name to display as"
                         value={form.nickName}
                         onChange={onChange}
                       />
                     </div>
                   </div>
+                  <div className="col-sm-6">
+                    <div className="panel panel-info">
+                      <div className="panel-heading">Gender</div>
+                      <select
+                        id="gender"
+                        name="gender"
+                        className="custom-select"
+                        value={form.gender}
+                        onChange={onChange}
+                      >
+                        <option value="M">Male</option>
+                        <option value="F">Female</option>
+                        <option value="O">Other</option>
+                      </select>
+                    </div>
+                  </div>
+                </div>
+              </div>
+
+              <div className="panel panel-body no-left-right-padding">
+                <div className="panel panel-title">
+                  <h3>My Location</h3>
                 </div>
 
-                <div className="panel panel-title">
-                  <h3>Address</h3>
-                </div>
                 <div className="form-group row">
                   <div className="col-md-6">
                     <div className="panel panel-default">
-                      <div className="panel-heading">Address Line 1</div>
+                      <div className="panel-heading">Address Line1</div>
                       <input
                         type="text"
                         name="address.addressLine1"
+                        id="addressLine1"
                         className="form-control input-lg"
-                        placeholder="Address Line 1"
+                        placeholder="Address Line1"
                         value={form.address.addressLine1}
                         onChange={onChange}
                       />
@@ -528,10 +581,11 @@ function Profile() {
                   </div>
                   <div className="col-md-6">
                     <div className="panel panel-default">
-                      <div className="panel-heading">Address Line 2</div>
+                      <div className="panel-heading">Address Line2</div>
                       <input
                         type="text"
                         name="address.addressLine2"
+                        id="addressLine2"
                         className="form-control input-lg"
                         placeholder="Address Line 2"
                         value={form.address.addressLine2}
@@ -548,6 +602,7 @@ function Profile() {
                       <input
                         type="text"
                         name="address.city"
+                        id="city"
                         className="form-control input-lg"
                         placeholder="City"
                         value={form.address.city}
@@ -561,6 +616,7 @@ function Profile() {
                       <input
                         type="text"
                         name="address.state"
+                        id="state"
                         className="form-control input-lg"
                         placeholder="State"
                         value={form.address.state}
@@ -577,8 +633,9 @@ function Profile() {
                       <input
                         type="text"
                         name="address.postcode"
+                        id="postcode"
                         className="form-control input-lg"
-                        placeholder="Postcode"
+                        placeholder="PostCode"
                         value={form.address.postcode}
                         onChange={onChange}
                       />
@@ -588,116 +645,29 @@ function Profile() {
                     <div className="panel panel-default">
                       <div className="panel-heading">Country</div>
                       <select
+                        id="country"
                         name="address.country"
-                        className="form-control input-lg"
+                        className="custom-select"
                         value={form.address.country}
                         onChange={onChange}
                       >
                         <option value="">Select...</option>
-                        {countries.filter((c) => c.enabled === "Y").map((c) => (
-                          <option key={c.code} value={c.name}>
-                            {c.name}
-                          </option>
-                        ))}
+                        {countriesWithCodes
+                          .filter((c) => c.name)
+                          .map((c) => (
+                            <option key={c.name} value={c.name}>
+                              {c.name}
+                            </option>
+                          ))}
                       </select>
                     </div>
                   </div>
                 </div>
+              </div>
 
+              <div className="panel panel-body no-left-right-padding">
                 <div className="panel panel-title">
-                  <h3>Contact Details</h3>
-                </div>
-                <div className="form-group row">
-                  <div className="col-sm-6">
-                    <div className="panel panel-info">
-                      <div className="panel-heading">
-                        Your email Id to login
-                      </div>
-                      <input
-                        type="email"
-                        name="emailId"
-                        className="form-control input-lg"
-                        placeholder="you@example.com"
-                        value={form.emailId}
-                        readOnly
-                        aria-readonly="true"
-                      />
-                      <small className="form-text text-muted">
-                        this email id cannot be changed once registered with
-                        this id
-                      </small>
-                    </div>
-                  </div>
-                  <div className="col-sm-6">
-                    <div className="panel panel-info">
-                      <div className="panel-heading">Mobile</div>
-                      <div className="row">
-                        <div className="col-4">
-                          <select
-                            name="countryCode"
-                            className="form-control"
-                            value={form.countryCode || "+1"}
-                            onChange={onChange}
-                            disabled
-                          >
-                            {countryCodes.filter((country) => country.enabled === "Y").map((country) => (
-                              <option key={country.iso} value={country.code}>
-                                {country.code} ({country.name})
-                              </option>
-                            ))}
-                          </select>
-                        </div>
-                        <div className="col-8">
-                          <input
-                            type="text"
-                            name="mobile"
-                            className="form-control"
-                            placeholder="Mobile Number"
-                            value={form.mobile}
-                            onChange={onChange}
-                          />
-                        </div>
-                      </div>
-                      {fieldErrors.mobile && (
-                        <small className="form-text text-danger">
-                          {fieldErrors.mobile}
-                        </small>
-                      )}
-                      <div className="mt-2">
-                        <div className="form-check">
-                          <input
-                            className="form-check-input"
-                            type="checkbox"
-                            name="isWhatsappAvailable"
-                            id="isWhatsappAvailable"
-                            checked={form.isWhatsappAvailable}
-                            onChange={(e) => setForm(prev => ({
-                              ...prev,
-                              isWhatsappAvailable: e.target.checked
-                            }))}
-                          />
-                          <label className="form-check-label" htmlFor="isWhatsappAvailable">
-                            This number is available on WhatsApp
-                          </label>
-                        </div>
-                      </div>
-                      {!form.isWhatsappAvailable && (
-                        <div className="mt-2">
-                          <input
-                            type="text"
-                            name="whatsappNumber"
-                            className="form-control"
-                            placeholder="WhatsApp Contact Number"
-                            value={form.whatsappNumber}
-                            onChange={onChange}
-                          />
-                          <small className="form-text text-muted">
-                            Enter your WhatsApp number if different from above
-                          </small>
-                        </div>
-                      )}
-                    </div>
-                  </div>
+                  <h3>My Contact Details</h3>
                 </div>
 
                 <div className="form-group row">
@@ -709,6 +679,7 @@ function Profile() {
                       <input
                         type="email"
                         name="secondaryEmail"
+                        id="secondaryEmail"
                         className="form-control input-lg"
                         placeholder="secondary@example.com"
                         value={form.secondaryEmail}
@@ -725,20 +696,108 @@ function Profile() {
                 <div className="form-group row">
                   <div className="col-sm-6">
                     <div className="panel panel-info">
-                      <div className="panel-heading">Contact Preferences</div>
-                      <div className="form-check">
+                      <div className="panel-heading">Mobile</div>
+                      <div className="row">
+                        <div className="col-4">
+                          <select
+                            name="countryCode"
+                            className="form-control"
+                            value={form.countryCode}
+                            onChange={onChange}
+                            disabled
+                          >
+                            {countryCodes
+                              .filter((country) => country.enabled === "Y")
+                              .map((country) => (
+                                <option
+                                  key={country.iso}
+                                  value={country.code}
+                                >
+                                  {country.code} ({country.name})
+                                </option>
+                              ))}
+                          </select>
+                        </div>
+                        <div className="col-8">
+                          <input
+                            type="text"
+                            name="mobile"
+                            id="mobileNo"
+                            className="form-control"
+                            placeholder="Mobile Number"
+                            value={form.mobile}
+                            onChange={onChange}
+                          />
+                        </div>
+                      </div>
+                      {fieldErrors.mobile && (
+                        <small className="form-text text-danger">
+                          {fieldErrors.mobile}
+                        </small>
+                      )}
+                      <div className="mt-2">
+                        <div
+                          className="form-check"
+                          style={{ margin: "10px" }}
+                        >
+                          <input
+                            className="form-check-input"
+                            type="checkbox"
+                            name="isWhatsappAvailable"
+                            id="isWhatsappAvailable"
+                            checked={form.isWhatsappAvailable}
+                            onChange={onChange}
+                          />
+                          <label
+                            className="form-check-label"
+                            htmlFor="isWhatsappAvailable"
+                          >
+                            This number is also available on WhatsApp
+                          </label>
+                        </div>
+                      </div>
+                      {!form.isWhatsappAvailable && (
+                        <div className="mt-2">
+                          <input
+                            type="text"
+                            name="whatsappNumber"
+                            className="form-control"
+                            placeholder="WhatsApp Contact Number"
+                            value={form.whatsappNumber}
+                            onChange={onChange}
+                          />
+                          <small className="form-text text-muted">
+                            Enter your WhatsApp number if different from
+                            above
+                          </small>
+                        </div>
+                      )}
+                    </div>
+                  </div>
+                </div>
+
+                <div className="form-group row">
+                  <div className="col-sm-6">
+                    <div className="panel panel-info">
+                      <div className="panel-heading">
+                        Contact Preferences
+                      </div>
+                      <div
+                        className="form-check"
+                        style={{ margin: "10px" }}
+                      >
                         <input
                           className="form-check-input"
                           type="checkbox"
                           name="allowEmailContact"
                           id="allowEmailContact"
                           checked={form.allowEmailContact}
-                          onChange={(e) => setForm(prev => ({
-                            ...prev,
-                            allowEmailContact: e.target.checked
-                          }))}
+                          onChange={onChange}
                         />
-                        <label className="form-check-label" htmlFor="allowEmailContact">
+                        <label
+                          className="form-check-label"
+                          htmlFor="allowEmailContact"
+                        >
                           Allow public to contact me on my email address
                         </label>
                       </div>
@@ -746,7 +805,9 @@ function Profile() {
                   </div>
                   <div className="col-sm-6">
                     <div className="panel panel-info">
-                      <div className="panel-heading">Contact Preferences</div>
+                      <div className="panel-heading">
+                        Contact Preferences
+                      </div>
                       <div className="form-check">
                         <input
                           className="form-check-input"
@@ -754,12 +815,12 @@ function Profile() {
                           name="allowMobileContact"
                           id="allowMobileContact"
                           checked={form.allowMobileContact}
-                          onChange={(e) => setForm(prev => ({
-                            ...prev,
-                            allowMobileContact: e.target.checked
-                          }))}
+                          onChange={onChange}
                         />
-                        <label className="form-check-label" htmlFor="allowMobileContact">
+                        <label
+                          className="form-check-label"
+                          htmlFor="allowMobileContact"
+                        >
                           Allow public to contact me on my mobile number
                         </label>
                       </div>
@@ -779,257 +840,409 @@ function Profile() {
                     </div>
                   </div>
                 )}
+              </div>
 
-                <div className="form-group row">
-                  <div className="col-md-6">
-                    <div className="panel panel-default">
-                      <div className="panel-heading">Facebook URL (optional)</div>
-                      <input
-                        type="url"
-                        name="facebookUrl"
-                        className="form-control"
-                        placeholder="https://facebook.com/yourprofile"
-                        value={form.facebookUrl}
-                        onChange={onChange}
-                      />
-                      <small className="form-text text-muted">
-                        Your Facebook profile or page URL
-                      </small>
+              {/* Only show Skills section for sellers */}
+              {form.roleType === "user" && (
+                <div className="panel panel-body no-left-right-padding">
+                  <div className="panel panel-title">
+                    <h3>My Skills</h3>
+                  </div>
+
+                  <div className="form-group row">
+                    <div className="col-md-6">
+                      <div className="panel panel-default">
+                        <div className="panel-heading">Category</div>
+                        <select
+                          id="category"
+                          name="category"
+                          className="custom-select"
+                          value={form.category}
+                          onChange={onChange}
+                        >
+                          <option value="">Select...</option>
+                          {categories.map((name) => (
+                            <option key={name} value={name}>
+                              {name}
+                            </option>
+                          ))}
+                        </select>
+                      </div>
                     </div>
                   </div>
-                  <div className="col-md-6">
-                    <div className="panel panel-default">
-                      <div className="panel-heading">LinkedIn URL (optional)</div>
-                      <input
-                        type="url"
-                        name="linkedinUrl"
-                        className="form-control"
-                        placeholder="https://linkedin.com/in/yourprofile"
-                        value={form.linkedinUrl}
-                        onChange={onChange}
-                      />
-                      <small className="form-text text-muted">
-                        Your LinkedIn profile URL
-                      </small>
-                    </div>
-                  </div>
-                </div>
 
-                <div className="panel panel-title">
-                  <h3>My Pricing</h3>
-                </div>
-
-                <div className="form-group row">
-                  <div className="col-md-6">
-                    <div className="panel panel-default">
-                      <div className="panel-heading">Starting Price</div>
-                      <div className="input-group">
-                        <div className="input-group-prepend">
-                          <select
-                            name="currencyCode"
-                            className="custom-select"
-                            value={form.currencyCode}
-                            onChange={onChange}
-                            disabled
-                            style={{ minWidth: "80px" }}
-                          >
-                            <option value="USD">USD</option>
-                            <option value="EUR">EUR</option>
-                            <option value="GBP">GBP</option>
-                            <option value="INR">INR</option>
-                            <option value="SGD">SGD</option>
-                            <option value="AUD">AUD</option>
-                            <option value="CAD">CAD</option>
-                          </select>
+                  <div className="form-group row">
+                    <div className="col-md-6">
+                      <div className="panel panel-default">
+                        <div className="panel-heading">
+                          Tags * (Add up to 5 relevant tags)
                         </div>
                         <input
-                          type="number"
-                          name="startingPrice"
+                          type="text"
                           className="form-control"
-                          placeholder="Enter starting price"
-                          value={form.startingPrice}
+                          id="keywords"
+                          name="keywords"
+                          placeholder="Like Software Development, Data Migration, AI & LLM Development"
+                          value={form.keywords}
                           onChange={onChange}
-                          min="0"
-                          step="0.01"
                         />
-                      </div>
-                      <small className="form-text text-muted">
-                        Your minimum hourly/daily rate
-                      </small>
-                      <div style={{ marginTop: "10px" }}>
-                        <div className="form-check form-check-inline">
-                          <input
-                            className="form-check-input"
-                            type="radio"
-                            name="rateType"
-                            id="hourly"
-                            value="H"
-                            checked={form.rateType === "H"}
-                            onChange={(e) => setForm(prev => ({
-                              ...prev,
-                              rateType: e.target.value
-                            }))}
-                          />
-                          <label className="form-check-label" htmlFor="hourly">
-                            Hourly
-                          </label>
-                        </div>
-                        <div className="form-check form-check-inline">
-                          <input
-                            className="form-check-input"
-                            type="radio"
-                            name="rateType"
-                            id="daily"
-                            value="D"
-                            checked={form.rateType === "D"}
-                            onChange={(e) => setForm(prev => ({
-                              ...prev,
-                              rateType: e.target.value
-                            }))}
-                          />
-                          <label className="form-check-label" htmlFor="daily">
-                            Daily
-                          </label>
-                        </div>
                       </div>
                     </div>
                   </div>
-                  <div className="col-md-6">
-                    <div className="panel panel-default">
-                      <div className="panel-heading">Negotiable</div>
-                      <div style={{ padding: "10px" }}>
-                        <div className="form-check">
-                          <input
-                            className="form-check-input"
-                            type="checkbox"
-                            name="negotiable"
-                            id="negotiable"
-                            checked={form.negotiable}
-                            onChange={(e) => setForm(prev => ({
-                              ...prev,
-                              negotiable: e.target.checked
-                            }))}
-                          />
-                          <label
-                            className="form-check-label"
-                            htmlFor="negotiable"
-                          >
-                            Price is negotiable
-                          </label>
+
+                  <div className="form-group row">
+                    <div className="col-md-12">
+                      <div className="panel panel-default">
+                        <div className="panel-heading">
+                          Summary of your skills
                         </div>
+                        <textarea
+                          name="summary"
+                          className="form-control"
+                          placeholder="Briefly describe your key skills and expertise (150 characters)"
+                          value={form.summary}
+                          onChange={onChange}
+                          maxLength={150}
+                          rows={3}
+                        />
                         <small className="form-text text-muted">
-                          Check if you&apos;re open to negotiating your rates
+                          {form.summary.length}/150 characters
+                        </small>
+                        {fieldErrors.summary && (
+                          <small className="form-text text-danger">
+                            {fieldErrors.summary}
+                          </small>
+                        )}
+                      </div>
+                    </div>
+                  </div>
+
+                  <div className="form-group row">
+                    <div className="col-md-6">
+                      <div className="panel panel-default">
+                        <div className="panel-heading">
+                          Facebook URL (optional)
+                        </div>
+                        <input
+                          type="url"
+                          name="facebookUrl"
+                          className="form-control"
+                          placeholder="https://facebook.com/yourprofile"
+                          value={form.facebookUrl}
+                          onChange={onChange}
+                        />
+                        <small className="form-text text-muted">
+                          Your Facebook profile or page URL
+                        </small>
+                      </div>
+                    </div>
+                    <div className="col-md-6">
+                      <div className="panel panel-default">
+                        <div className="panel-heading">
+                          LinkedIn URL (optional)
+                        </div>
+                        <input
+                          type="url"
+                          name="linkedinUrl"
+                          className="form-control"
+                          placeholder="https://linkedin.com/in/yourprofile"
+                          value={form.linkedinUrl}
+                          onChange={onChange}
+                        />
+                        <small className="form-text text-muted">
+                          Your LinkedIn profile URL
                         </small>
                       </div>
                     </div>
                   </div>
                 </div>
+              )}
 
+              {/* Only show Pricing section for sellers */}
+              {form.roleType === "user" && (
+                <div className="panel panel-body no-left-right-padding">
+                  <div className="panel panel-title">
+                    <h3>My Pricing</h3>
+                  </div>
+
+                  <div className="form-group row">
+                    <div className="col-md-6">
+                      <div className="panel panel-default">
+                        <div className="panel-heading">Starting Price</div>
+                        <div className="row">
+                          <div className="col-md-8">
+                            <div className="input-group">
+                              <div className="input-group-prepend">
+                                <select
+                                  name="currencyCode"
+                                  className="custom-select"
+                                  value={form.currencyCode}
+                                  onChange={onChange}
+                                  disabled
+                                  style={{ minWidth: "80px" }}
+                                >
+                                  <option value="USD">USD</option>
+                                  <option value="EUR">EUR</option>
+                                  <option value="GBP">GBP</option>
+                                  <option value="INR">INR</option>
+                                  <option value="SGD">SGD</option>
+                                  <option value="AUD">AUD</option>
+                                  <option value="CAD">CAD</option>
+                                </select>
+                              </div>
+                              <input
+                                type="number"
+                                name="startingPrice"
+                                className="form-control"
+                                placeholder="Enter starting price"
+                                value={form.startingPrice}
+                                onChange={onChange}
+                                min="0"
+                                step="0.01"
+                              />
+                            </div>
+                          </div>
+                          <div className="col-md-4">
+                            <div
+                              className="form-check form-check-inline"
+                              style={{ marginRight: "15px" }}
+                            >
+                              <input
+                                className="form-check-input"
+                                type="radio"
+                                name="rateType"
+                                id="hourly"
+                                value="H"
+                                checked={form.rateType === "H"}
+                                onChange={(e) => setForm(prev => ({
+                                  ...prev,
+                                  rateType: e.target.value
+                                }))}
+                              />
+                              <label
+                                className="form-check-label"
+                                htmlFor="hourly"
+                              >
+                                Hourly
+                              </label>
+                            </div>
+                            <div className="form-check form-check-inline">
+                              <input
+                                className="form-check-input"
+                                type="radio"
+                                name="rateType"
+                                id="daily"
+                                value="D"
+                                checked={form.rateType === "D"}
+                                onChange={(e) => setForm(prev => ({
+                                  ...prev,
+                                  rateType: e.target.value
+                                }))}
+                              />
+                              <label
+                                className="form-check-label"
+                                htmlFor="daily"
+                              >
+                                Daily
+                              </label>
+                            </div>
+                          </div>
+                        </div>
+                        <small className="form-text text-muted">
+                          Your minimum hourly/daily rate
+                        </small>
+                      </div>
+                    </div>
+                    <div className="col-md-6">
+                      <div className="panel panel-default">
+                        <div className="panel-heading">Negotiable</div>
+                        <div style={{ padding: "10px" }}>
+                          <div className="form-check">
+                            <input
+                              className="form-check-input"
+                              type="checkbox"
+                              name="negotiable"
+                              id="negotiable"
+                              checked={form.negotiable}
+                              onChange={(e) => setForm(prev => ({
+                                ...prev,
+                                negotiable: e.target.checked
+                              }))}
+                            />
+                            <label
+                              className="form-check-label"
+                              htmlFor="negotiable"
+                            >
+                              Price is negotiable
+                            </label>
+                          </div>
+                          <small className="form-text text-muted">
+                            Check if you&apos;re open to negotiating your rates
+                          </small>
+                        </div>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+              )}
+
+              {/* Only show Availability section for sellers */}
+              {form.roleType === "user" && (
+                <div className="panel panel-body no-left-right-padding">
+                  <div className="panel panel-title">
+                    <h3>My Availability</h3>
+                  </div>
+
+                  <div className="form-group row">
+                    <div className="col-md-6">
+                      <div className="panel panel-default">
+                        <div className="panel-heading">Preference</div>
+                        <select
+                          id="workPreference"
+                          name="workPreference"
+                          className="custom-select"
+                          value={form.workPreference || ""}
+                          onChange={onChange}
+                        >
+                          <option value="">Select...</option>
+                          <option value="Remote">Remote</option>
+                          <option value="On Site">On Site</option>
+                          <option value="Hybrid">Hybrid</option>
+                        </select>
+                      </div>
+                    </div>
+                    <div className="col-md-6">
+                      <div className="panel panel-default">
+                        <div className="panel-heading">Traveling</div>
+                        <select
+                          id="traveling"
+                          name="traveling"
+                          className="custom-select"
+                          value={form.traveling || ""}
+                          onChange={onChange}
+                        >
+                          <option value="">Select...</option>
+                          <option value="No Traveling">No Traveling</option>
+                          <option value="25%">25%</option>
+                          <option value="50%">50%</option>
+                          <option value="100%">100%</option>
+                        </select>
+                      </div>
+                    </div>
+                  </div>
+                  <div className="form-group row">
+                    <div className="col-md-6">
+                      <div className="panel panel-default">
+                        <div className="panel-heading">Available</div>
+                        <select
+                          id="available"
+                          name="available"
+                          className="custom-select"
+                          value={form.available || ""}
+                          onChange={onChange}
+                        >
+                          <option value="">Select...</option>
+                          <option value="Immediate">Immediate</option>
+                          <option value="In 1 month">In 1 month</option>
+                          <option value="In 2 months">In 2 months</option>
+                          <option value="In 3 months">In 3 months</option>
+                        </select>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+              )}
+
+              <div className="panel panel-body no-left-right-padding">
                 <div className="panel panel-title">
-                  <h3>Skills</h3>
+                  <h3>Visibility</h3>
                 </div>
-                <div className="form-group row">
-                  <div className="col-sm-6">
-                    <div className="panel panel-info">
-                      <div className="panel-heading">Category</div>
-                      <select
-                        name="category"
-                        className="custom-select"
-                        value={form.category || ""}
-                        onChange={onChange}
-                      >
-                        <option value="">Select...</option>
-                        {categories.map((name) => (
-                          <option key={name} value={name}>
-                            {name}
-                          </option>
-                        ))}
-                      </select>
-                    </div>
-                  </div>
-                </div>
-
-                <div className="form-group row">
-                  <div className="col-md-12">
-                    <div className="panel panel-default">
-                      <div className="panel-heading">Summary of your skills</div>
-                      <textarea
-                        name="summary"
-                        className="form-control"
-                        placeholder="Briefly describe your key skills and expertise (150 characters)"
-                        value={form.summary}
-                        onChange={onChange}
-                        maxLength={150}
-                        rows={3}
-                      />
-                      <small className="form-text text-muted">
-                        {form.summary.length}/150 characters
-                      </small>
-                    </div>
-                  </div>
-                </div>
-
                 <div className="form-group row">
                   <div className="col-md-6">
                     <div className="panel panel-default">
-                      <div className="panel-heading">Work Preference</div>
-                      <select
-                        name="workPreference"
-                        className="custom-select"
-                        value={form.workPreference || ""}
-                        onChange={onChange}
-                      >
-                        <option value="">Select...</option>
-                        <option value="Remote">Remote</option>
-                        <option value="On Site">On Site</option>
-                        <option value="Hybrid">Hybrid</option>
-                      </select>
+                      <div className="panel-heading">
+                        Show my profile on the public dashboard
+                      </div>
+                      <div className="checkbox" style={{ padding: "10px" }}>
+                        <label>
+                          <input
+                            type="checkbox"
+                            name="showInDashboard"
+                            checked={form.showInDashboard}
+                            onChange={onChange}
+                          />{" "}
+                          Allow my profile to appear on the dashboard
+                        </label>
+                      </div>
                     </div>
                   </div>
                   <div className="col-md-6">
                     <div className="panel panel-default">
-                      <div className="panel-heading">Availability</div>
-                      <select
-                        name="availability"
-                        className="custom-select"
-                        value={form.availability || ""}
-                        onChange={onChange}
-                      >
-                        <option value="">Select...</option>
-                        <option value="Immediate">Immediate</option>
-                        <option value="In 1 month">In 1 month</option>
-                        <option value="In 2 months">In 2 months</option>
-                        <option value="In 3 months">In 3 months</option>
-                      </select>
+                      <div className="panel-heading">
+                        Show my photo publicly
+                      </div>
+                      <div className="checkbox" style={{ padding: "10px" }}>
+                        <label>
+                          <input
+                            type="checkbox"
+                            name="showPhoto"
+                            checked={form.showPhoto}
+                            onChange={onChange}
+                          />{" "}
+                          Allow my uploaded photo to be shown
+                        </label>
+                      </div>
                     </div>
-                  </div>
-                </div>
-
-                <div className="panel panel-body">
-                  <div className="form-group set-padding-top">
-                    <button
-                      className="btn btn-default"
-                      onClick={onCancel}
-                      disabled={saving}
-                    >
-                      <i className="fa fa-fw fa-times" aria-hidden="true"></i>{" "}
-                      Cancel
-                    </button>
-                    <button
-                      className="btn btn-primary"
-                      type="submit"
-                      disabled={saving}
-                      style={{ marginLeft: 8 }}
-                    >
-                      <i className="fa fa-fw fa-check" aria-hidden="true"></i>{" "}
-                      {saving ? "Updating..." : "Update"}
-                    </button>
                   </div>
                 </div>
               </div>
+
+              <div className="panel panel-body no-left-right-padding set-padding-top">
+                <div className="form-group panel-body">
+                  <button
+                    className="btn btn-default"
+                    onClick={onCancel}
+                    disabled={saving}
+                  >
+                    <i className="fa fa-fw fa-times" aria-hidden="true"></i>{" "}
+                    Cancel
+                  </button>
+                  <button
+                    className="btn btn-primary"
+                    type="submit"
+                    disabled={saving}
+                    style={{ marginLeft: 8 }}
+                  >
+                    <i className="fa fa-fw fa-check" aria-hidden="true"></i>{" "}
+                    {saving ? "Updating..." : "Update"}
+                  </button>
+                </div>
+              </div>
+
+              {error ? (
+                <div className="panel panel-body no-left-right-padding">
+                  <div
+                    className="alert alert-danger"
+                    role="alert"
+                    style={{ marginBottom: 0 }}
+                  >
+                    {error}
+                  </div>
+                </div>
+              ) : null}
+              {notice ? (
+                <div className="panel panel-body no-left-right-padding">
+                  <div
+                    className="alert alert-success"
+                    role="alert"
+                    style={{ marginBottom: 0 }}
+                  >
+                    {notice}
+                  </div>
+                </div>
+              ) : null}
             </div>
 
-            {/* Right column - avatar/info (optional) */}
             <div className="col-lg-4">
               <div className="panel panel-body">
                 <div className="panel panel-title">

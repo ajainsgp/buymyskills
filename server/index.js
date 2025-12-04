@@ -1099,6 +1099,17 @@ app.post("/api/register", async (req, res) => {
       if (exists) return res.status(409).json({ error: "User with this email already exists" });
 
       const passwordHash = await hashPassword(String(password || ""));
+
+      // Map userRole to roleType
+      let roleType = "user"; // default
+      if (userRole === "buyer") {
+        roleType = "buyer";
+      } else if (userRole === "seller") {
+        roleType = "user";
+      } else if (userRole === "both") {
+        roleType = "user"; // both means they can sell
+      }
+
       const newUser = {
         id: makeId(),
         name: [firstName, lastName].filter(Boolean).join(" ").trim(),
@@ -1115,7 +1126,7 @@ app.post("/api/register", async (req, res) => {
         workPreference: workPreference || "",
         traveling: traveling || "",
         availability: available || "",
-        roleType: "user",
+        roleType: roleType,
         createdAt: new Date(),
         category: category || "",
         showInDashboard: !!showInDashboard,
