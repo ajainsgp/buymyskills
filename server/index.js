@@ -553,6 +553,8 @@ function mapDbUserRowToApiUser(row) {
     rateType: row.rate_type || "",
     roleType: rt,
     createdAt,
+    showInDashboard: !!row.show_in_dashboard,
+    showPhoto: !!row.show_photo,
   };
 }
 

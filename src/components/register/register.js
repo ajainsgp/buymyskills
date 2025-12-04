@@ -310,7 +310,7 @@ function RegisterUser() {
             <div className="col-lg-3 col-md-3 hidden-sm hidden-xs">
               <div className="panel panel-body">
                 <div className="col-md-12 no-left-right-padding">
-                  <h3 className="panel-title">My Profile photo</h3>
+                  <h3 className="panel-title">My Profile Photo</h3>
                   <div className="text-center">
                     <div className="col-lg-12 col-md-12">
                       <img
@@ -381,49 +381,56 @@ function RegisterUser() {
                 <div className="row">
                   <div className="panel panel-body no-left-right-padding">
                     <div className="panel panel-title">
-                      <h3>My basic Profile</h3>
+                      <h3>My Basic Profile</h3>
                     </div>
 
-                    <div className="form-group row">
+                    <div className="form-group row set-padding-left-right">
                       <div className="col-sm-12">
                         <div className="panel panel-info">
-                          <div className="panel-heading">I want to</div>
-                          <div className="form-check form-check-inline">
-                            <input
-                              className="form-check-input"
-                              type="radio"
-                              name="userRole"
-                              id="seller"
-                              value="seller"
-                              checked={form.userRole === "seller"}
-                              onChange={onChange}
-                            />
-                            <label
-                              className="form-check-label"
-                              htmlFor="seller"
-                            >
-                              Become a Seller
-                            </label>
-                          </div>
-                          <div className="form-check form-check-inline">
-                            <input
-                              className="form-check-input"
-                              type="radio"
-                              name="userRole"
-                              id="buyer"
-                              value="buyer"
-                              checked={form.userRole === "buyer"}
-                              onChange={onChange}
-                            />
-                            <label className="form-check-label" htmlFor="buyer">
-                              Become a Buyer
-                            </label>
+                          <div className="role-selection-with-label">
+                            <div className="role-label">I want to</div>
+                            <div className="role-options">
+                              <div className="form-check form-check-inline">
+                                <input
+                                  className="form-check-input"
+                                  type="radio"
+                                  name="userRole"
+                                  id="seller"
+                                  value="seller"
+                                  checked={form.userRole === "seller"}
+                                  onChange={onChange}
+                                />
+                                <label
+                                  className="form-check-label"
+                                  htmlFor="seller"
+                                >
+                                  Become a Seller
+                                </label>
+                              </div>
+                              <div className="form-check form-check-inline">
+                                <input
+                                  className="form-check-input"
+                                  type="radio"
+                                  name="userRole"
+                                  id="buyer"
+                                  value="buyer"
+                                  checked={form.userRole === "buyer"}
+                                  onChange={onChange}
+                                />
+                                <label
+                                  className="form-check-label"
+                                  htmlFor="buyer"
+                                >
+                                  Become a Buyer
+                                </label>
+                              </div>
+                            </div>
                           </div>
                         </div>
                       </div>
                     </div>
 
-                    <div className="form-group row">
+                    <div className="form-group row set-padding-left-right">
                       <div className="col-sm-6">
                         <div className="panel panel-info">
                           <div className="panel-heading">First Name</div>
@@ -454,46 +461,7 @@ function RegisterUser() {
                       </div>
                     </div>
 
-                    <div className="form-group row">
-                      <div className="col-sm-6">
-                        <div className="panel panel-info">
-                          <div className="panel-heading">Nick Name</div>
-                          <input
-                            type="text"
-                            name="nickName"
-                            id="nick_name"
-                            className="form-control input-lg"
-                            placeholder="Nick Name to display as"
-                            value={form.nickName}
-                            onChange={onChange}
-                          />
-                        </div>
-                      </div>
-                      <div className="col-sm-6">
-                        <div className="panel panel-info">
-                          <div className="panel-heading">Gender</div>
-                          <select
-                            id="gender"
-                            name="gender"
-                            className="custom-select"
-                            value={form.gender}
-                            onChange={onChange}
-                          >
-                            <option value="M">Male</option>
-                            <option value="F">Female</option>
-                            <option value="O">Other</option>
-                          </select>
-                        </div>
-                      </div>
-                    </div>
-                  </div>
-
-                  <div className="panel panel-body no-left-right-padding">
-                    <div className="panel panel-title">
-                      <h3>My Location</h3>
-                    </div>
-
-                    <div className="form-group row">
+                    <div className="form-group row set-padding-left-right">
                       <div className="col-md-6">
                         <div className="panel panel-default">
                           <div className="panel-heading">Address Line1</div>
@@ -524,7 +492,7 @@ function RegisterUser() {
                       </div>
                     </div>
 
-                    <div className="form-group row">
+                    <div className="form-group row set-padding-left-right">
                       <div className="col-md-6">
                         <div className="panel panel-default">
                           <div className="panel-heading">City</div>
@@ -555,7 +523,7 @@ function RegisterUser() {
                       </div>
                     </div>
 
-                    <div className="form-group row">
+                    <div className="form-group row set-padding-left-right">
                       <div className="col-md-6">
                         <div className="panel panel-default">
                           <div className="panel-heading">Postcode</div>
@@ -599,7 +567,7 @@ function RegisterUser() {
                       <h3>My Contact Details</h3>
                     </div>
 
-                    <div className="form-group row">
+                    <div className="form-group row set-padding-left-right">
                       <div className="col-sm-6">
                         <div className="panel panel-info">
                           <div className="panel-heading">
@@ -647,7 +615,7 @@ function RegisterUser() {
                       </div>
                     </div>
 
-                    <div className="form-group row">
+                    <div className="form-group row set-padding-left-right">
                       <div className="col-sm-6">
                         <div className="panel panel-info">
                           <div className="panel-heading">Mobile</div>
@@ -690,10 +658,7 @@ function RegisterUser() {
                             </small>
                           )}
                           <div className="mt-2">
-                            <div
-                              className="form-check"
-                              style={{ margin: "10px" }}
-                            >
+                            <div className="form-check">
                               <input
                                 className="form-check-input"
                                 type="checkbox"
@@ -730,16 +695,13 @@ function RegisterUser() {
                       </div>
                     </div>
 
-                    <div className="form-group row">
+                    <div className="form-group row set-padding-left-right">
                       <div className="col-sm-6">
                         <div className="panel panel-info">
                           <div className="panel-heading">
                             Contact Preferences
                           </div>
-                          <div
-                            className="form-check"
-                            style={{ margin: "10px" }}
-                          >
+                          <div className="form-check">
                             <input
                               className="form-check-input"
                               type="checkbox"
@@ -783,7 +745,7 @@ function RegisterUser() {
                     </div>
 
                     {!form.allowEmailContact && !form.allowMobileContact && (
-                      <div className="form-group row">
+                      <div className="form-group row set-padding-left-right">
                         <div className="col-12">
                           <div className="alert alert-warning" role="alert">
                             <medium>
@@ -796,7 +758,7 @@ function RegisterUser() {
                       </div>
                     )}
 
-                    <div className="form-group row">
+                    <div className="form-group row set-padding-left-right">
                       <div className="col-sm-6">
                         <div className="panel panel-info">
                           <div className="panel-heading">Password</div>
@@ -826,7 +788,7 @@ function RegisterUser() {
                         <h3>My Skills</h3>
                       </div>
 
-                      <div className="form-group row">
+                      <div className="form-group row set-padding-left-right">
                         <div className="col-md-6">
                           <div className="panel panel-default">
                             <div className="panel-heading">Category</div>
@@ -848,7 +810,7 @@ function RegisterUser() {
                         </div>
                       </div>
 
-                      <div className="form-group row">
+                      <div className="form-group row set-padding-left-right">
                         <div className="col-md-6">
                           <div className="panel panel-default">
                             <div className="panel-heading">
@@ -867,7 +829,7 @@ function RegisterUser() {
                         </div>
                       </div>
 
-                      <div className="form-group row">
+                      <div className="form-group row set-padding-left-right">
                         <div className="col-md-12">
                           <div className="panel panel-default">
                             <div className="panel-heading">
@@ -894,7 +856,7 @@ function RegisterUser() {
                         </div>
                       </div>
 
-                      <div className="form-group row">
+                      <div className="form-group row set-padding-left-right">
                         <div className="col-md-6">
                           <div className="panel panel-default">
                             <div className="panel-heading">
@@ -942,7 +904,7 @@ function RegisterUser() {
                         <h3>My Pricing</h3>
                       </div>
 
-                      <div className="form-group row">
+                      <div className="form-group row set-padding-left-right">
                         <div className="col-md-6">
                           <div className="panel panel-default">
                             <div className="panel-heading">Starting Price</div>
@@ -979,7 +941,7 @@ function RegisterUser() {
                                   />
                                 </div>
                               </div>
-                              <div className="col-md-4">
+                              <div className="col-md-4 mt-2">
                                 <div
                                   className="form-check form-check-inline"
                                   style={{ marginRight: "15px" }}
@@ -1118,7 +1080,7 @@ function RegisterUser() {
                         <div className="col-md-6">
                           <div className="panel panel-default">
                             <div className="panel-heading">Negotiable</div>
-                            <div style={{ padding: "10px" }}>
+                            <div className="mt-2">
                               <div className="form-check">
                                 <input
                                   className="form-check-input"
@@ -1153,7 +1115,7 @@ function RegisterUser() {
                         <h3>My Availability</h3>
                       </div>
 
-                      <div className="form-group row">
+                      <div className="form-group row set-padding-left-right">
                         <div className="col-md-6">
                           <div className="panel panel-default">
                             <div className="panel-heading">Preference</div>
@@ -1188,7 +1150,7 @@ function RegisterUser() {
                           </div>
                         </div>
                       </div>
-                      <div className="form-group row">
+                      <div className="form-group row set-padding-left-right">
                         <div className="col-md-6">
                           <div className="panel panel-default">
                             <div className="panel-heading">Available</div>
@@ -1224,9 +1186,9 @@ function RegisterUser() {
 
                   <div className="panel panel-body no-left-right-padding">
                     <div className="panel panel-title">
-                      <h3>Visibility</h3>
+                      <h3>My Visibility</h3>
                     </div>
-                    <div className="form-group row">
+                    <div className="form-group row set-padding-left-right">
                       <div className="col-md-6">
                         <div className="panel panel-default">
                           <div className="panel-heading">
@@ -1277,7 +1239,10 @@ function RegisterUser() {
                   </div>
 
                   <div className="panel panel-body no-left-right-padding">
-                    <div className="form-group" style={{ padding: "10px" }}>
+                    <div
+                      className="form-group"
+                      style={{ padding: "10px", marginBottom: 0 }}
+                    >
                       <div className="checkbox">
                         <label>
                           <input
