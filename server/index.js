@@ -555,6 +555,7 @@ function mapDbUserRowToApiUser(row) {
     createdAt,
     showInDashboard: !!row.show_in_dashboard,
     showPhoto: !!row.show_photo,
+    enabled: !!row.enabled,
   };
 }
 
@@ -1059,6 +1060,158 @@ app.delete("/api/admin/landing-page-cards/:id", async (req, res) => {
   }
 });
 
+/**
+ * Admin: Get paginated users with search
+ * - GET /api/admin/users?page=1&limit=50&search=emailOrName
+ */
+app.get("/api/admin/users", async (req, res) => {
+  try {
+    // Check if user is admin by examining the x-current-user header
+    let currentUser = null;
+    try {
+      const userHeader = req.headers['x-current-user'];
+      if (userHeader) {
+        currentUser = JSON.parse(userHeader);
+      }
+    } catch (e) {
+      // ignore parse errors
+    }
+
+    const isAdmin = currentUser &&
+      (String(currentUser.roleType || "").toLowerCase() === "administrative" ||
+       String(currentUser.roleType || "").toLowerCase() === "administrator");
+
+    if (!isAdmin) {
+      return res.status(403).json({ error: "Admin access required" });
+    }
+
+    if (USE_DB) {
+      const page = parseInt(req.query.page) || 1;
+      const limit = parseInt(req.query.limit) || 50;
+      const search = (req.query.search || "").trim();
+      const offset = (page - 1) * limit;
+
+      // Get total count for pagination
+      const [countRows] = await db.pool.execute(`SELECT COUNT(*) as total FROM users`, []);
+      const total = countRows[0].total;
+
+      // Get paginated results - use pool.query instead of execute to avoid parameter issues
+      const limitNum = parseInt(limit) || 50;
+      const offsetNum = parseInt(offset) || 0;
+      const [rows] = await db.pool.query(
+        `SELECT id, name, first_name, last_name, nick_name, gender, email_id, role_type, created_at, start_date, end_date
+         FROM users
+         ORDER BY created_at DESC
+         LIMIT ${limitNum} OFFSET ${offsetNum}`
+      );
+
+      const users = rows.map(row => ({
+        id: row.id,
+        name: row.name || "",
+        firstName: row.first_name || "",
+        lastName: row.last_name || "",
+        nickName: row.nick_name || "",
+        gender: row.gender || "",
+        emailId: row.email_id || "",
+        roleType: row.role_type || "",
+        createdAt: row.created_at instanceof Date ? row.created_at.toISOString() : row.created_at,
+        enabled: row.enabled === 1 || row.enabled === '1' || row.enabled === true,
+      }));
+
+      return res.json({
+        users,
+        pagination: {
+          page,
+          limit,
+          total,
+          totalPages: Math.ceil(total / limit),
+        }
+      });
+    }
+
+    // FS mode - simplified implementation
+    const store = await readUsersFS();
+    let users = store.users;
+
+    // Apply search filter
+    if (req.query.search) {
+      const searchTerm = req.query.search.toLowerCase();
+      users = users.filter(user =>
+        (user.emailId || "").toLowerCase().includes(searchTerm) ||
+        (user.firstName || "").toLowerCase().includes(searchTerm) ||
+        (user.lastName || "").toLowerCase().includes(searchTerm) ||
+        (user.nickName || "").toLowerCase().includes(searchTerm)
+      );
+    }
+
+    // Apply pagination
+    const page = parseInt(req.query.page) || 1;
+    const limit = parseInt(req.query.limit) || 50;
+    const offset = (page - 1) * limit;
+    const paginatedUsers = users.slice(offset, offset + limit);
+
+    return res.json({
+      users: paginatedUsers,
+      pagination: {
+        page,
+        limit,
+        total: users.length,
+        totalPages: Math.ceil(users.length / limit),
+      }
+    });
+  } catch (err) {
+    console.error("Admin get users error:", err);
+    return res.status(500).json({ error: "Internal server error" });
+  }
+});
+
+/**
+ * Admin: Update user
+ * - PUT /api/admin/users/:id
+ */
+app.put("/api/admin/users/:id", async (req, res) => {
+  try {
+    // Check if user is admin by examining the x-current-user header
+    let currentUser = null;
+    try {
+      const userHeader = req.headers['x-current-user'];
+      if (userHeader) {
+        currentUser = JSON.parse(userHeader);
+      }
+    } catch (e) {
+      // ignore parse errors
+    }
+
+    const isAdmin = currentUser &&
+      (String(currentUser.roleType || "").toLowerCase() === "administrative" ||
+       String(currentUser.roleType || "").toLowerCase() === "administrator");
+
+    if (!isAdmin) {
+      return res.status(403).json({ error: "Admin access required" });
+    }
+
+    const { id } = req.params || {};
+    const updates = req.body || {};
+
+    if (USE_DB) {
+      await db.updateUserFields(id, updates);
+      return res.json({ message: "User updated successfully" });
+    }
+
+    // FS mode
+    const store = await readUsersFS();
+    const idx = store.users.findIndex((u) => u.id === id);
+    if (idx === -1) return res.status(404).json({ error: "User not found" });
+
+    store.users[idx] = { ...store.users[idx], ...updates };
+    await writeUsersFS(store);
+    return res.json({ message: "User updated successfully" });
+  } catch (err) {
+    console.error("Admin update user error:", err);
+    return res.status(500).json({ error: "Internal server error" });
+  }
+});
+
 
 
 /**
@@ -1130,6 +1283,9 @@ app.post("/api/register", async (req, res) => {
         availability: available || "",
         roleType: roleType,
         createdAt: new Date(),
+        startDate: new Date(),
+        endDate: null,
+        enabled: 1,
         category: category || "",
         showInDashboard: !!showInDashboard,
         showPhoto: !!showPhoto,
@@ -1185,6 +1341,9 @@ app.post("/api/register", async (req, res) => {
       currencyCode: currencyCode || "",
       roleType: "user",
       createdAt: new Date().toISOString(),
+      startDate: new Date().toISOString(),
+      endDate: null,
+      enabled: 1,
       category: category || "",
       showInDashboard: !!showInDashboard,
       showPhoto: !!showPhoto,

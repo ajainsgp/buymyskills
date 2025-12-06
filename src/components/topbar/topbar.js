@@ -284,6 +284,9 @@ function Topbar() {
                   {isAdmin && (
                     <>
                       <div className="dropdown-divider"></div>
+                      <a className="dropdown-item" href="/users" onClick={() => setDropdownOpen(false)}>
+                        Users
+                      </a>
                       <a className="dropdown-item" href="/admin/categories" onClick={() => setDropdownOpen(false)}>
                         Manage Categories
                       </a>
