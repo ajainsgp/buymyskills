@@ -439,7 +439,10 @@ function Profile() {
     <div className="container-fluid">
       <div className="profile-container">
         <div className="d-sm-flex align-items-center justify-content-between mb-4">
-          <h1 className="h3 mb-0 text-gray-800">My Profile</h1>
+          <h1 className="h3 mb-0 text-gray-800">
+            My Profile id is{" "}
+            <span className="text-primary font-weight-bold">{form.emailId}</span>
+          </h1>
         </div>
 
         <form onSubmit={onSave}>

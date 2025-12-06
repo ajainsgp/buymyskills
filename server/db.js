@@ -379,6 +379,7 @@ async function initSchema() {
         { name: "country_code", sql: "ALTER TABLE users ADD COLUMN country_code VARCHAR(10) NULL" },
         { name: "show_in_dashboard", sql: "ALTER TABLE users ADD COLUMN show_in_dashboard TINYINT(1) NOT NULL DEFAULT 0" },
         { name: "show_photo", sql: "ALTER TABLE users ADD COLUMN show_photo TINYINT(1) NOT NULL DEFAULT 0" },
+        { name: "enabled", sql: "ALTER TABLE users ADD COLUMN enabled TINYINT(1) NOT NULL DEFAULT 1" },
       ];
 
       for (const col of columnsToAdd) {
@@ -492,8 +493,8 @@ async function createUser(u) {
       facebook_url, linkedin_url,
       starting_price, negotiable, currency_code,
       created_at,
-      role_type, category, show_in_dashboard, show_photo
-    ) VALUES (?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?)`,
+      role_type, category, show_in_dashboard, show_photo, enabled
+    ) VALUES (?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?)`,
     [
       u.id,
       u.name || null,
@@ -524,6 +525,7 @@ async function createUser(u) {
       u.category || null,
       u.showInDashboard ? 1 : 0,
       u.showPhoto ? 1 : 0,
+      u.enabled !== undefined ? (u.enabled ? 1 : 0) : 1,
     ],
   );
 }
@@ -561,6 +563,7 @@ async function updateUserFields(id, patch) {
     category: "category",
     showInDashboard: "show_in_dashboard",
     showPhoto: "show_photo",
+    enabled: "enabled",
     // passwordHash intentionally excluded here; use updatePasswordHash
   };
   const sets = [];
