@@ -1466,7 +1466,19 @@ app.get("/api/users", async (_req, res) => {
             : {};
         return { ...sanitizeUser(u), address: addr, category: r.category || "" };
       });
-      return res.json({ users });
+      const limit = parseInt(_req.query.limit) || 50;
+      const offset = parseInt(_req.query.offset) || 0;
+      const total = users.length;
+      const paginatedUsers = users.slice(offset, offset + limit);
+      return res.json({
+        users: paginatedUsers,
+        pagination: {
+          page: Math.floor(offset / limit) + 1,
+          limit,
+          total,
+          totalPages: Math.ceil(total / limit),
+        }
+      });
     }
 
     // FS flow
@@ -1593,7 +1605,7 @@ app.get("/api/users/public", async (req, res) => {
     const store = await readUsersFS();
     const addrStore = await readAddressesFS();
     const photos = await readPhotosFS();
-    const users = store.users
+    let users = store.users
       .filter((u) => !!u.showInDashboard)
       .filter((u) => (category ? String(u.category || "").toLowerCase() === category.toLowerCase() : true))
       .map((u) => {
@@ -1618,7 +1630,20 @@ app.get("/api/users/public", async (req, res) => {
           photoPresent: hasPhoto,
         };
       });
-    return res.json({ users, region: "All Regions (FS Mode)" });
+    const limit = parseInt(req.query.limit) || 50;
+    const offset = parseInt(req.query.offset) || 0;
+    const total = users.length;
+    users = users.slice(offset, offset + limit);
+    return res.json({
+      users,
+      region: "All Regions (FS Mode)",
+      pagination: {
+        page: Math.floor(offset / limit) + 1,
+        limit,
+        total,
+        totalPages: Math.ceil(total / limit),
+      }
+    });
   } catch (err) {
     console.error("Public users error:", err);
     return res.status(500).json({ error: "Internal server error" });

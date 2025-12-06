@@ -25,6 +25,11 @@ function BrowsePage() {
   const [cityFilter, setCityFilter] = useState("");
   const [searchKw, setSearchKw] = useState("");
 
+  // Pagination
+  const [currentPage, setCurrentPage] = useState(1);
+  const [hasMore, setHasMore] = useState(true);
+  const itemsPerPage = 20;
+
   const [selectedCategory, setSelectedCategory] = useState("all");
   const [selectedCountry, setSelectedCountry] = useState("all");
   const [categories, setCategories] = useState([]);
@@ -140,110 +145,134 @@ function BrowsePage() {
     const value = e.target.value;
     setSelectedCategory(value);
     setCategoryFilter(value === "all" ? "" : value);
+    setCurrentPage(1);
+    loadUsers(1);
   };
 
   const handleCountryChange = (e) => {
     const value = e.target.value;
     setSelectedCountry(value);
     setCountryFilter(value === "all" ? "" : value);
+    setCurrentPage(1);
+    loadUsers(1);
   };
 
   const handleCityChange = (e) => {
     setCityFilter(e.target.value);
+    setCurrentPage(1);
+    loadUsers(1);
   };
 
-  const handleSearch = () => {
-    setKw(searchKw);
-  };
-
-  useEffect(() => {
-    let aborted = false;
-
-    async function load() {
-      const mySeq = (reqSeqRef.current += 1);
+  const loadUsers = React.useCallback(async (page = 1) => {
+    const mySeq = (reqSeqRef.current += 1);
+    setLoading(true);
+    try {
+      let rt = "user";
       try {
-        let rt = "user";
-        try {
-          const getCurrentUser = () => {
-            const s = sessionStorage.getItem("currentUser");
-            if (s) {
+        const getCurrentUser = () => {
+          const s = sessionStorage.getItem("currentUser");
+          if (s) {
+            try {
+              return JSON.parse(s);
+            } catch (_e) {
+              /* ignore parse error */
+            }
+          }
+          if (localStorage.getItem("rememberMe") === "true") {
+            const l = localStorage.getItem("currentUser");
+            if (l) {
               try {
-                return JSON.parse(s);
+                return JSON.parse(l);
               } catch (_e) {
                 /* ignore parse error */
               }
             }
-            if (localStorage.getItem("rememberMe") === "true") {
-              const l = localStorage.getItem("currentUser");
-              if (l) {
-                try {
-                  return JSON.parse(l);
-                } catch (_e) {
-                  /* ignore parse error */
-                }
-              }
-            }
-            return null;
-          };
-          const cu = getCurrentUser();
-          if (cu) {
-            const r = String(cu.roleType || "user").toLowerCase();
-            rt = r === "administrative" ? "administrator" : r;
           }
-        } catch (e) {
-          /* ignore */
+          return null;
+        };
+        const cu = getCurrentUser();
+        if (cu) {
+          const r = String(cu.roleType || "user").toLowerCase();
+          rt = r === "administrative" ? "administrator" : r;
         }
-        // Use /api/users/public for logged-in users (region-filtered), /api/users for admins
-        const endpoint = currentUser ? `${API_BASE}/api/users/public` : `${API_BASE}/api/users?roleType=${encodeURIComponent(rt)}`;
-        const res = await fetch(endpoint, {
-          cache: "no-store",
-          headers: currentUser ? {
-            'x-current-user': JSON.stringify(currentUser)
-          } : {}
-        });
-        const data = await res.json().catch(() => ({}));
-        if (!res.ok) {
-          const errMsg =
-            (data && data.error) || `Failed to load users (${res.status})`;
-          throw new Error(errMsg);
+      } catch (e) {
+        /* ignore */
+      }
+      const limit = itemsPerPage;
+      const offset = (page - 1) * itemsPerPage;
+      // Use /api/users/public for logged-in users (region-filtered), /api/users for admins
+      const endpoint = currentUser ? `${API_BASE}/api/users/public?limit=${limit}&offset=${offset}` : `${API_BASE}/api/users?roleType=${encodeURIComponent(rt)}&limit=${limit}&offset=${offset}`;
+      const res = await fetch(endpoint, {
+        cache: "no-store",
+        headers: currentUser ? {
+          'x-current-user': JSON.stringify(currentUser)
+        } : {}
+      });
+      const data = await res.json().catch(() => ({}));
+      if (!res.ok) {
+        const errMsg =
+          (data && data.error) || `Failed to load users (${res.status})`;
+        throw new Error(errMsg);
+      }
+      if (mySeq === reqSeqRef.current) {
+        const newUsers = Array.isArray(data.users) ? data.users : [];
+        if (page === 1) {
+          setUsers(newUsers);
+        } else {
+          setUsers(prev => [...prev, ...newUsers]);
         }
-        if (!aborted && mySeq === reqSeqRef.current) {
-          setUsers(Array.isArray(data.users) ? data.users : []);
-        }
-      } catch (err) {
-        if (!aborted && mySeq === reqSeqRef.current) {
-          setError(err.message || "Failed to load users");
-        }
-      } finally {
-        if (!aborted && mySeq === reqSeqRef.current) {
-          setLoading(false);
-        }
+        setHasMore(data.pagination ? data.pagination.totalPages > page : false);
+        setError("");
+      }
+    } catch (err) {
+      if (mySeq === reqSeqRef.current) {
+        setError(err.message || "Failed to load users");
+      }
+    } finally {
+      if (mySeq === reqSeqRef.current) {
+        setLoading(false);
       }
     }
+  }, [currentUser, itemsPerPage]);
 
-    load();
+  const handleLoadMore = () => {
+    const newPage = currentPage + 1;
+    setCurrentPage(newPage);
+    loadUsers(newPage);
+  };
 
+  const handleSearch = () => {
+    setKw(searchKw);
+    setCurrentPage(1);
+    loadUsers(1);
+  };
+
+  useEffect(() => {
+    loadUsers(1);
+  }, [loadUsers]);
+
+  useEffect(() => {
     function handleAuth() {
-      load();
+      setCurrentPage(1);
+      loadUsers(1);
     }
     function handleStorage(e) {
       if (!e || e.key === "currentUser") {
-        load();
+        setCurrentPage(1);
+        loadUsers(1);
       }
     }
     if (typeof window !== "undefined") {
       window.addEventListener("auth-changed", handleAuth);
       window.addEventListener("storage", handleStorage);
     }
-
     return () => {
-      aborted = true;
       if (typeof window !== "undefined") {
         window.removeEventListener("auth-changed", handleAuth);
         window.removeEventListener("storage", handleStorage);
       }
     };
-  }, [currentUser]);
+  }, [loadUsers]);
 
   // Reload when route changes (e.g., after login redirects)
   useEffect(() => {
@@ -416,6 +445,13 @@ function BrowsePage() {
                   <p>No users found matching your criteria.</p>
                 </div>
               )}
+            </div>
+          )}
+          {hasMore && !loading && displayUsers.length > 0 && (
+            <div className="text-center mt-4">
+              <button className="btn btn-primary" onClick={handleLoadMore}>
+                Load More Users
+              </button>
             </div>
           )}
         </div>
