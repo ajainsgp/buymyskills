@@ -63,7 +63,7 @@ export const validateSummary = (summary) => {
   if (summary.length > 150) {
     return {
       isValid: false,
-      message: `Summary must be 100 characters or less (${summary.length}/150)`,
+      message: `Summary must be 150 characters or less (${summary.length}/150)`,
     };
   }
 

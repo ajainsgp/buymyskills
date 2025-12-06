@@ -380,6 +380,10 @@ async function initSchema() {
         { name: "show_in_dashboard", sql: "ALTER TABLE users ADD COLUMN show_in_dashboard TINYINT(1) NOT NULL DEFAULT 0" },
         { name: "show_photo", sql: "ALTER TABLE users ADD COLUMN show_photo TINYINT(1) NOT NULL DEFAULT 0" },
         { name: "enabled", sql: "ALTER TABLE users ADD COLUMN enabled TINYINT(1) NOT NULL DEFAULT 1" },
+        { name: "is_email_verified", sql: "ALTER TABLE users ADD COLUMN is_email_verified TINYINT(1) NOT NULL DEFAULT 1" },
+        { name: "is_secondary_email_verified", sql: "ALTER TABLE users ADD COLUMN is_secondary_email_verified TINYINT(1) NOT NULL DEFAULT 1" },
+        { name: "verification_tokens", sql: "ALTER TABLE users ADD COLUMN verification_tokens JSON NULL" },
+      { name: "keyword_tags", sql: "ALTER TABLE users ADD COLUMN keyword_tags TEXT NULL" },
       ];
 
       for (const col of columnsToAdd) {
@@ -489,12 +493,13 @@ async function createUser(u) {
       country_code, mobile, is_whatsapp_available, whatsapp_number,
       allow_email_contact, allow_mobile_contact,
       email_id, secondary_email, password_hash,
-      summary, work_preference, traveling, availability,
+      summary, keyword_tags, work_preference, traveling, availability,
       facebook_url, linkedin_url,
       starting_price, negotiable, currency_code,
       created_at,
-      role_type, category, show_in_dashboard, show_photo, enabled
-    ) VALUES (?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?)`,
+      role_type, category, show_in_dashboard, show_photo, enabled,
+      is_email_verified, is_secondary_email_verified, verification_tokens
+    ) VALUES (?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?)`,
     [
       u.id,
       u.name || null,
@@ -512,6 +517,7 @@ async function createUser(u) {
       u.secondaryEmail || null,
       u.passwordHash || null,
       u.summary || null,
+      u.keywordTags || null,
       u.workPreference || null,
       u.traveling || null,
       u.availability || null,
@@ -526,6 +532,9 @@ async function createUser(u) {
       u.showInDashboard ? 1 : 0,
       u.showPhoto ? 1 : 0,
       u.enabled !== undefined ? (u.enabled ? 1 : 0) : 1,
+      u.isEmailVerified ? 1 : 0,
+      u.isSecondaryEmailVerified ? 1 : 0,
+      u.verificationTokens ? JSON.stringify(u.verificationTokens) : null,
     ],
   );
 }
@@ -552,6 +561,7 @@ async function updateUserFields(id, patch) {
     linkedinUrl: "linkedin_url",
     secondaryEmail: "secondary_email",
     summary: "summary",
+    keywordTags: "keyword_tags",
     workPreference: "work_preference",
     traveling: "traveling",
     availability: "availability",
@@ -1142,7 +1152,7 @@ async function getUserRegion(userId) {
 
 async function listPublicUsersInRegion(regionId, category) {
   const params = [regionId];
-  let where = `u.show_in_dashboard = 1 AND crm.region_id = ? AND crm.enabled = 1 AND r.enabled = 1`;
+  let where = `u.show_in_dashboard = 1 AND u.role_type = 'user' AND u.enabled = 1 AND crm.region_id = ? AND crm.enabled = 1 AND r.enabled = 1 AND CURDATE() BETWEEN DATE(u.start_date) AND COALESCE(DATE(u.end_date), CURDATE())`;
   if (category) {
     where += " AND u.category = ?";
     params.push(category);

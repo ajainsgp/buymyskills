@@ -264,8 +264,9 @@ function UserProfile({ userProfiles, showSensitive = false }) {
               <div>
                 <h5 className="card-title">{profile.name}</h5>
                 <h6 className="card-subtitle mb-2 text-muted">
-                  {profile.nickName}
+                  {profile.nickName || profile.firstName}
                 </h6>
+                <h6 className="card-subtitle mb-2">{profile.category}</h6>
               </div>
               <div>
                 <img
@@ -291,7 +292,8 @@ function UserProfile({ userProfiles, showSensitive = false }) {
                 </div>
               )}
             </div>
-            <p className="card-text">{profile.summary}</p>
+            <p className="card-text">{profile.keywordTags}</p>
+            <p className="card-text">{profile.summary || "-"}</p>
           </div>
           <div className="card-footer bg-transparent">
             <div className="card-footer-grid">
