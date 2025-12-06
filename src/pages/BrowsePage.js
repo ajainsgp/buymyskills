@@ -321,7 +321,7 @@ function BrowsePage() {
   const filtered = users.filter((u) => {
     // Fuzzy search implementation
     const searchTerm = kw.toLowerCase().trim();
-    const searchFields = [u.name, u.nickName, u.summary, u.category]
+    const searchFields = [u.name, u.nickName, u.summary, u.category, u.keywordTags]
       .filter(Boolean)
       .join(" ")
       .toLowerCase();

@@ -25,6 +25,7 @@ function Profile() {
     countryCode: "+1",
     mobile: "",
     category: "",
+    keywordTags: "",
     summary: "",
     workPreference: "",
     available: "",
@@ -49,6 +50,8 @@ function Profile() {
     showInDashboard: false,
     showPhoto: false,
   });
+
+  const [originalRoleType, setOriginalRoleType] = useState("");
 
   const [photoUrl, setPhotoUrl] = useState("");
   const [photoError, setPhotoError] = useState("");
@@ -129,6 +132,7 @@ function Profile() {
           countryCode: cu.countryCode || "+1",
           mobile: cu.mobile || "",
           category: cu.category || "",
+          keywordTags: cu.keywordTags || "",
           summary: cu.summary || "",
           workPreference:
             cu.workPreference === "R"
@@ -168,6 +172,8 @@ function Profile() {
         const data = await res.json().catch(() => ({}));
         if (res.ok && data.user) {
           const u = data.user;
+          // Store original role type for validation
+          setOriginalRoleType(u.roleType || "user");
           setForm({
             firstName: u.firstName || "",
             lastName: u.lastName || "",
@@ -177,6 +183,7 @@ function Profile() {
             countryCode: u.countryCode || "+1",
             mobile: u.mobile || "",
             category: u.category || "",
+            keywordTags: u.keywordTags || "",
             summary: u.summary || "",
             workPreference:
               u.workPreference === "R"
@@ -343,8 +350,26 @@ function Profile() {
       return;
     }
 
+    // Check if user is upgrading from buyer to seller
+    const isUpgradingToSeller = originalRoleType === "buyer" && form.roleType === "user";
+    if (isUpgradingToSeller) {
+      // Validate required fields for seller upgrade
+      if (!form.category || form.category.trim() === "") {
+        setError("Category is required when upgrading to seller.");
+        return;
+      }
+      if (!form.keywordTags || form.keywordTags.trim() === "") {
+        setError("Tags are required when upgrading to seller.");
+        return;
+      }
+      if (!form.startingPrice || form.startingPrice === "" || parseFloat(form.startingPrice) <= 0) {
+        setError("Starting Price is required when upgrading to seller.");
+        return;
+      }
+    }
+
     // Validation
-    if (form.summary && form.summary.length > 100) {
+    if (form.summary && form.summary.length > 150) {
       setError("Summary must be 100 characters or less");
       return;
     }
@@ -373,6 +398,7 @@ function Profile() {
         facebookUrl: form.facebookUrl,
         linkedinUrl: form.linkedinUrl,
         category: form.category,
+        keywordTags: form.keywordTags,
         summary: form.summary,
         workPreference: form.workPreference,
         available: form.available,
@@ -381,6 +407,7 @@ function Profile() {
         negotiable: form.negotiable,
         currencyCode: form.currencyCode,
         rateType: form.rateType,
+        roleType: form.roleType,
         showInDashboard: form.showInDashboard,
         showPhoto: form.showPhoto,
         address: { ...form.address },
@@ -896,10 +923,10 @@ function Profile() {
                         <input
                           type="text"
                           className="form-control"
-                          id="keywords"
-                          name="keywords"
+                          id="keywordTags"
+                          name="keywordTags"
                           placeholder="Like Software Development, Data Migration, AI & LLM Development"
-                          value={form.keywords}
+                          value={form.keywordTags}
                           onChange={onChange}
                         />
                       </div>
@@ -1167,49 +1194,52 @@ function Profile() {
                 </div>
               )}
 
-              <div className="panel panel-body no-left-right-padding">
-                <div className="panel panel-title">
-                  <h3>My Visibility</h3>
-                </div>
-                <div className="form-group row set-padding-left-right">
-                  <div className="col-md-6">
-                    <div className="panel panel-default">
-                      <div className="panel-heading">
-                        Show my profile on the public dashboard
+              {/* Only show Visibility section for sellers */}
+              {form.roleType === "user" && (
+                <div className="panel panel-body no-left-right-padding">
+                  <div className="panel panel-title">
+                    <h3>My Visibility</h3>
+                  </div>
+                  <div className="form-group row set-padding-left-right">
+                    <div className="col-md-6">
+                      <div className="panel panel-default">
+                        <div className="panel-heading">
+                          Show my profile on the public dashboard
+                        </div>
+                        <div className="checkbox visibility-checkbox">
+                          <label>
+                            <input
+                              type="checkbox"
+                              name="showInDashboard"
+                              checked={form.showInDashboard}
+                              onChange={onChange}
+                            />{" "}
+                            Allow my profile to appear on the dashboard
+                          </label>
+                        </div>
                       </div>
-                      <div className="checkbox visibility-checkbox">
-                        <label>
-                          <input
-                            type="checkbox"
-                            name="showInDashboard"
-                            checked={form.showInDashboard}
-                            onChange={onChange}
-                          />{" "}
-                          Allow my profile to appear on the dashboard
-                        </label>
+                    </div>
+                    <div className="col-md-6">
+                      <div className="panel panel-default">
+                        <div className="panel-heading">
+                          Show my photo publicly
+                        </div>
+                        <div className="checkbox visibility-checkbox">
+                          <label>
+                            <input
+                              type="checkbox"
+                              name="showPhoto"
+                              checked={form.showPhoto}
+                              onChange={onChange}
+                            />{" "}
+                            Allow my uploaded photo to be shown
+                          </label>
+                        </div>
                       </div>
                     </div>
                   </div>
-                  <div className="col-md-6">
-                    <div className="panel panel-default">
-                      <div className="panel-heading">
-                        Show my photo publicly
-                      </div>
-                      <div className="checkbox visibility-checkbox">
-                        <label>
-                          <input
-                            type="checkbox"
-                            name="showPhoto"
-                            checked={form.showPhoto}
-                            onChange={onChange}
-                          />{" "}
-                          Allow my uploaded photo to be shown
-                        </label>
-                      </div>
-                    </div>
-                  </div>
                 </div>
-              </div>
+              )}
 
               <div className="panel panel-body no-left-right-padding set-padding-top">
                 <div className="form-group panel-body">

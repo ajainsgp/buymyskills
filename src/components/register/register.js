@@ -25,7 +25,7 @@ function RegisterUser() {
     emailId: "",
     secondaryEmail: "",
     password: "",
-    keywords: "",
+    keywordTags: "",
     summary: "",
     workPreference: "Hybrid",
     traveling: "No Traveling",
@@ -235,8 +235,8 @@ function RegisterUser() {
     }
 
     // Validation
-    if (form.summary && form.summary.length > 100) {
-      setError("Summary must be 100 characters or less");
+    if (form.summary && form.summary.length > 150) {
+      setError("Summary must be 150 characters or less");
       return;
     }
     // Validate mobile number based on country code
@@ -819,10 +819,10 @@ function RegisterUser() {
                             <input
                               type="text"
                               className="form-control"
-                              id="keywords"
-                              name="keywords"
+                              id="keywordTags"
+                              name="keywordTags"
                               placeholder="Like Software Development, Data Migration, AI & LLM Development"
-                              value={form.keywords}
+                              value={form.keywordTags}
                               onChange={onChange}
                             />
                           </div>
@@ -1184,49 +1184,58 @@ function RegisterUser() {
                     </div>
                   ) : null}
 
-                  <div className="panel panel-body no-left-right-padding">
-                    <div className="panel panel-title">
-                      <h3>My Visibility</h3>
-                    </div>
-                    <div className="form-group row set-padding-left-right">
-                      <div className="col-md-6">
-                        <div className="panel panel-default">
-                          <div className="panel-heading">
-                            Show my profile on the public dashboard
+                  {/* Only show Visibility section for sellers */}
+                  {form.userRole === "seller" && (
+                    <div className="panel panel-body no-left-right-padding">
+                      <div className="panel panel-title">
+                        <h3>My Visibility</h3>
+                      </div>
+                      <div className="form-group row set-padding-left-right">
+                        <div className="col-md-6">
+                          <div className="panel panel-default">
+                            <div className="panel-heading">
+                              Show my profile on the public dashboard
+                            </div>
+                            <div
+                              className="checkbox"
+                              style={{ padding: "10px" }}
+                            >
+                              <label>
+                                <input
+                                  type="checkbox"
+                                  name="showInDashboard"
+                                  checked={form.showInDashboard}
+                                  onChange={onChange}
+                                />{" "}
+                                Allow my profile to appear on the dashboard
+                              </label>
+                            </div>
                           </div>
-                          <div className="checkbox" style={{ padding: "10px" }}>
-                            <label>
-                              <input
-                                type="checkbox"
-                                name="showInDashboard"
-                                checked={form.showInDashboard}
-                                onChange={onChange}
-                              />{" "}
-                              Allow my profile to appear on the dashboard
-                            </label>
+                        </div>
+                        <div className="col-md-6">
+                          <div className="panel panel-default">
+                            <div className="panel-heading">
+                              Show my photo publicly
+                            </div>
+                            <div
+                              className="checkbox"
+                              style={{ padding: "10px" }}
+                            >
+                              <label>
+                                <input
+                                  type="checkbox"
+                                  name="showPhoto"
+                                  checked={form.showPhoto}
+                                  onChange={onChange}
+                                />{" "}
+                                Allow my uploaded photo to be shown
+                              </label>
+                            </div>
                           </div>
                         </div>
                       </div>
-                      <div className="col-md-6">
-                        <div className="panel panel-default">
-                          <div className="panel-heading">
-                            Show my photo publicly
-                          </div>
-                          <div className="checkbox" style={{ padding: "10px" }}>
-                            <label>
-                              <input
-                                type="checkbox"
-                                name="showPhoto"
-                                checked={form.showPhoto}
-                                onChange={onChange}
-                              />{" "}
-                              Allow my uploaded photo to be shown
-                            </label>
-                          </div>
-                        </div>
-                      </div>
                     </div>
-                  </div>
+                  )}
 
                   <div className="panel no-left-right-padding">
                     <div className="alert alert-info">

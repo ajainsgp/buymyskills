@@ -15,6 +15,11 @@ const rateLimit = require("express-rate-limit");
 const compression = require("compression");
 const morgan = require("morgan");
 const bcrypt = require("bcrypt");
+const sgMail = require('@sendgrid/mail');
+
+if (process.env.SENDGRID_API_KEY) {
+  sgMail.setApiKey(process.env.SENDGRID_API_KEY);
+}
 
 const USE_DB =
   String(process.env.PERSISTENCE || "").toLowerCase() === "mysql" ||
@@ -123,6 +128,11 @@ function makeId() {
 
 function sha256Hex(s) {
   return crypto.createHash("sha256").update(String(s), "utf8").digest("hex");
+}
+
+// Generate verification token
+function generateVerificationToken() {
+  return crypto.randomBytes(32).toString('hex');
 }
 
 // Password hashing (bcrypt primary; scrypt legacy fallback supported for verify)
@@ -488,6 +498,25 @@ async function readCountriesFS() {
     .map((c) => ({ name: c.name, code: c.code }));
 }
 
+// Read countries with phone codes by matching countries.json with countryCodes.json
+async function readCountriesWithCodesFS() {
+  const countries = await readAllCountriesFS();
+  const countryCodes = require("../src/data/countryCodes.json");
+
+  return countries
+    .filter((c) => c && (c.enabled === 1 || c.enabled === true || c.enabled === "Y"))
+    .map((country) => {
+      const codeEntry = countryCodes.find((cc) => cc.iso === country.code && cc.enabled === "Y");
+      return {
+        name: country.name,
+        code: country.code,
+        phoneCode: codeEntry ? codeEntry.code : "",
+      };
+    })
+    .filter((c) => c.phoneCode) // Only include countries that have phone codes
+    .sort((a, b) => String(a.name).localeCompare(String(b.name)));
+}
+
 
 
 async function ensureHashedPasswordsOnStartFS() {
@@ -543,6 +572,7 @@ function mapDbUserRowToApiUser(row) {
     emailId: row.email_id || "",
     secondaryEmail: row.secondary_email || row.email_id || "",
     summary: row.summary || "",
+    keywordTags: row.keyword_tags || "",
     workPreference: row.work_preference || "",
     traveling: row.traveling || "",
     availability: row.availability || "",
@@ -692,11 +722,7 @@ app.get("/api/countries-with-codes", async (_req, res) => {
       const countries = await db.listCountries();
       return res.json({ countries });
     }
-    const all = await readAllCountriesFS();
-    const countries = all
-      .filter((c) => c && (c.enabled === 1 || c.enabled === true || c.enabled === "Y"))
-      .sort((a, b) => String(a.name).localeCompare(String(b.name)))
-      .map((c) => ({ name: c.name, code: c.code, phoneCode: c.phoneCode }));
+    const countries = await readCountriesWithCodesFS();
     return res.json({ countries });
   } catch (err) {
     console.error("Countries with codes error:", err);
@@ -1230,6 +1256,7 @@ app.post("/api/register", async (req, res) => {
       secondaryEmail,
       password,
       keywords,
+      summary,
       workPreference,
       traveling,
       available,
@@ -1242,6 +1269,17 @@ app.post("/api/register", async (req, res) => {
       category,
       showInDashboard,
       showPhoto,
+      isWhatsappAvailable,
+      whatsappNumber,
+      allowEmailContact,
+      allowMobileContact,
+      facebookUrl,
+      linkedinUrl,
+      startingPrice,
+      negotiable,
+      currencyCode,
+      rateType,
+      userRole,
       passwordDigest,
     } = req.body || {};
 
@@ -1251,7 +1289,7 @@ app.post("/api/register", async (req, res) => {
 
     if (USE_DB) {
       const exists = await db.getUserByEmail(emailId);
-      if (exists) return res.status(409).json({ error: "User with this email already exists" });
+      if (exists) return res.status(409).json({ error: "This email ID has already been registered. Please register with a different email ID." });
 
       const passwordHash = await hashPassword(String(password || ""));
 
@@ -1265,6 +1303,8 @@ app.post("/api/register", async (req, res) => {
         roleType = "user"; // both means they can sell
       }
 
+      const emailVerificationEnabled = String(process.env.EMAIL_VERIFICATION_ENABLED || "").toLowerCase() === "true";
+
       const newUser = {
         id: makeId(),
         name: [firstName, lastName].filter(Boolean).join(" ").trim(),
@@ -1277,7 +1317,8 @@ app.post("/api/register", async (req, res) => {
         emailId,
         secondaryEmail: secondaryEmail || emailId,
         passwordHash: passwordHash,
-        summary: keywords || "",
+        summary: summary || "",
+        keywordTags: keywords || "",
         workPreference: workPreference || "",
         traveling: traveling || "",
         availability: available || "",
@@ -1289,6 +1330,12 @@ app.post("/api/register", async (req, res) => {
         category: category || "",
         showInDashboard: !!showInDashboard,
         showPhoto: !!showPhoto,
+        isEmailVerified: emailVerificationEnabled ? false : true,
+        isSecondaryEmailVerified: emailVerificationEnabled && secondaryEmail ? false : true,
+        verificationTokens: emailVerificationEnabled ? {
+          primary: { token: generateVerificationToken() },
+          secondary: secondaryEmail ? { token: generateVerificationToken() } : null
+        } : null,
       };
       await db.createUser(newUser);
       await db.setAddressForUser(newUser.id, {
@@ -1299,6 +1346,43 @@ app.post("/api/register", async (req, res) => {
         postcode,
         country,
       });
+
+      // Send verification emails if enabled
+      if (emailVerificationEnabled && process.env.SENDGRID_API_KEY) {
+        const baseUrl = process.env.FRONTEND_ORIGIN || 'http://localhost:3000';
+
+        // Send primary email verification
+        if (emailId) {
+          const primaryToken = newUser.verificationTokens.primary.token;
+          const primaryUrl = `${baseUrl}/verify-email?token=${primaryToken}`;
+          try {
+            await sgMail.send({
+              to: emailId,
+              from: process.env.EMAIL_FROM || 'noreply@buymyskills.com',
+              subject: 'Verify Your Email',
+              html: `<p>Please verify your email by clicking <a href="${primaryUrl}">here</a>.</p>`
+            });
+          } catch (e) {
+            console.error("Failed to send primary email verification:", e);
+          }
+        }
+
+        // Send secondary email verification
+        if (secondaryEmail) {
+          const secondaryToken = newUser.verificationTokens.secondary.token;
+          const secondaryUrl = `${baseUrl}/verify-email?token=${secondaryToken}`;
+          try {
+            await sgMail.send({
+              to: secondaryEmail,
+              from: process.env.EMAIL_FROM || 'noreply@buymyskills.com',
+              subject: 'Verify Your Secondary Email',
+              html: `<p>Please verify your secondary email by clicking <a href="${secondaryUrl}">here</a>.</p>`
+            });
+          } catch (e) {
+            console.error("Failed to send secondary email verification:", e);
+          }
+        }
+      }
       const apiUser = sanitizeUser({
         ...newUser,
         createdAt: new Date(newUser.createdAt).toISOString(),
@@ -1311,7 +1395,9 @@ app.post("/api/register", async (req, res) => {
     const exists = store.users.find(
       (u) => (u.emailId || "").toLowerCase() === String(emailId).toLowerCase(),
     );
-    if (exists) return res.status(409).json({ error: "User with this email already exists" });
+    if (exists) return res.status(409).json({ error: "This email ID has already been registered. Please register with a different email ID." });
+
+    const emailVerificationEnabled = String(process.env.EMAIL_VERIFICATION_ENABLED || "").toLowerCase() === "true";
 
     const passwordHash = await hashPassword(String(password || ""));
     const newUser = {
@@ -1332,7 +1418,8 @@ app.post("/api/register", async (req, res) => {
       emailId: emailId,
       secondaryEmail: secondaryEmail || emailId,
       passwordHash: passwordHash,
-      summary: keywords || "",
+      summary: summary || "",
+      keywordTags: keywords || "",
       workPreference: workPreference || "",
       traveling: traveling || "",
       availability: available || "",
@@ -1344,6 +1431,12 @@ app.post("/api/register", async (req, res) => {
       startDate: new Date().toISOString(),
       endDate: null,
       enabled: 1,
+      isEmailVerified: emailVerificationEnabled ? false : true,
+      isSecondaryEmailVerified: emailVerificationEnabled && secondaryEmail ? false : true,
+      verificationTokens: emailVerificationEnabled ? {
+        primary: { token: generateVerificationToken() },
+        secondary: secondaryEmail ? { token: generateVerificationToken() } : null
+      } : null,
       category: category || "",
       showInDashboard: !!showInDashboard,
       showPhoto: !!showPhoto,
@@ -1397,6 +1490,12 @@ app.post("/api/login", async (req, res) => {
         rt = "user";
       }
 
+      // Check email verification if enabled
+      const emailVerificationEnabled = String(process.env.EMAIL_VERIFICATION_ENABLED || "").toLowerCase() === "true";
+      if (emailVerificationEnabled && !row.is_email_verified) {
+        return res.status(403).json({ error: "Please verify your email before logging in" });
+      }
+
       const mapped = mapDbUserRowToApiUser(row);
       const apiUser = { ...mapped, roleType: rt };
       return res.json({ user: sanitizeUser(apiUser), message: "Login successful" });
@@ -1428,6 +1527,64 @@ app.post("/api/login", async (req, res) => {
     return res.json({ user: apiUser, message: "Login successful" });
   } catch (err) {
     console.error("Login error:", err);
+    return res.status(500).json({ error: "Internal server error" });
+  }
+});
+
+/**
+ * GET /api/verify-email?token=...
+ */
+app.get("/api/verify-email", async (req, res) => {
+  try {
+    const { token } = req.query;
+    if (!token) return res.status(400).json({ error: "Token required" });
+
+    if (USE_DB) {
+      // For DB mode, check if verification fields exist or use JSON field
+      // For now, assume verificationTokens is stored as JSON in a text field
+      const [rows] = await db.pool.execute(
+        `SELECT id, verification_tokens FROM users WHERE JSON_EXTRACT(verification_tokens, '$.primary.token') = ? OR JSON_EXTRACT(verification_tokens, '$.secondary.token') = ?`,
+        [token, token]
+      );
+
+      if (!rows.length) return res.status(404).json({ error: "Invalid or expired token" });
+
+      const user = rows[0];
+      const tokens = JSON.parse(user.verification_tokens || '{}');
+
+      let updateField = '';
+      if (tokens.primary?.token === token) {
+        updateField = 'is_email_verified';
+      } else if (tokens.secondary?.token === token) {
+        updateField = 'is_secondary_email_verified';
+      }
+
+      if (updateField) {
+        await db.pool.execute(`UPDATE users SET ${updateField} = 1 WHERE id = ?`, [user.id]);
+      }
+
+      return res.json({ message: "Email verified successfully" });
+    }
+
+    // FS mode
+    const store = await readUsersFS();
+    const user = store.users.find(u =>
+      u.verificationTokens?.primary?.token === token ||
+      u.verificationTokens?.secondary?.token === token
+    );
+
+    if (!user) return res.status(404).json({ error: "Invalid or expired token" });
+
+    if (user.verificationTokens.primary.token === token) {
+      user.isEmailVerified = true;
+    } else if (user.verificationTokens.secondary?.token === token) {
+      user.isSecondaryEmailVerified = true;
+    }
+
+    await writeUsersFS(store);
+    return res.json({ message: "Email verified successfully" });
+  } catch (err) {
+    console.error("Verify email error:", err);
     return res.status(500).json({ error: "Internal server error" });
   }
 });
@@ -2243,13 +2400,21 @@ app.get("/api/users/public", async (req, res) => {
       return res.json({ users, region: userRegion.name });
     }
 
-    // FS flow - For now, return all users (region filtering not implemented for FS mode)
-    // TODO: Implement region filtering for filesystem mode
+    // FS flow - Apply same filters as DB mode
     const store = await readUsersFS();
     const addrStore = await readAddressesFS();
     const photos = await readPhotosFS();
+    const currentDate = new Date();
     const users = store.users
-      .filter((u) => !!u.showInDashboard)
+      .filter((u) => !!u.showInDashboard) // Must have showInDashboard enabled
+      .filter((u) => u.roleType === "user") // Only sellers (role_type = "user")
+      .filter((u) => u.enabled === true || u.enabled === 1) // Must be enabled
+      .filter((u) => {
+        // Date range check: current date between start_date and end_date (or end_date null)
+        const startDate = u.startDate ? new Date(u.startDate) : null;
+        const endDate = u.endDate ? new Date(u.endDate) : null;
+        return (!startDate || currentDate >= startDate) && (!endDate || currentDate <= endDate);
+      })
       .filter((u) => (category ? String(u.category || "").toLowerCase() === category.toLowerCase() : true))
       .map((u) => {
         const addrRec = addrStore.addresses.find((a) => a.userId === u.id);
