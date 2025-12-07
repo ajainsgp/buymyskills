@@ -383,7 +383,7 @@ async function initSchema() {
         { name: "is_email_verified", sql: "ALTER TABLE users ADD COLUMN is_email_verified TINYINT(1) NOT NULL DEFAULT 1" },
         { name: "is_secondary_email_verified", sql: "ALTER TABLE users ADD COLUMN is_secondary_email_verified TINYINT(1) NOT NULL DEFAULT 1" },
         { name: "verification_tokens", sql: "ALTER TABLE users ADD COLUMN verification_tokens JSON NULL" },
-      { name: "keyword_tags", sql: "ALTER TABLE users ADD COLUMN keyword_tags TEXT NULL" },
+        { name: "keyword_tags", sql: "ALTER TABLE users ADD COLUMN keyword_tags TEXT NULL" },
       ];
 
       for (const col of columnsToAdd) {
