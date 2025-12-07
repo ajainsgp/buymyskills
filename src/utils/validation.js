@@ -1,20 +1,19 @@
-// Validation utility functions
+import { PhoneNumberUtil } from "google-libphonenumber";
+import countryCodes from "../data/countryCodes.json";
 
-// Mobile number digit requirements by country code
-const MOBILE_LENGTHS = {
-  "+1": { min: 10, max: 10 }, // US/Canada
-  "+44": { min: 10, max: 11 }, // UK
-  "+91": { min: 10, max: 10 }, // India
-  "+65": { min: 8, max: 8 }, // Singapore
-  "+353": { min: 9, max: 10 }, // Ireland
-  // Default for other countries
-  default: { min: 7, max: 15 },
-};
+// Initialize the phone number utility
+const phoneUtil = PhoneNumberUtil.getInstance();
+
+// Create a mapping from calling code to ISO code
+const callingCodeToIso = {};
+countryCodes.forEach((country) => {
+  callingCodeToIso[country.code] = country.iso;
+});
 
 /**
- * Validates mobile number format based on country code
+ * Validates mobile number format using Google libphonenumber
  * @param {string} mobile - Mobile number to validate
- * @param {string} countryCode - Country code (e.g., '+65' for Singapore)
+ * @param {string} countryCode - Country code (e.g., "+65" for Singapore)
  * @returns {Object} { isValid: boolean, message: string }
  */
 export const validateMobile = (mobile, countryCode = "+1") => {
@@ -22,32 +21,48 @@ export const validateMobile = (mobile, countryCode = "+1") => {
     return { isValid: true, message: "" }; // Optional field, empty is ok
   }
 
-  const cleanMobile = mobile.replace(/\s+/g, "").replace(/[-()]/g, "");
+  try {
+    // Remove country code prefix if present in the mobile number
+    let cleanMobile = mobile.replace(/\s+/g, "").replace(/[-()]/g, "");
 
-  // Get digit requirements for the country
-  const lengthReq = MOBILE_LENGTHS[countryCode] || MOBILE_LENGTHS.default;
+    // If the mobile number already includes the country code, remove it
+    if (cleanMobile.startsWith("+")) {
+      // Extract just the number part after the country code
+      const phoneNumber = phoneUtil.parse(cleanMobile, "");
+      cleanMobile = phoneNumber.getNationalNumber().toString();
+    }
 
-  if (
-    cleanMobile.length < lengthReq.min ||
-    cleanMobile.length > lengthReq.max
-  ) {
+    // Get the ISO country code from the calling code
+    const isoCode = callingCodeToIso[countryCode] || "US"; // Default to US if not found
+
+    // Parse the phone number with the ISO country code
+    const phoneNumber = phoneUtil.parse(cleanMobile, isoCode);
+
+    // Check if the number is valid
+    if (!phoneUtil.isValidNumber(phoneNumber)) {
+      return {
+        isValid: false,
+        message: "Please enter a valid mobile number for the selected country",
+      };
+    }
+
+    // Check if it's a mobile number (not fixed line)
+    const numberType = phoneUtil.getNumberType(phoneNumber);
+    if (numberType !== 1) {
+      // MOBILE = 1
+      return {
+        isValid: false,
+        message: "Please enter a valid mobile phone number",
+      };
+    }
+
+    return { isValid: true, message: "" };
+  } catch (error) {
     return {
       isValid: false,
-      message: `Mobile number must be ${
-        lengthReq.min
-      }${lengthReq.min !== lengthReq.max ? `-${lengthReq.max}` : ""} digits for this country`,
+      message: "Please enter a valid mobile number for the selected country",
     };
   }
-
-  // Check if it's all digits
-  if (!/^\d+$/.test(cleanMobile)) {
-    return {
-      isValid: false,
-      message: "Mobile number can only contain digits",
-    };
-  }
-
-  return { isValid: true, message: "" };
 };
 
 /**
