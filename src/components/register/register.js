@@ -15,6 +15,7 @@ function RegisterUser() {
   const navigate = useNavigate();
   const [submitting, setSubmitting] = useState(false);
   const [error, setError] = useState("");
+  const [success, setSuccess] = useState("");
   const [form, setForm] = useState({
     firstName: "",
     lastName: "",
@@ -309,7 +310,12 @@ function RegisterUser() {
           // ignore upload errors
         }
       }
-      navigate("/home");
+
+      // Show success message before navigating
+      setSuccess("Your profile has been created successfully!");
+      setTimeout(() => {
+        navigate("/home");
+      }, 3000); // Navigate after 3 seconds
     } catch (err) {
       setError(err.message || "Something went wrong");
     } finally {
@@ -1210,6 +1216,22 @@ function RegisterUser() {
                         style={{ marginBottom: 0 }}
                       >
                         {error}
+                      </div>
+                    </div>
+                  ) : null}
+
+                  {success ? (
+                    <div className="panel panel-body no-left-right-padding">
+                      <div
+                        className="alert alert-success"
+                        role="alert"
+                        style={{ marginBottom: 0 }}
+                      >
+                        <i
+                          className="fa fa-check-circle"
+                          aria-hidden="true"
+                        ></i>{" "}
+                        {success}
                       </div>
                     </div>
                   ) : null}

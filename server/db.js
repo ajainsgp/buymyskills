@@ -473,6 +473,7 @@ async function getUserById(id) {
 /**
  * List users plus their current address (LEFT JOIN).
  * Returns flat rows; caller can map to the API shape.
+ * Filters for enabled users and active date ranges.
  */
 async function listUsers() {
   const [rows] = await pool.execute(
@@ -481,6 +482,7 @@ async function listUsers() {
        ac.address_line1, ac.address_line2, ac.city, ac.state, ac.postcode, ac.country
      FROM users u
      LEFT JOIN address_current ac ON ac.user_id = u.id
+     WHERE u.enabled = 1 AND CURDATE() BETWEEN DATE(u.start_date) AND COALESCE(DATE(u.end_date), CURDATE())
      ORDER BY u.created_at DESC`,
   );
   return rows;
@@ -496,10 +498,10 @@ async function createUser(u) {
       summary, keyword_tags, work_preference, traveling, availability,
       facebook_url, linkedin_url,
       starting_price, negotiable, currency_code,
-      created_at,
+      created_at, start_date,
       role_type, category, show_in_dashboard, show_photo, enabled,
       is_email_verified, is_secondary_email_verified, verification_tokens
-    ) VALUES (?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?)`,
+    ) VALUES (?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?)`,
     [
       u.id,
       u.name || null,
@@ -527,6 +529,7 @@ async function createUser(u) {
       u.negotiable ? 1 : 0,
       u.currencyCode || null,
       u.createdAt,
+      u.startDate,
       u.roleType || "user",
       u.category || null,
       u.showInDashboard ? 1 : 0,
