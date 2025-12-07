@@ -183,6 +183,19 @@ function RegisterUser() {
         ...prev,
         password: validation.message,
       }));
+    } else if (name === "whatsappNumber") {
+      if (newValue && newValue.trim() !== "") {
+        const validation = validateMobile(newValue, form.countryCode);
+        setFieldErrors((prev) => ({
+          ...prev,
+          whatsappNumber: validation.message,
+        }));
+      } else {
+        setFieldErrors((prev) => ({
+          ...prev,
+          whatsappNumber: "",
+        }));
+      }
     }
   };
 
@@ -244,6 +257,18 @@ function RegisterUser() {
       const mobileValidation = validateMobile(form.mobileNo, form.countryCode);
       if (!mobileValidation.isValid) {
         setError(mobileValidation.message);
+        return;
+      }
+    }
+
+    // Validate WhatsApp number if provided
+    if (form.whatsappNumber && form.whatsappNumber.trim() !== "") {
+      const whatsappValidation = validateMobile(
+        form.whatsappNumber,
+        form.countryCode,
+      );
+      if (!whatsappValidation.isValid) {
+        setError(`WhatsApp number: ${whatsappValidation.message}`);
         return;
       }
     }
@@ -685,6 +710,11 @@ function RegisterUser() {
                                 value={form.whatsappNumber}
                                 onChange={onChange}
                               />
+                              {fieldErrors.whatsappNumber && (
+                                <small className="form-text text-danger">
+                                  {fieldErrors.whatsappNumber}
+                                </small>
+                              )}
                               <small className="form-text text-muted">
                                 Enter your WhatsApp number if different from
                                 above

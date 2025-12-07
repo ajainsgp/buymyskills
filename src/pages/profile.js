@@ -275,13 +275,26 @@ function Profile() {
           ...prev,
           mobile: validation.message,
         }));
-      } else if (name === "summary") {
-        const validation = validateSummary(newValue);
+    } else if (name === "summary") {
+      const validation = validateSummary(newValue);
+      setFieldErrors((prev) => ({
+        ...prev,
+        summary: validation.message,
+      }));
+    } else if (name === "whatsappNumber") {
+      if (newValue && newValue.trim() !== "") {
+        const validation = validateMobile(newValue, form.countryCode);
         setFieldErrors((prev) => ({
           ...prev,
-          summary: validation.message,
+          whatsappNumber: validation.message,
+        }));
+      } else {
+        setFieldErrors((prev) => ({
+          ...prev,
+          whatsappNumber: "",
         }));
       }
+    }
     }
   };
 
@@ -378,6 +391,18 @@ function Profile() {
       const mobileValidation = validateMobile(form.mobile, form.countryCode);
       if (!mobileValidation.isValid) {
         setError(mobileValidation.message);
+        return;
+      }
+    }
+
+    // Validate WhatsApp number if provided
+    if (form.whatsappNumber && form.whatsappNumber.trim() !== "") {
+      const whatsappValidation = validateMobile(
+        form.whatsappNumber,
+        form.countryCode,
+      );
+      if (!whatsappValidation.isValid) {
+        setError(`WhatsApp number: ${whatsappValidation.message}`);
         return;
       }
     }
@@ -810,6 +835,11 @@ function Profile() {
                             value={form.whatsappNumber}
                             onChange={onChange}
                           />
+                          {fieldErrors.whatsappNumber && (
+                            <small className="form-text text-danger">
+                              {fieldErrors.whatsappNumber}
+                            </small>
+                          )}
                           <small className="form-text text-muted">
                             Enter your WhatsApp number if different from
                             above
