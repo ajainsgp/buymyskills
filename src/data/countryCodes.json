@@ -1,125 +1,842 @@
 [
-  { "name": "United States", "code": "+1", "iso": "US", "enabled": "Y" },
-  { "name": "United Kingdom", "code": "+44", "iso": "GB", "enabled": "Y" },
-  { "name": "India", "code": "+91", "iso": "IN", "enabled": "Y" },
-  { "name": "Canada", "code": "+1", "iso": "CA", "enabled": "N" },
-  { "name": "Australia", "code": "+61", "iso": "AU", "enabled": "N" },
-  { "name": "Germany", "code": "+49", "iso": "DE", "enabled": "N" },
-  { "name": "France", "code": "+33", "iso": "FR", "enabled": "N" },
-  { "name": "Italy", "code": "+39", "iso": "IT", "enabled": "N" },
-  { "name": "Spain", "code": "+34", "iso": "ES", "enabled": "N" },
-  { "name": "Netherlands", "code": "+31", "iso": "NL", "enabled": "N" },
-  { "name": "Belgium", "code": "+32", "iso": "BE", "enabled": "N" },
-  { "name": "Switzerland", "code": "+41", "iso": "CH", "enabled": "N" },
-  { "name": "Austria", "code": "+43", "iso": "AT", "enabled": "N" },
-  { "name": "Sweden", "code": "+46", "iso": "SE", "enabled": "N" },
-  { "name": "Norway", "code": "+47", "iso": "NO", "enabled": "N" },
-  { "name": "Denmark", "code": "+45", "iso": "DK", "enabled": "N" },
-  { "name": "Finland", "code": "+358", "iso": "FI", "enabled": "N" },
-  { "name": "Ireland", "code": "+353", "iso": "IE", "enabled": "Y" },
-  { "name": "Portugal", "code": "+351", "iso": "PT", "enabled": "N" },
-  { "name": "Greece", "code": "+30", "iso": "GR", "enabled": "N" },
-  { "name": "Poland", "code": "+48", "iso": "PL", "enabled": "N" },
-  { "name": "Czech Republic", "code": "+420", "iso": "CZ", "enabled": "N" },
-  { "name": "Hungary", "code": "+36", "iso": "HU", "enabled": "N" },
-  { "name": "Slovakia", "code": "+421", "iso": "SK", "enabled": "N" },
-  { "name": "Slovenia", "code": "+386", "iso": "SI", "enabled": "N" },
-  { "name": "Croatia", "code": "+385", "iso": "HR", "enabled": "N" },
-  { "name": "Bosnia and Herzegovina", "code": "+387", "iso": "BA", "enabled": "N" },
-  { "name": "Serbia", "code": "+381", "iso": "RS", "enabled": "N" },
-  { "name": "Montenegro", "code": "+382", "iso": "ME", "enabled": "N" },
-  { "name": "Kosovo", "code": "+383", "iso": "XK", "enabled": "N" },
-  { "name": "Albania", "code": "+355", "iso": "AL", "enabled": "N" },
-  { "name": "North Macedonia", "code": "+389", "iso": "MK", "enabled": "N" },
-  { "name": "Bulgaria", "code": "+359", "iso": "BG", "enabled": "N" },
-  { "name": "Romania", "code": "+40", "iso": "RO", "enabled": "N" },
-  { "name": "Turkey", "code": "+90", "iso": "TR", "enabled": "N" },
-  { "name": "Russia", "code": "+7", "iso": "RU", "enabled": "N" },
-  { "name": "Ukraine", "code": "+380", "iso": "UA", "enabled": "N" },
-  { "name": "Belarus", "code": "+375", "iso": "BY", "enabled": "N" },
-  { "name": "Moldova", "code": "+373", "iso": "MD", "enabled": "N" },
-  { "name": "Georgia", "code": "+995", "iso": "GE", "enabled": "N" },
-  { "name": "Armenia", "code": "+374", "iso": "AM", "enabled": "N" },
-  { "name": "Azerbaijan", "code": "+994", "iso": "AZ", "enabled": "N" },
-  { "name": "Kazakhstan", "code": "+7", "iso": "KZ", "enabled": "N" },
-  { "name": "Uzbekistan", "code": "+998", "iso": "UZ", "enabled": "N" },
-  { "name": "Turkmenistan", "code": "+993", "iso": "TM", "enabled": "N" },
-  { "name": "Tajikistan", "code": "+992", "iso": "TJ", "enabled": "N" },
-  { "name": "Kyrgyzstan", "code": "+996", "iso": "KG", "enabled": "N" },
-  { "name": "China", "code": "+86", "iso": "CN", "enabled": "N" },
-  { "name": "Japan", "code": "+81", "iso": "JP", "enabled": "N" },
-  { "name": "South Korea", "code": "+82", "iso": "KR", "enabled": "N" },
-  { "name": "Vietnam", "code": "+84", "iso": "VN", "enabled": "N" },
-  { "name": "Thailand", "code": "+66", "iso": "TH", "enabled": "N" },
-  { "name": "Malaysia", "code": "+60", "iso": "MY", "enabled": "N" },
-  { "name": "Singapore", "code": "+65", "iso": "SG", "enabled": "Y" },
-  { "name": "Indonesia", "code": "+62", "iso": "ID", "enabled": "N" },
-  { "name": "Philippines", "code": "+63", "iso": "PH", "enabled": "N" },
-  { "name": "Pakistan", "code": "+92", "iso": "PK", "enabled": "N" },
-  { "name": "Bangladesh", "code": "+880", "iso": "BD", "enabled": "N" },
-  { "name": "Sri Lanka", "code": "+94", "iso": "LK", "enabled": "N" },
-  { "name": "Nepal", "code": "+977", "iso": "NP", "enabled": "N" },
-  { "name": "Bhutan", "code": "+975", "iso": "BT", "enabled": "N" },
-  { "name": "Maldives", "code": "+960", "iso": "MV", "enabled": "N" },
-  { "name": "Afghanistan", "code": "+93", "iso": "AF", "enabled": "N" },
-  { "name": "Iran", "code": "+98", "iso": "IR", "enabled": "N" },
-  { "name": "Iraq", "code": "+964", "iso": "IQ", "enabled": "N" },
-  { "name": "Saudi Arabia", "code": "+966", "iso": "SA", "enabled": "N" },
-  { "name": "United Arab Emirates", "code": "+971", "iso": "AE", "enabled": "N" },
-  { "name": "Qatar", "code": "+974", "iso": "QA", "enabled": "N" },
-  { "name": "Kuwait", "code": "+965", "iso": "KW", "enabled": "N" },
-  { "name": "Bahrain", "code": "+973", "iso": "BH", "enabled": "N" },
-  { "name": "Oman", "code": "+968", "iso": "OM", "enabled": "N" },
-  { "name": "Yemen", "code": "+967", "iso": "YE", "enabled": "N" },
-  { "name": "Jordan", "code": "+962", "iso": "JO", "enabled": "N" },
-  { "name": "Lebanon", "code": "+961", "iso": "LB", "enabled": "N" },
-  { "name": "Syria", "code": "+963", "iso": "SY", "enabled": "N" },
-  { "name": "Israel", "code": "+972", "iso": "IL", "enabled": "N" },
-  { "name": "Palestine", "code": "+970", "iso": "PS", "enabled": "N" },
-  { "name": "Egypt", "code": "+20", "iso": "EG", "enabled": "N" },
-  { "name": "Libya", "code": "+218", "iso": "LY", "enabled": "N" },
-  { "name": "Tunisia", "code": "+216", "iso": "TN", "enabled": "N" },
-  { "name": "Algeria", "code": "+213", "iso": "DZ", "enabled": "N" },
-  { "name": "Morocco", "code": "+212", "iso": "MA", "enabled": "N" },
-  { "name": "South Africa", "code": "+27", "iso": "ZA", "enabled": "N" },
-  { "name": "+27", "code": "+27", "iso": "ZA", "enabled": "N" },
-  { "name": "Nigeria", "code": "+234", "iso": "NG", "enabled": "N" },
-  { "name": "Kenya", "code": "+254", "iso": "KE", "enabled": "N" },
-  { "name": "Ghana", "code": "+233", "iso": "GH", "enabled": "N" },
-  { "name": "Ethiopia", "code": "+251", "iso": "ET", "enabled": "N" },
-  { "name": "Uganda", "code": "+256", "iso": "UG", "enabled": "N" },
-  { "name": "Tanzania", "code": "+255", "iso": "TZ", "enabled": "N" },
-  { "name": "Rwanda", "code": "+250", "iso": "RW", "enabled": "N" },
-  { "name": "Burundi", "code": "+257", "iso": "BI", "enabled": "N" },
-  { "name": "Zimbabwe", "code": "+263", "iso": "ZW", "enabled": "N" },
-  { "name": "Zambia", "code": "+260", "iso": "ZM", "enabled": "N" },
-  { "name": "Malawi", "code": "+265", "iso": "MW", "enabled": "N" },
-  { "name": "Mozambique", "code": "+258", "iso": "MZ", "enabled": "N" },
-  { "name": "Botswana", "code": "+267", "iso": "BW", "enabled": "N" },
-  { "name": "Namibia", "code": "+264", "iso": "NA", "enabled": "N" },
-  { "name": "Angola", "code": "+244", "iso": "AO", "enabled": "N" },
-  { "name": "Brazil", "code": "+55", "iso": "BR", "enabled": "N" },
-  { "name": "Mexico", "code": "+52", "iso": "MX", "enabled": "N" },
-  { "name": "Argentina", "code": "+54", "iso": "AR", "enabled": "N" },
-  { "name": "Colombia", "code": "+57", "iso": "CO", "enabled": "N" },
-  { "name": "Chile", "code": "+56", "iso": "CL", "enabled": "N" },
-  { "name": "Peru", "code": "+51", "iso": "PE", "enabled": "N" },
-  { "name": "Venezuela", "code": "+58", "iso": "VE", "enabled": "N" },
-  { "name": "Ecuador", "code": "+593", "iso": "EC", "enabled": "N" },
-  { "name": "Bolivia", "code": "+591", "iso": "BO", "enabled": "N" },
-  { "name": "Paraguay", "code": "+595", "iso": "PY", "enabled": "N" },
-  { "name": "Uruguay", "code": "+598", "iso": "UY", "enabled": "N" },
-  { "name": "New Zealand", "code": "+64", "iso": "NZ", "enabled": "N" },
-  { "name": "Fiji", "code": "+679", "iso": "FJ", "enabled": "N" },
-  { "name": "Papua New Guinea", "code": "+675", "iso": "PG", "enabled": "N" },
-  { "name": "Solomon Islands", "code": "+677", "iso": "SB", "enabled": "N" },
-  { "name": "Vanuatu", "code": "+678", "iso": "VU", "enabled": "N" },
-  { "name": "Samoa", "code": "+685", "iso": "WS", "enabled": "N" },
-  { "name": "Tonga", "code": "+676", "iso": "TO", "enabled": "N" },
-  { "name": "Kiribati", "code": "+686", "iso": "KI", "enabled": "N" },
-  { "name": "Tuvalu", "code": "+688", "iso": "TV", "enabled": "N" },
-  { "name": "Nauru", "code": "+674", "iso": "NR", "enabled": "N" },
-  { "name": "Marshall Islands", "code": "+692", "iso": "MH", "enabled": "N" },
-  { "name": "Micronesia", "code": "+691", "iso": "FM", "enabled": "N" },
-  { "name": "Palau", "code": "+680", "iso": "PW", "enabled": "N" }
+  {
+    "name": "United States",
+    "code": "US",
+    "isdCode": "+1",
+    "currencyCode": "USD",
+    "enabled": "Y"
+  },
+  {
+    "name": "United Kingdom",
+    "code": "GB",
+    "isdCode": "+44",
+    "currencyCode": "GBP",
+    "enabled": "Y"
+  },
+  {
+    "name": "India",
+    "code": "IN",
+    "isdCode": "+91",
+    "currencyCode": "INR",
+    "enabled": "Y"
+  },
+  {
+    "name": "Singapore",
+    "code": "SG",
+    "isdCode": "+65",
+    "currencyCode": "SGD",
+    "enabled": "Y"
+  },
+  {
+    "name": "Ireland",
+    "code": "IE",
+    "isdCode": "+353",
+    "currencyCode": "EUR",
+    "enabled": "Y"
+  },
+  {
+    "name": "Australia",
+    "code": "AU",
+    "isdCode": "+61",
+    "currencyCode": "AUD",
+    "enabled": "Y"
+  },
+  {
+    "name": "Germany",
+    "code": "DE",
+    "isdCode": "+49",
+    "currencyCode": "EUR",
+    "enabled": "Y"
+  },
+  {
+    "name": "France",
+    "code": "FR",
+    "isdCode": "+33",
+    "currencyCode": "EUR",
+    "enabled": "Y"
+  },
+  {
+    "name": "Italy",
+    "code": "IT",
+    "isdCode": "+39",
+    "currencyCode": "EUR",
+    "enabled": "Y"
+  },
+  {
+    "name": "Spain",
+    "code": "ES",
+    "isdCode": "+34",
+    "currencyCode": "EUR",
+    "enabled": "Y"
+  },
+  {
+    "name": "Netherlands",
+    "code": "NL",
+    "isdCode": "+31",
+    "currencyCode": "EUR",
+    "enabled": "Y"
+  },
+  {
+    "name": "Belgium",
+    "code": "BE",
+    "isdCode": "+32",
+    "currencyCode": "EUR",
+    "enabled": "Y"
+  },
+  {
+    "name": "Switzerland",
+    "code": "CH",
+    "isdCode": "+41",
+    "currencyCode": "CHF",
+    "enabled": "Y"
+  },
+  {
+    "name": "Austria",
+    "code": "AT",
+    "isdCode": "+43",
+    "currencyCode": "EUR",
+    "enabled": "Y"
+  },
+  {
+    "name": "Sweden",
+    "code": "SE",
+    "isdCode": "+46",
+    "currencyCode": "SEK",
+    "enabled": "Y"
+  },
+  {
+    "name": "Norway",
+    "code": "NO",
+    "isdCode": "+47",
+    "currencyCode": "NOK",
+    "enabled": "Y"
+  },
+  {
+    "name": "Denmark",
+    "code": "DK",
+    "isdCode": "+45",
+    "currencyCode": "DKK",
+    "enabled": "Y"
+  },
+  {
+    "name": "Finland",
+    "code": "FI",
+    "isdCode": "+358",
+    "currencyCode": "EUR",
+    "enabled": "Y"
+  },
+  {
+    "name": "Portugal",
+    "code": "PT",
+    "isdCode": "+351",
+    "currencyCode": "EUR",
+    "enabled": "Y"
+  },
+  {
+    "name": "Greece",
+    "code": "GR",
+    "isdCode": "+30",
+    "currencyCode": "EUR",
+    "enabled": "Y"
+  },
+  {
+    "name": "Poland",
+    "code": "PL",
+    "isdCode": "+48",
+    "currencyCode": "PLN",
+    "enabled": "Y"
+  },
+  {
+    "name": "Czech Republic",
+    "code": "CZ",
+    "isdCode": "+420",
+    "currencyCode": "CZK",
+    "enabled": "Y"
+  },
+  {
+    "name": "Hungary",
+    "code": "HU",
+    "isdCode": "+36",
+    "currencyCode": "HUF",
+    "enabled": "Y"
+  },
+  {
+    "name": "Slovakia",
+    "code": "SK",
+    "isdCode": "+421",
+    "currencyCode": "EUR",
+    "enabled": "Y"
+  },
+  {
+    "name": "Slovenia",
+    "code": "SI",
+    "isdCode": "+386",
+    "currencyCode": "EUR",
+    "enabled": "Y"
+  },
+  {
+    "name": "Croatia",
+    "code": "HR",
+    "isdCode": "+385",
+    "currencyCode": "EUR",
+    "enabled": "Y"
+  },
+  {
+    "name": "Bosnia and Herzegovina",
+    "code": "BA",
+    "isdCode": "+387",
+    "currencyCode": "BAM",
+    "enabled": "Y"
+  },
+  {
+    "name": "Serbia",
+    "code": "RS",
+    "isdCode": "+381",
+    "currencyCode": "RSD",
+    "enabled": "Y"
+  },
+  {
+    "name": "Montenegro",
+    "code": "ME",
+    "isdCode": "+382",
+    "currencyCode": "EUR",
+    "enabled": "Y"
+  },
+  {
+    "name": "Kosovo",
+    "code": "XK",
+    "isdCode": "+383",
+    "currencyCode": "EUR",
+    "enabled": "Y"
+  },
+  {
+    "name": "Albania",
+    "code": "AL",
+    "isdCode": "+355",
+    "currencyCode": "ALL",
+    "enabled": "Y"
+  },
+  {
+    "name": "North Macedonia",
+    "code": "MK",
+    "isdCode": "+389",
+    "currencyCode": "MKD",
+    "enabled": "Y"
+  },
+  {
+    "name": "Bulgaria",
+    "code": "BG",
+    "isdCode": "+359",
+    "currencyCode": "BGN",
+    "enabled": "Y"
+  },
+  {
+    "name": "Romania",
+    "code": "RO",
+    "isdCode": "+40",
+    "currencyCode": "RON",
+    "enabled": "Y"
+  },
+  {
+    "name": "Turkey",
+    "code": "TR",
+    "isdCode": "+90",
+    "currencyCode": "TRY",
+    "enabled": "Y"
+  },
+  {
+    "name": "Russia",
+    "code": "RU",
+    "isdCode": "+7",
+    "currencyCode": "RUB",
+    "enabled": "Y"
+  },
+  {
+    "name": "Ukraine",
+    "code": "UA",
+    "isdCode": "+380",
+    "currencyCode": "UAH",
+    "enabled": "Y"
+  },
+  {
+    "name": "Belarus",
+    "code": "BY",
+    "isdCode": "+375",
+    "currencyCode": "BYN",
+    "enabled": "Y"
+  },
+  {
+    "name": "Moldova",
+    "code": "MD",
+    "isdCode": "+373",
+    "currencyCode": "MDL",
+    "enabled": "Y"
+  },
+  {
+    "name": "Georgia",
+    "code": "GE",
+    "isdCode": "+995",
+    "currencyCode": "GEL",
+    "enabled": "Y"
+  },
+  {
+    "name": "Armenia",
+    "code": "AM",
+    "isdCode": "+374",
+    "currencyCode": "AMD",
+    "enabled": "Y"
+  },
+  {
+    "name": "Azerbaijan",
+    "code": "AZ",
+    "isdCode": "+994",
+    "currencyCode": "AZN",
+    "enabled": "Y"
+  },
+  {
+    "name": "Uzbekistan",
+    "code": "UZ",
+    "isdCode": "+998",
+    "currencyCode": "UZS",
+    "enabled": "Y"
+  },
+  {
+    "name": "Turkmenistan",
+    "code": "TM",
+    "isdCode": "+993",
+    "currencyCode": "TMT",
+    "enabled": "Y"
+  },
+  {
+    "name": "Tajikistan",
+    "code": "TJ",
+    "isdCode": "+992",
+    "currencyCode": "TJS",
+    "enabled": "Y"
+  },
+  {
+    "name": "Kyrgyzstan",
+    "code": "KG",
+    "isdCode": "+996",
+    "currencyCode": "KGS",
+    "enabled": "Y"
+  },
+  {
+    "name": "China",
+    "code": "CN",
+    "isdCode": "+86",
+    "currencyCode": "CNY",
+    "enabled": "Y"
+  },
+  {
+    "name": "Japan",
+    "code": "JP",
+    "isdCode": "+81",
+    "currencyCode": "JPY",
+    "enabled": "Y"
+  },
+  {
+    "name": "South Korea",
+    "code": "KR",
+    "isdCode": "+82",
+    "currencyCode": "KRW",
+    "enabled": "Y"
+  },
+  {
+    "name": "Vietnam",
+    "code": "VN",
+    "isdCode": "+84",
+    "currencyCode": "VND",
+    "enabled": "Y"
+  },
+  {
+    "name": "Thailand",
+    "code": "TH",
+    "isdCode": "+66",
+    "currencyCode": "THB",
+    "enabled": "Y"
+  },
+  {
+    "name": "Malaysia",
+    "code": "MY",
+    "isdCode": "+60",
+    "currencyCode": "MYR",
+    "enabled": "Y"
+  },
+  {
+    "name": "Indonesia",
+    "code": "ID",
+    "isdCode": "+62",
+    "currencyCode": "IDR",
+    "enabled": "Y"
+  },
+  {
+    "name": "Philippines",
+    "code": "PH",
+    "isdCode": "+63",
+    "currencyCode": "PHP",
+    "enabled": "Y"
+  },
+  {
+    "name": "Pakistan",
+    "code": "PK",
+    "isdCode": "+92",
+    "currencyCode": "PKR",
+    "enabled": "Y"
+  },
+  {
+    "name": "Bangladesh",
+    "code": "BD",
+    "isdCode": "+880",
+    "currencyCode": "BDT",
+    "enabled": "Y"
+  },
+  {
+    "name": "Sri Lanka",
+    "code": "LK",
+    "isdCode": "+94",
+    "currencyCode": "LKR",
+    "enabled": "Y"
+  },
+  {
+    "name": "Nepal",
+    "code": "NP",
+    "isdCode": "+977",
+    "currencyCode": "NPR",
+    "enabled": "Y"
+  },
+  {
+    "name": "Bhutan",
+    "code": "BT",
+    "isdCode": "+975",
+    "currencyCode": "BTN",
+    "enabled": "Y"
+  },
+  {
+    "name": "Maldives",
+    "code": "MV",
+    "isdCode": "+960",
+    "currencyCode": "MVR",
+    "enabled": "Y"
+  },
+  {
+    "name": "Afghanistan",
+    "code": "AF",
+    "isdCode": "+93",
+    "currencyCode": "AFN",
+    "enabled": "N"
+  },
+  {
+    "name": "Iran",
+    "code": "IR",
+    "isdCode": "+98",
+    "currencyCode": "IRR",
+    "enabled": "N"
+  },
+  {
+    "name": "Iraq",
+    "code": "IQ",
+    "isdCode": "+964",
+    "currencyCode": "IQD",
+    "enabled": "N"
+  },
+  {
+    "name": "Saudi Arabia",
+    "code": "SA",
+    "isdCode": "+966",
+    "currencyCode": "SAR",
+    "enabled": "N"
+  },
+  {
+    "name": "United Arab Emirates",
+    "code": "AE",
+    "isdCode": "+971",
+    "currencyCode": "AED",
+    "enabled": "N"
+  },
+  {
+    "name": "Qatar",
+    "code": "QA",
+    "isdCode": "+974",
+    "currencyCode": "QAR",
+    "enabled": "N"
+  },
+  {
+    "name": "Kuwait",
+    "code": "KW",
+    "isdCode": "+965",
+    "currencyCode": "KWD",
+    "enabled": "N"
+  },
+  {
+    "name": "Bahrain",
+    "code": "BH",
+    "isdCode": "+973",
+    "currencyCode": "BHD",
+    "enabled": "N"
+  },
+  {
+    "name": "Oman",
+    "code": "OM",
+    "isdCode": "+968",
+    "currencyCode": "OMR",
+    "enabled": "N"
+  },
+  {
+    "name": "Yemen",
+    "code": "YE",
+    "isdCode": "+967",
+    "currencyCode": "YER",
+    "enabled": "N"
+  },
+  {
+    "name": "Jordan",
+    "code": "JO",
+    "isdCode": "+962",
+    "currencyCode": "JOD",
+    "enabled": "N"
+  },
+  {
+    "name": "Lebanon",
+    "code": "LB",
+    "isdCode": "+961",
+    "currencyCode": "LBP",
+    "enabled": "N"
+  },
+  {
+    "name": "Syria",
+    "code": "SY",
+    "isdCode": "+963",
+    "currencyCode": "SYP",
+    "enabled": "N"
+  },
+  {
+    "name": "Israel",
+    "code": "IL",
+    "isdCode": "+972",
+    "currencyCode": "ILS",
+    "enabled": "N"
+  },
+  {
+    "name": "Palestine",
+    "code": "PS",
+    "isdCode": "+970",
+    "currencyCode": "ILS",
+    "enabled": "N"
+  },
+  {
+    "name": "Egypt",
+    "code": "EG",
+    "isdCode": "+20",
+    "currencyCode": "EGP",
+    "enabled": "N"
+  },
+  {
+    "name": "Libya",
+    "code": "LY",
+    "isdCode": "+218",
+    "currencyCode": "LYD",
+    "enabled": "N"
+  },
+  {
+    "name": "Tunisia",
+    "code": "TN",
+    "isdCode": "+216",
+    "currencyCode": "TND",
+    "enabled": "N"
+  },
+  {
+    "name": "Algeria",
+    "code": "DZ",
+    "isdCode": "+213",
+    "currencyCode": "DZD",
+    "enabled": "N"
+  },
+  {
+    "name": "Morocco",
+    "code": "MA",
+    "isdCode": "+212",
+    "currencyCode": "MAD",
+    "enabled": "N"
+  },
+  {
+    "name": "South Africa",
+    "code": "ZA",
+    "isdCode": "+27",
+    "currencyCode": "ZAR",
+    "enabled": "N"
+  },
+  {
+    "name": "Nigeria",
+    "code": "NG",
+    "isdCode": "+234",
+    "currencyCode": "NGN",
+    "enabled": "N"
+  },
+  {
+    "name": "Kenya",
+    "code": "KE",
+    "isdCode": "+254",
+    "currencyCode": "KES",
+    "enabled": "N"
+  },
+  {
+    "name": "Ghana",
+    "code": "GH",
+    "isdCode": "+233",
+    "currencyCode": "GHS",
+    "enabled": "N"
+  },
+  {
+    "name": "Ethiopia",
+    "code": "ET",
+    "isdCode": "+251",
+    "currencyCode": "ETB",
+    "enabled": "N"
+  },
+  {
+    "name": "Uganda",
+    "code": "UG",
+    "isdCode": "+256",
+    "currencyCode": "UGX",
+    "enabled": "N"
+  },
+  {
+    "name": "Tanzania",
+    "code": "TZ",
+    "isdCode": "+255",
+    "currencyCode": "TZS",
+    "enabled": "N"
+  },
+  {
+    "name": "Rwanda",
+    "code": "RW",
+    "isdCode": "+250",
+    "currencyCode": "RWF",
+    "enabled": "N"
+  },
+  {
+    "name": "Burundi",
+    "code": "BI",
+    "isdCode": "+257",
+    "currencyCode": "BIF",
+    "enabled": "N"
+  },
+  {
+    "name": "Zimbabwe",
+    "code": "ZW",
+    "isdCode": "+263",
+    "currencyCode": "ZWL",
+    "enabled": "N"
+  },
+  {
+    "name": "Zambia",
+    "code": "ZM",
+    "isdCode": "+260",
+    "currencyCode": "ZMW",
+    "enabled": "N"
+  },
+  {
+    "name": "Malawi",
+    "code": "MW",
+    "isdCode": "+265",
+    "currencyCode": "MWK",
+    "enabled": "N"
+  },
+  {
+    "name": "Mozambique",
+    "code": "MZ",
+    "isdCode": "+258",
+    "currencyCode": "MZN",
+    "enabled": "N"
+  },
+  {
+    "name": "Botswana",
+    "code": "BW",
+    "isdCode": "+267",
+    "currencyCode": "BWP",
+    "enabled": "N"
+  },
+  {
+    "name": "Namibia",
+    "code": "NA",
+    "isdCode": "+264",
+    "currencyCode": "NAD",
+    "enabled": "N"
+  },
+  {
+    "name": "Angola",
+    "code": "AO",
+    "isdCode": "+244",
+    "currencyCode": "AOA",
+    "enabled": "N"
+  },
+  {
+    "name": "Brazil",
+    "code": "BR",
+    "isdCode": "+55",
+    "currencyCode": "BRL",
+    "enabled": "N"
+  },
+  {
+    "name": "Mexico",
+    "code": "MX",
+    "isdCode": "+52",
+    "currencyCode": "MXN",
+    "enabled": "N"
+  },
+  {
+    "name": "Argentina",
+    "code": "AR",
+    "isdCode": "+54",
+    "currencyCode": "ARS",
+    "enabled": "N"
+  },
+  {
+    "name": "Colombia",
+    "code": "CO",
+    "isdCode": "+57",
+    "currencyCode": "COP",
+    "enabled": "N"
+  },
+  {
+    "name": "Chile",
+    "code": "CL",
+    "isdCode": "+56",
+    "currencyCode": "CLP",
+    "enabled": "N"
+  },
+  {
+    "name": "Peru",
+    "code": "PE",
+    "isdCode": "+51",
+    "currencyCode": "PEN",
+    "enabled": "N"
+  },
+  {
+    "name": "Venezuela",
+    "code": "VE",
+    "isdCode": "+58",
+    "currencyCode": "VES",
+    "enabled": "N"
+  },
+  {
+    "name": "Ecuador",
+    "code": "EC",
+    "isdCode": "+593",
+    "currencyCode": "USD",
+    "enabled": "N"
+  },
+  {
+    "name": "Bolivia",
+    "code": "BO",
+    "isdCode": "+591",
+    "currencyCode": "BOB",
+    "enabled": "N"
+  },
+  {
+    "name": "Paraguay",
+    "code": "PY",
+    "isdCode": "+595",
+    "currencyCode": "PYG",
+    "enabled": "N"
+  },
+  {
+    "name": "Uruguay",
+    "code": "UY",
+    "isdCode": "+598",
+    "currencyCode": "UYU",
+    "enabled": "N"
+  },
+  {
+    "name": "New Zealand",
+    "code": "NZ",
+    "isdCode": "+64",
+    "currencyCode": "NZD",
+    "enabled": "N"
+  },
+  {
+    "name": "Fiji",
+    "code": "FJ",
+    "isdCode": "+679",
+    "currencyCode": "FJD",
+    "enabled": "N"
+  },
+  {
+    "name": "Papua New Guinea",
+    "code": "PG",
+    "isdCode": "+675",
+    "currencyCode": "PGK",
+    "enabled": "N"
+  },
+  {
+    "name": "Solomon Islands",
+    "code": "SB",
+    "isdCode": "+677",
+    "currencyCode": "SBD",
+    "enabled": "N"
+  },
+  {
+    "name": "Vanuatu",
+    "code": "VU",
+    "isdCode": "+678",
+    "currencyCode": "VUV",
+    "enabled": "N"
+  },
+  {
+    "name": "Samoa",
+    "code": "WS",
+    "isdCode": "+685",
+    "currencyCode": "WST",
+    "enabled": "N"
+  },
+  {
+    "name": "Tonga",
+    "code": "TO",
+    "isdCode": "+676",
+    "currencyCode": "TOP",
+    "enabled": "N"
+  },
+  {
+    "name": "Kiribati",
+    "code": "KI",
+    "isdCode": "+686",
+    "currencyCode": "AUD",
+    "enabled": "N"
+  },
+  {
+    "name": "Tuvalu",
+    "code": "TV",
+    "isdCode": "+688",
+    "currencyCode": "AUD",
+    "enabled": "N"
+  },
+  {
+    "name": "Nauru",
+    "code": "NR",
+    "isdCode": "+674",
+    "currencyCode": "AUD",
+    "enabled": "N"
+  },
+  {
+    "name": "Marshall Islands",
+    "code": "MH",
+    "isdCode": "+692",
+    "currencyCode": "USD",
+    "enabled": "N"
+  },
+  {
+    "name": "Micronesia",
+    "code": "FM",
+    "isdCode": "+691",
+    "currencyCode": "USD",
+    "enabled": "N"
+  },
+  {
+    "name": "Palau",
+    "code": "PW",
+    "isdCode": "+680",
+    "currencyCode": "USD",
+    "enabled": "N"
+  }
 ]

@@ -3,7 +3,7 @@ import React, { useEffect, useState, useRef } from "react";
 import API_BASE from "../utils/apiBase";
 import UserProfile from "../components/UserProfile";
 import { useLocation, useSearchParams } from "react-router-dom";
-import countriesData from "../data/countries.json";
+import { getCountries } from "../utils/countryUtils";
 
 function BrowsePage() {
   const [users, setUsers] = useState([]);
@@ -34,7 +34,7 @@ function BrowsePage() {
   const [selectedCountry, setSelectedCountry] = useState("all");
   const [categories, setCategories] = useState([]);
   const [countries, setCountries] = useState([]);
-  const [regionCountries, setRegionCountries] = useState([]);
+  const [availableCountries, setAvailableCountries] = useState([]);
   const [locationDetected, setLocationDetected] = useState(false);
 
   useEffect(() => {
@@ -94,52 +94,16 @@ function BrowsePage() {
       })
       .catch(err => console.error("Error fetching categories:", err));
 
-    // Load countries from imported data
-    setCountries(countriesData.filter(c => c.enabled === "Y").map(c => c.name).sort());
+    // Load countries using utility function
+    getCountries(false)
+      .then(countryList => {
+        // Store both name and code for dropdown and filtering
+        setCountries(countryList);
+      })
+      .catch(err => console.error("Error fetching countries:", err));
   }, [searchParams]);
 
-  // Load user region and filter countries when user is logged in
-  useEffect(() => {
-    const loadUserRegion = async () => {
-      if (currentUser && currentUser.id) {
-        try {
-          // Get user's region
-          const regionRes = await fetch(`${API_BASE}/api/users/region`, {
-            headers: {
-              'x-current-user': JSON.stringify(currentUser)
-            }
-          });
-          const regionData = await regionRes.json();
-          if (regionData.region) {
-            // Get countries in user's region using the new public endpoint
-            const regionCountriesRes = await fetch(`${API_BASE}/api/user-region/countries`, {
-              headers: {
-                'x-current-user': JSON.stringify(currentUser)
-              }
-            });
-            const regionCountriesData = await regionCountriesRes.json();
-            if (regionCountriesData.countries) {
-              setRegionCountries(regionCountriesData.countries);
 
-              // If current selection is not in region countries, reset to first available
-              if (selectedCountry !== "all" && !regionCountriesData.countries.includes(selectedCountry)) {
-                const firstRegionCountry = regionCountriesData.countries.length > 0 ? regionCountriesData.countries[0] : "all";
-                setSelectedCountry(firstRegionCountry);
-                setCountryFilter(firstRegionCountry === "all" ? "" : firstRegionCountry);
-              }
-            }
-          }
-        } catch (err) {
-          console.error("Error loading user region:", err);
-        }
-      } else {
-        // User not logged in - reset region data only on logout, not on selection changes
-        setRegionCountries([]);
-      }
-    };
-
-    loadUserRegion();
-  }, [currentUser]); // Removed selectedCountry dependency to prevent reset on user selection
 
   const handleCategoryChange = (e) => {
     const value = e.target.value;
@@ -281,41 +245,88 @@ function BrowsePage() {
     }
   }, [location.pathname]);
 
-  // Set default country based on user profile or IP geolocation
+  // Set available countries based on user region and auto-set default country
   useEffect(() => {
-    if (currentUser && !locationDetected && !countrySetRef.current) {
-      // Logged-in user: fetch their profile to get country
-      fetch(`${API_BASE}/api/users/${currentUser.id}`)
-        .then(res => res.json())
-        .then(data => {
-          if (data.user && data.user.address?.country && selectedCountry === "all") {
-            setSelectedCountry(data.user.address.country);
-            setCountryFilter(data.user.address.country);
-            countrySetRef.current = true;
+    const setupUserRegionAndCountry = async () => {
+      if (currentUser && countries.length > 0) {
+        try {
+          // Get user's region
+          const regionRes = await fetch(`${API_BASE}/api/users/region`, {
+            headers: {
+              'x-current-user': JSON.stringify(currentUser)
+            }
+          });
+          const regionData = await regionRes.json();
+
+          if (regionData.region) {
+            // Get countries in user's region
+            const regionCountriesRes = await fetch(`${API_BASE}/api/user-region/countries`, {
+              headers: {
+                'x-current-user': JSON.stringify(currentUser)
+              }
+            });
+            const regionCountriesData = await regionCountriesRes.json();
+
+            if (regionCountriesData.countries && regionCountriesData.countries.length > 0) {
+              // Filter countries to only those in user's region
+              const regionCountryCodes = regionCountriesData.countries;
+              const availableCountriesList = countries.filter(c =>
+                regionCountryCodes.includes(c.name)
+              );
+              setAvailableCountries(availableCountriesList);
+
+              // Auto-set user's country if not already set
+              if (!countrySetRef.current && selectedCountry === "all") {
+                // Get user's country code
+                const userRes = await fetch(`${API_BASE}/api/users/${currentUser.id}`);
+                const userData = await userRes.json();
+                if (userData.user && userData.user.countryCode) {
+                  const userCountryCode = userData.user.countryCode;
+                  // Check if user's country is in their region
+                  if (availableCountriesList.find(c => c.code === userCountryCode)) {
+                    setSelectedCountry(userCountryCode);
+                    setCountryFilter(userCountryCode);
+                  }
+                  countrySetRef.current = true;
+                }
+              }
+            } else {
+              // Fallback to all countries if region logic fails
+              setAvailableCountries(countries);
+            }
+          } else {
+            // Fallback to all countries if no region found
+            setAvailableCountries(countries);
           }
-          setLocationDetected(true);
-        })
-        .catch(() => {
-          setLocationDetected(true);
-        });
-    } else if (!currentUser && !locationDetected) {
-      // Not logged in: try IP-based geolocation via our API
-      fetch(`${API_BASE}/api/geolocate`)
-        .then(res => res.json())
-        .then(data => {
-          if (data.country && countries.includes(data.country)) {
-            setSelectedCountry(data.country);
-            setCountryFilter(data.country);
-          }
-          // If country not found or not in our list, keep "all"
-          setLocationDetected(true);
-        })
-        .catch(() => {
-          // IP geolocation failed, keep "all"
-          setLocationDetected(true);
-        });
-    }
-  }, [currentUser, locationDetected, countries]);
+        } catch (err) {
+          console.error("Error setting up region and country:", err);
+          // Fallback to all countries
+          setAvailableCountries(countries);
+        }
+        setLocationDetected(true);
+      } else if (!currentUser && countries.length > 0) {
+        // Not logged in: show all countries, try IP-based geolocation
+        setAvailableCountries(countries);
+
+        if (!locationDetected) {
+          fetch(`${API_BASE}/api/geolocate`)
+            .then(res => res.json())
+            .then(data => {
+              if (data.countryCode && countries.find(c => c.code === data.countryCode)) {
+                setSelectedCountry(data.countryCode);
+                setCountryFilter(data.countryCode);
+              }
+              setLocationDetected(true);
+            })
+            .catch(() => {
+              setLocationDetected(true);
+            });
+        }
+      }
+    };
+
+    setupUserRegionAndCountry();
+  }, [currentUser, countries, selectedCountry, locationDetected]);
 
   // Filtered data with fuzzy search
   const filtered = users.filter((u) => {
@@ -335,13 +346,16 @@ function BrowsePage() {
       !categoryFilter ||
       (u.category || "").toLowerCase() === categoryFilter.toLowerCase();
 
+    // Filter by country code instead of country name
     const countryOk =
       !countryFilter ||
-      (u.address?.country || "").toLowerCase() === countryFilter.toLowerCase();
+      !u.countryCode ||
+      (u.countryCode || "").toLowerCase() === countryFilter.toLowerCase();
 
     const cityOk =
       !cityFilter.trim() ||
-      (u.address?.city || "").toLowerCase().includes(cityFilter.toLowerCase().trim());
+      !u.address?.city ||
+      (u.address.city || "").toLowerCase().includes(cityFilter.toLowerCase().trim());
 
     return kwOk && categoryOk && countryOk && cityOk;
   });
@@ -402,9 +416,9 @@ function BrowsePage() {
                     value={selectedCountry}
                     onChange={handleCountryChange}
                   >
-                    {!currentUser && <option value="all">All Countries</option>}
-                    {(currentUser ? regionCountries : countries).map(name => (
-                      <option key={name} value={name}>{name}</option>
+                    <option value="all">All Countries</option>
+                    {availableCountries.map(country => (
+                      <option key={country.code} value={country.code}>{country.name}</option>
                     ))}
                   </select>
                 </div>

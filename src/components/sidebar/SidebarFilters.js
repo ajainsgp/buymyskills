@@ -1,8 +1,8 @@
 import React, { useContext, useMemo, useEffect, useState } from "react";
 import { useLocation, useNavigate } from "react-router-dom";
 import { FilterContext } from "./FilterContext";
-import countries from "../../data/countries.json";
 import API_BASE from "../../utils/apiBase";
+import { getCountries } from "../../utils/countryUtils";
 
 export default function SidebarFilters() {
   const navigate = useNavigate();
@@ -34,6 +34,7 @@ export default function SidebarFilters() {
   const preferenceOptions = useMemo(() => ["Remote", "On Site", "Hybrid"], []);
 
   const [categories, setCategories] = useState([]);
+  const [countries, setCountries] = useState([]);
   useEffect(() => {
     let ignore = false;
     async function loadCategories() {
@@ -47,7 +48,20 @@ export default function SidebarFilters() {
         // ignore
       }
     }
+
+    async function loadCountries() {
+      try {
+        const countries = await getCountries(false);
+        if (!ignore) {
+          setCountries(countries);
+        }
+      } catch {
+        // ignore
+      }
+    }
+
     loadCategories();
+    loadCountries();
     return () => {
       ignore = true;
     };
@@ -139,13 +153,11 @@ export default function SidebarFilters() {
           onChange={(e) => setCountryFilter(e.target.value)}
         >
           <option value="">All</option>
-          {countries
-            .filter((c) => c.enabled === "Y")
-            .map((c) => (
-              <option key={c.code} value={c.name}>
-                {c.name}
-              </option>
-            ))}
+          {countries.map((c) => (
+            <option key={c.code} value={c.name}>
+              {c.name}
+            </option>
+          ))}
         </select>
       </div>
 
