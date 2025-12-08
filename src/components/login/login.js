@@ -11,6 +11,9 @@ function LoginApps() {
   const [error, setError] = useState("");
   const [remember, setRemember] = useState(false);
   const [fieldErrors, setFieldErrors] = useState({});
+  const [showReactivation, setShowReactivation] = useState(false);
+  const [reactivationReason, setReactivationReason] = useState("");
+  const [reactivationSubmitting, setReactivationSubmitting] = useState(false);
 
   const onChange = (e) => {
     const { name, value } = e.target;
@@ -46,6 +49,14 @@ function LoginApps() {
       });
       const data = await res.json().catch(() => ({}));
       if (!res.ok) {
+        // Check if account is disabled
+        if (data?.accountDisabled) {
+          setShowReactivation(true);
+          setError("");
+          setForm((p) => ({ ...p, password: "" }));
+          setSubmitting(false);
+          return;
+        }
         throw new Error(data?.error || `Login failed (${res.status})`);
       }
       try {
@@ -73,6 +84,34 @@ function LoginApps() {
     } finally {
       setSubmitting(false);
       setForm((p) => ({ ...p, password: "" }));
+    }
+  };
+
+  const onReactivationSubmit = async (e) => {
+    e.preventDefault();
+
+    try {
+      setReactivationSubmitting(true);
+      const payload = { emailId: form.emailId, reason: reactivationReason };
+      const res = await fetch(`${API_BASE}/api/reactivation-request`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(payload),
+      });
+      const data = await res.json().catch(() => ({}));
+      if (!res.ok) {
+        throw new Error(data?.error || `Request failed (${res.status})`);
+      }
+      // Success - close modal and show success message
+      setShowReactivation(false);
+      setReactivationReason("");
+      setError("");
+      // Show success message
+      alert(data.message || "Reactivation request submitted successfully!");
+    } catch (err) {
+      setError(err.message || "Something went wrong");
+    } finally {
+      setReactivationSubmitting(false);
     }
   };
 
@@ -182,6 +221,77 @@ function LoginApps() {
           </div>
         </div>
       </div>
+
+      {/* Reactivation Request Modal */}
+      {showReactivation && (
+        <div
+          className="modal fade show"
+          style={{ display: "block" }}
+          tabIndex="-1"
+        >
+          <div className="modal-dialog">
+            <div className="modal-content">
+              <div className="modal-header">
+                <h5 className="modal-title">Account Reactivation</h5>
+                <button
+                  type="button"
+                  className="close"
+                  onClick={() => setShowReactivation(false)}
+                >
+                  <span>&times;</span>
+                </button>
+              </div>
+              <div className="modal-body">
+                <p>
+                  Your account has been deactivated. To reactivate your account,
+                  please submit a reactivation request.
+                </p>
+                <form onSubmit={onReactivationSubmit}>
+                  <div className="form-group">
+                    <label htmlFor="reactivationReason">
+                      Reason for reactivation (optional)
+                    </label>
+                    <textarea
+                      id="reactivationReason"
+                      className="form-control"
+                      rows="3"
+                      value={reactivationReason}
+                      onChange={(e) => setReactivationReason(e.target.value)}
+                      placeholder="Please explain why you want to reactivate your account..."
+                    />
+                  </div>
+                  {error && (
+                    <div className="alert alert-danger" role="alert">
+                      {error}
+                    </div>
+                  )}
+                  <div className="modal-footer">
+                    <button
+                      type="button"
+                      className="btn btn-secondary"
+                      onClick={() => setShowReactivation(false)}
+                    >
+                      Cancel
+                    </button>
+                    <button
+                      type="submit"
+                      className="btn btn-primary"
+                      disabled={reactivationSubmitting}
+                    >
+                      {reactivationSubmitting
+                        ? "Submitting..."
+                        : "Submit Request"}
+                    </button>
+                  </div>
+                </form>
+              </div>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* Modal backdrop */}
+      {showReactivation && <div className="modal-backdrop fade show"></div>}
     </>
   );
 }

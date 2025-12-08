@@ -225,6 +225,21 @@ async function initSchema() {
       INDEX idx_feedback_read (is_read)
     ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;`);
 
+    await conn.query(`CREATE TABLE IF NOT EXISTS reactivation_requests (
+      id INT AUTO_INCREMENT PRIMARY KEY,
+      user_id VARCHAR(64) NOT NULL,
+      email_id VARCHAR(255) NOT NULL,
+      reason TEXT,
+      status VARCHAR(20) NOT NULL DEFAULT 'pending',
+      created_at DATETIME NOT NULL,
+      updated_at DATETIME,
+      INDEX idx_reactivation_user (user_id),
+      INDEX idx_reactivation_email (email_id),
+      INDEX idx_reactivation_status (status),
+      INDEX idx_reactivation_created (created_at),
+      CONSTRAINT fk_reactivation_user FOREIGN KEY (user_id) REFERENCES users(id) ON DELETE CASCADE
+    ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;`);
+
 
 
     await conn.query(`CREATE TABLE IF NOT EXISTS roles (

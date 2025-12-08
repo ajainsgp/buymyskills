@@ -12,7 +12,7 @@ function AdminCountries() {
   const [newCountry, setNewCountry] = useState({
     name: "",
     code: "",
-    phoneCode: "",
+    isdCode: "",
     currencyCode: "",
     enabled: true,
   });
@@ -110,7 +110,7 @@ function AdminCountries() {
         body: JSON.stringify({
           name: newCountry.name.trim(),
           code: newCountry.code.trim().toUpperCase(),
-          phoneCode: newCountry.phoneCode.trim(),
+          phoneCode: newCountry.isdCode.trim(),
           currencyCode: newCountry.currencyCode.trim().toUpperCase(),
           enabled: !!newCountry.enabled,
         }),
@@ -122,7 +122,7 @@ function AdminCountries() {
       setNewCountry({
         name: "",
         code: "",
-        phoneCode: "",
+        isdCode: "",
         currencyCode: "",
         enabled: true,
       });
@@ -239,16 +239,16 @@ function AdminCountries() {
                   />
                 </div>
                 <div className="form-group col-md-2">
-                  <label>Phone Code</label>
+                  <label>ISD Code</label>
                   <input
                     type="text"
                     className="form-control"
                     maxLength={6}
-                    value={newCountry.phoneCode}
+                    value={newCountry.isdCode}
                     onChange={(e) =>
                       setNewCountry((p) => ({
                         ...p,
-                        phoneCode: e.target.value,
+                        isdCode: e.target.value,
                       }))
                     }
                     disabled={disabled || adding}
@@ -322,7 +322,7 @@ function AdminCountries() {
                     <tr>
                       <th style={{ width: 140 }}>Name</th>
                       <th style={{ width: 50 }}>Code</th>
-                      <th style={{ width: 70 }}>Phone Code</th>
+                      <th style={{ width: 70 }}>ISD Code</th>
                       <th style={{ width: 70 }}>Currency Code</th>
                       <th style={{ width: 50 }}>Enabled</th>
                       <th style={{ width: 100 }}>Created</th>
@@ -385,13 +385,13 @@ function AdminCountries() {
                                 type="text"
                                 className="form-control form-control-sm"
                                 maxLength={6}
-                                value={c.phoneCode || ""}
+                                value={c.isdCode || ""}
                                 onChange={(e) => {
-                                  const phoneCode = e.target.value;
+                                  const isdCode = e.target.value;
                                   setCountries((prev) =>
                                     prev.map((row) => {
                                       if (row.id === c.id) {
-                                        return { ...row, phoneCode };
+                                        return { ...row, isdCode };
                                       }
                                       return row;
                                     }),
@@ -460,7 +460,7 @@ function AdminCountries() {
                                     handleUpdate(c.id, {
                                       name: c.name,
                                       code: c.code,
-                                      phoneCode: c.phoneCode,
+                                      phoneCode: c.isdCode,
                                       currencyCode: c.currencyCode,
                                       enabled:
                                         c.enabled === 1 ||

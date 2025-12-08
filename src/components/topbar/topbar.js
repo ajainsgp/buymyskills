@@ -198,8 +198,8 @@ function Topbar() {
         <div className="collapse navbar-collapse bg-white" id="navbarNav" style={{ zIndex: 1060 }}>
           <ul className="navbar-nav">
             <li className="nav-item">
-              <a className="nav-link text-dark" href={isAdmin ? "/admin/categories" : "/browse"}>
-                {isAdmin ? "Categories" : "Browse Skills"}
+              <a className="nav-link text-dark" href="/browse">
+                Browse Skills
               </a>
             </li>
             <li className="nav-item">

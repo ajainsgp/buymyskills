@@ -1076,6 +1076,78 @@ app.delete("/api/admin/landing-page-cards/:id", async (req, res) => {
 });
 
 /**
+ * Admin: Get all feedback messages
+ * - GET /api/admin/feedback
+ */
+app.get("/api/admin/feedback", async (req, res) => {
+  try {
+    // Check if user is admin
+    let currentUser = null;
+    try {
+      const userHeader = req.headers['x-current-user'];
+      if (userHeader) {
+        currentUser = JSON.parse(userHeader);
+      }
+    } catch (e) {
+      // ignore parse errors
+    }
+
+    console.log('Admin feedback check - currentUser:', currentUser);
+    console.log('Admin feedback check - roleType:', currentUser?.roleType);
+
+    const isAdmin = currentUser &&
+      (String(currentUser.roleType || "").toLowerCase() === "administrative" ||
+       String(currentUser.roleType || "").toLowerCase() === "administrator");
+
+    console.log('Admin feedback check - isAdmin:', isAdmin);
+
+    if (!isAdmin) {
+      return res.status(403).json({ error: "Admin access required" });
+    }
+
+    if (USE_DB) {
+      const [rows] = await db.pool.execute(`
+        SELECT
+          f.id,
+          f.sender_id as senderId,
+          f.receiver_id as receiverId,
+          f.content,
+          f.created_at as createdAt,
+          f.is_read as isRead,
+          u.name as senderName,
+          u.email_id as senderEmail
+        FROM bms_feedback f
+        LEFT JOIN users u ON f.sender_id = u.id
+        ORDER BY f.created_at DESC
+      `);
+
+      const feedback = rows.map(row => ({
+        id: row.id,
+        sender: {
+          id: row.senderId,
+          name: row.senderName || (row.senderId === 'admin' ? 'Support Team' : 'Unknown'),
+          email: row.senderEmail || null,
+        },
+        receiver: {
+          id: row.receiverId,
+        },
+        content: row.content,
+        createdAt: row.createdAt,
+        isRead: row.isRead === 1,
+      }));
+
+      return res.json({ feedback });
+    }
+
+    // FS mode - not implemented for feedback system
+    return res.json({ feedback: [] });
+  } catch (err) {
+    console.error("Admin get feedback error:", err);
+    return res.status(500).json({ error: "Internal server error" });
+  }
+});
+
+/**
  * Admin: Get paginated users with search
  * - GET /api/admin/users?page=1&limit=50&search=emailOrName
  */
@@ -1114,7 +1186,7 @@ app.get("/api/admin/users", async (req, res) => {
       const limitNum = parseInt(limit) || 50;
       const offsetNum = parseInt(offset) || 0;
       const [rows] = await db.pool.query(
-        `SELECT id, name, first_name, last_name, nick_name, gender, email_id, role_type, created_at, start_date, end_date
+        `SELECT id, name, first_name, last_name, nick_name, gender, email_id, role_type, created_at, start_date, end_date, enabled
          FROM users
          ORDER BY created_at DESC
          LIMIT ${limitNum} OFFSET ${offsetNum}`
@@ -1130,6 +1202,8 @@ app.get("/api/admin/users", async (req, res) => {
         emailId: row.email_id || "",
         roleType: row.role_type || "",
         createdAt: row.created_at instanceof Date ? row.created_at.toISOString() : row.created_at,
+        startDate: row.start_date instanceof Date ? row.start_date.toISOString() : row.start_date,
+        endDate: row.end_date instanceof Date ? row.end_date.toISOString() : row.end_date,
         enabled: row.enabled === 1 || row.enabled === '1' || row.enabled === true,
       }));
 
@@ -1477,6 +1551,11 @@ app.post("/api/login", async (req, res) => {
         rt = "administrator";
       } else if (!rt) {
         rt = "user";
+      }
+
+      // Check if user is enabled
+      if (!row.enabled) {
+        return res.status(403).json({ error: "Account deactivated. Please contact support to reactivate.", accountDisabled: true });
       }
 
       // Check email verification if enabled
@@ -3130,6 +3209,276 @@ app.get("/api/feedback/unread-count", async (req, res) => {
     }
   } catch (err) {
     console.error("Get unread feedback count error:", err);
+    return res.status(500).json({ error: "Internal server error" });
+  }
+});
+
+/**
+ * POST /api/reactivation-request
+ * Submit a reactivation request for a disabled account
+ */
+app.post("/api/reactivation-request", async (req, res) => {
+  try {
+    const { emailId, reason } = req.body || {};
+    if (!emailId) {
+      return res.status(400).json({ error: "emailId is required" });
+    }
+
+    if (USE_DB) {
+      // Check if user exists and is disabled
+      const user = await db.getUserByEmail(emailId);
+      if (!user) {
+        return res.status(404).json({ error: "User not found" });
+      }
+      if (user.enabled) {
+        return res.status(400).json({ error: "Account is already active" });
+      }
+
+      // Check if reactivation request already exists and is pending
+      const [existing] = await db.pool.execute(
+        `SELECT id FROM reactivation_requests WHERE user_id = ? AND status = 'pending'`,
+        [user.id]
+      );
+      if (existing.length > 0) {
+        return res.status(409).json({ error: "Reactivation request already pending" });
+      }
+
+      // Insert reactivation request
+      const [result] = await db.pool.execute(
+        `INSERT INTO reactivation_requests (user_id, email_id, reason, status, created_at)
+         VALUES (?, ?, ?, 'pending', NOW())`,
+        [user.id, emailId, reason || '']
+      );
+
+      return res.status(201).json({
+        requestId: result.insertId,
+        message: "Reactivation request submitted successfully. You will be notified once reviewed."
+      });
+    }
+
+    // FS mode - store in a simple JSON file
+    const requestsFile = path.resolve(DATA_DIR, "reactivation-requests.json");
+    let requests = [];
+    try {
+      const raw = await fs.readFile(requestsFile, "utf8");
+      requests = JSON.parse(raw);
+    } catch {
+      // File doesn't exist, start empty
+    }
+
+    // Find user
+    const users = await readUsersFS();
+    const user = users.users.find(u => u.emailId.toLowerCase() === emailId.toLowerCase());
+    if (!user) {
+      return res.status(404).json({ error: "User not found" });
+    }
+    if (user.enabled) {
+      return res.status(400).json({ error: "Account is already active" });
+    }
+
+    // Check if request already exists
+    const existing = requests.find(r => r.userId === user.id && r.status === 'pending');
+    if (existing) {
+      return res.status(409).json({ error: "Reactivation request already pending" });
+    }
+
+    const request = {
+      id: makeId(),
+      userId: user.id,
+      emailId,
+      reason: reason || '',
+      status: 'pending',
+      createdAt: new Date().toISOString()
+    };
+
+    requests.push(request);
+    await fs.writeFile(requestsFile, JSON.stringify(requests, null, 2), "utf8");
+
+    return res.status(201).json({
+      requestId: request.id,
+      message: "Reactivation request submitted successfully. You will be notified once reviewed."
+    });
+  } catch (err) {
+    console.error("Reactivation request error:", err);
+    return res.status(500).json({ error: "Internal server error" });
+  }
+});
+
+/**
+ * GET /api/admin/reactivation-requests
+ * Admin endpoint to get pending reactivation requests
+ */
+app.get("/api/admin/reactivation-requests", async (req, res) => {
+  try {
+    // Check if user is admin
+    let currentUser = null;
+    try {
+      const userHeader = req.headers['x-current-user'];
+      if (userHeader) {
+        currentUser = JSON.parse(userHeader);
+      }
+    } catch (e) {
+      // ignore parse errors
+    }
+
+    const isAdmin = currentUser &&
+      (String(currentUser.roleType || "").toLowerCase() === "administrative" ||
+       String(currentUser.roleType || "").toLowerCase() === "administrator");
+
+    if (!isAdmin) {
+      return res.status(403).json({ error: "Admin access required" });
+    }
+
+    if (USE_DB) {
+      const [rows] = await db.pool.execute(`
+        SELECT rr.id, rr.user_id, rr.email_id, rr.reason, rr.status, rr.created_at,
+               u.first_name, u.last_name, u.name
+        FROM reactivation_requests rr
+        JOIN users u ON rr.user_id = u.id
+        ORDER BY rr.created_at DESC
+      `);
+
+      const requests = rows.map(row => ({
+        id: row.id,
+        userId: row.user_id,
+        emailId: row.email_id,
+        firstName: row.first_name || '',
+        lastName: row.last_name || '',
+        name: row.name || '',
+        reason: row.reason || '',
+        status: row.status,
+        createdAt: row.created_at
+      }));
+
+      return res.json({ requests });
+    }
+
+    // FS mode
+    const requestsFile = path.resolve(DATA_DIR, "reactivation-requests.json");
+    let requests = [];
+    try {
+      const raw = await fs.readFile(requestsFile, "utf8");
+      requests = JSON.parse(raw);
+    } catch {
+      // File doesn't exist, return empty
+    }
+
+    // Enrich with user data
+    const users = await readUsersFS();
+    const enrichedRequests = requests.map(req => {
+      const user = users.users.find(u => u.id === req.userId);
+      return {
+        ...req,
+        firstName: user?.firstName || '',
+        lastName: user?.lastName || '',
+        name: user?.name || ''
+      };
+    });
+
+    return res.json({ requests: enrichedRequests });
+  } catch (err) {
+    console.error("Get reactivation requests error:", err);
+    return res.status(500).json({ error: "Internal server error" });
+  }
+});
+
+/**
+ * PUT /api/admin/reactivation-requests/:id
+ * Admin endpoint to approve/reject reactivation request
+ */
+app.put("/api/admin/reactivation-requests/:id", async (req, res) => {
+  try {
+    const { id } = req.params || {};
+    const { action } = req.body || {}; // 'approve' or 'reject'
+
+    // Check if user is admin
+    let currentUser = null;
+    try {
+      const userHeader = req.headers['x-current-user'];
+      if (userHeader) {
+        currentUser = JSON.parse(userHeader);
+      }
+    } catch (e) {
+      // ignore parse errors
+    }
+
+    const isAdmin = currentUser &&
+      (String(currentUser.roleType || "").toLowerCase() === "administrative" ||
+       String(currentUser.roleType || "").toLowerCase() === "administrator");
+
+    if (!isAdmin) {
+      return res.status(403).json({ error: "Admin access required" });
+    }
+
+    if (!['approve', 'reject'].includes(action)) {
+      return res.status(400).json({ error: "Action must be 'approve' or 'reject'" });
+    }
+
+    if (USE_DB) {
+      // Get the request
+      const [requestRows] = await db.pool.execute(
+        `SELECT user_id FROM reactivation_requests WHERE id = ? AND status = 'pending'`,
+        [id]
+      );
+
+      if (!requestRows.length) {
+        return res.status(404).json({ error: "Request not found or already processed" });
+      }
+
+      const userId = requestRows[0].user_id;
+
+      // Update request status
+      await db.pool.execute(
+        `UPDATE reactivation_requests SET status = ?, updated_at = NOW() WHERE id = ?`,
+        [action === 'approve' ? 'approved' : 'rejected', id]
+      );
+
+      // If approved, enable the user
+      if (action === 'approve') {
+        await db.updateUserFields(userId, { enabled: true });
+      }
+
+      return res.json({
+        message: `Reactivation request ${action}d successfully`
+      });
+    }
+
+    // FS mode
+    const requestsFile = path.resolve(DATA_DIR, "reactivation-requests.json");
+    let requests = [];
+    try {
+      const raw = await fs.readFile(requestsFile, "utf8");
+      requests = JSON.parse(raw);
+    } catch {
+      return res.status(404).json({ error: "Request not found" });
+    }
+
+    const requestIndex = requests.findIndex(r => r.id === id && r.status === 'pending');
+    if (requestIndex === -1) {
+      return res.status(404).json({ error: "Request not found or already processed" });
+    }
+
+    const request = requests[requestIndex];
+    request.status = action === 'approve' ? 'approved' : 'rejected';
+    request.updatedAt = new Date().toISOString();
+
+    // If approved, enable the user
+    if (action === 'approve') {
+      const users = await readUsersFS();
+      const userIndex = users.users.findIndex(u => u.id === request.userId);
+      if (userIndex !== -1) {
+        users.users[userIndex].enabled = true;
+        await writeUsersFS(users);
+      }
+    }
+
+    await fs.writeFile(requestsFile, JSON.stringify(requests, null, 2), "utf8");
+
+    return res.json({
+      message: `Reactivation request ${action}d successfully`
+    });
+  } catch (err) {
+    console.error("Update reactivation request error:", err);
     return res.status(500).json({ error: "Internal server error" });
   }
 });
