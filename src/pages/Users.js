@@ -10,6 +10,8 @@ function Users() {
   const [editingUser, setEditingUser] = useState(null);
   const [editForm, setEditForm] = useState({});
   const [currentUser, setCurrentUser] = useState(null);
+  const [activeTab, setActiveTab] = useState("users");
+  const [reactivationRequests, setReactivationRequests] = useState([]);
   const PAGE_SIZE = 50;
 
   useEffect(() => {
@@ -163,6 +165,61 @@ function Users() {
     }
   };
 
+  const loadReactivationRequests = useCallback(async () => {
+    try {
+      const response = await fetch(
+        `${API_BASE}/api/admin/reactivation-requests`,
+        {
+          method: "GET",
+          headers: {
+            "x-current-user": JSON.stringify(currentUser),
+          },
+        },
+      );
+
+      if (response.ok) {
+        const data = await response.json();
+        setReactivationRequests(data.requests || []);
+      }
+    } catch (error) {
+      console.error("Failed to load reactivation requests:", error);
+    }
+  }, [currentUser]);
+
+  const handleReactivationAction = async (requestId, action) => {
+    try {
+      const response = await fetch(
+        `${API_BASE}/api/admin/reactivation-requests/${requestId}`,
+        {
+          method: "PUT",
+          headers: {
+            "Content-Type": "application/json",
+            "x-current-user": JSON.stringify(currentUser),
+          },
+          body: JSON.stringify({ action }),
+        },
+      );
+
+      if (response.ok) {
+        // Reload requests
+        loadReactivationRequests();
+        alert(`Reactivation request ${action}d successfully`);
+      } else {
+        alert("Failed to process request");
+      }
+    } catch (error) {
+      console.error("Error processing reactivation request:", error);
+      alert("Error processing request");
+    }
+  };
+
+  // Load reactivation requests when tab changes
+  useEffect(() => {
+    if (currentUser && isAdmin && activeTab === "reactivation") {
+      loadReactivationRequests();
+    }
+  }, [currentUser, isAdmin, activeTab, loadReactivationRequests]);
+
   if (!isAdmin) {
     return (
       <div className="container mt-4">
@@ -177,252 +234,341 @@ function Users() {
         <h1 className="h3 mb-0 text-gray-800">User Management</h1>
       </div>
 
-      {/* Search */}
-      <div className="card mb-4" style={{ height: "5rem" }}>
-        <div className="card-body">
-          <div className="form-group">
-            <input
-              type="text"
-              className="form-control"
-              placeholder="Search by email, first name, last name, or nickname..."
-              value={searchTerm}
-              onChange={(e) => setSearchTerm(e.target.value)}
-            />
-          </div>
-        </div>
-      </div>
+      {/* Tabs */}
+      <ul className="nav nav-tabs mb-4">
+        <li className="nav-item">
+          <button
+            className={`nav-link ${activeTab === "users" ? "active" : ""}`}
+            onClick={() => setActiveTab("users")}
+          >
+            User Management
+          </button>
+        </li>
+        <li className="nav-item">
+          <button
+            className={`nav-link ${activeTab === "reactivation" ? "active" : ""}`}
+            onClick={() => setActiveTab("reactivation")}
+          >
+            Reactivation Requests ({reactivationRequests.length})
+          </button>
+        </li>
+      </ul>
 
-      {/* Users Table */}
-      <div className="card">
-        <div className="card-body">
-          <div className="table-responsive">
-            <table className="table table-striped">
-              <thead>
-                <tr>
-                  <th>ID</th>
-                  <th>First Name</th>
-                  <th>Last Name</th>
-                  <th>Name</th>
-                  <th>Gender</th>
-                  <th>Email</th>
-                  <th>Role</th>
-                  <th>Created</th>
-                  <th>Start Date</th>
-                  <th>End Date</th>
-                  <th>Enabled</th>
-                  <th>Actions</th>
-                </tr>
-              </thead>
-              <tbody>
-                {users.map((user) => (
-                  <tr key={user.id}>
-                    <td className="text-muted small">{user.id}</td>
-                    <td>
-                      {editingUser === user.id ? (
-                        <input
-                          type="text"
-                          className="form-control form-control-sm"
-                          value={editForm.firstName}
-                          onChange={(e) =>
-                            setEditForm((prev) => ({
-                              ...prev,
-                              firstName: e.target.value,
-                            }))
-                          }
-                        />
-                      ) : (
-                        user.firstName || ""
-                      )}
-                    </td>
-                    <td>
-                      {editingUser === user.id ? (
-                        <input
-                          type="text"
-                          className="form-control form-control-sm"
-                          value={editForm.lastName}
-                          onChange={(e) =>
-                            setEditForm((prev) => ({
-                              ...prev,
-                              lastName: e.target.value,
-                            }))
-                          }
-                        />
-                      ) : (
-                        user.lastName || ""
-                      )}
-                    </td>
-                    <td>
-                      {editingUser === user.id ? (
-                        <input
-                          type="text"
-                          className="form-control form-control-sm"
-                          value={editForm.name}
-                          onChange={(e) =>
-                            setEditForm((prev) => ({
-                              ...prev,
-                              name: e.target.value,
-                            }))
-                          }
-                        />
-                      ) : (
-                        user.name || ""
-                      )}
-                    </td>
-                    <td>
-                      {editingUser === user.id ? (
-                        <select
-                          className="form-control form-control-sm"
-                          value={editForm.gender}
-                          onChange={(e) =>
-                            setEditForm((prev) => ({
-                              ...prev,
-                              gender: e.target.value,
-                            }))
-                          }
-                        >
-                          <option value="">Select...</option>
-                          <option value="M">Male</option>
-                          <option value="F">Female</option>
-                          <option value="O">Other</option>
-                        </select>
-                      ) : (
-                        user.gender || ""
-                      )}
-                    </td>
-                    <td className="text-muted small">{user.emailId}</td>
-                    <td>
-                      {editingUser === user.id ? (
-                        <select
-                          className="form-control form-control-sm"
-                          value={editForm.roleType}
-                          onChange={(e) =>
-                            setEditForm((prev) => ({
-                              ...prev,
-                              roleType: e.target.value,
-                            }))
-                          }
-                        >
-                          <option value="user">User</option>
-                          <option value="buyer">Buyer</option>
-                          <option value="administrator">Administrator</option>
-                        </select>
-                      ) : (
-                        user.roleType || ""
-                      )}
-                    </td>
-                    <td className="small">{formatDate(user.createdAt)}</td>
-                    <td>
-                      {editingUser === user.id ? (
-                        <input
-                          type="date"
-                          className="form-control form-control-sm"
-                          value={editForm.startDate || ""}
-                          onChange={(e) =>
-                            setEditForm((prev) => ({
-                              ...prev,
-                              startDate: e.target.value,
-                            }))
-                          }
-                        />
-                      ) : (
-                        formatDate(user.startDate) || ""
-                      )}
-                    </td>
-                    <td>
-                      {editingUser === user.id ? (
-                        <input
-                          type="date"
-                          className="form-control form-control-sm"
-                          value={editForm.endDate || ""}
-                          onChange={(e) =>
-                            setEditForm((prev) => ({
-                              ...prev,
-                              endDate: e.target.value,
-                            }))
-                          }
-                        />
-                      ) : (
-                        formatDate(user.endDate) || ""
-                      )}
-                    </td>
-                    <td>
-                      {editingUser === user.id ? (
-                        <select
-                          className="form-control form-control-sm"
-                          value={editForm.enabled ? "true" : "false"}
-                          onChange={(e) =>
-                            setEditForm((prev) => ({
-                              ...prev,
-                              enabled: e.target.value === "true",
-                            }))
-                          }
-                        >
-                          <option value="true">Yes</option>
-                          <option value="false">No</option>
-                        </select>
-                      ) : (
-                        <span
-                          className={`badge ${!user.enabled ? "badge-success" : "badge-danger"}`}
-                        >
-                          {!user.enabled ? "Yes" : "No"}
-                        </span>
-                      )}
-                    </td>
-                    <td>
-                      {editingUser === user.id ? (
+      {activeTab === "users" && (
+        <>
+          {/* Search */}
+          <div className="card mb-4" style={{ height: "5rem" }}>
+            <div className="card-body">
+              <div className="form-group">
+                <input
+                  type="text"
+                  className="form-control"
+                  placeholder="Search by email, first name, last name, or nickname..."
+                  value={searchTerm}
+                  onChange={(e) => setSearchTerm(e.target.value)}
+                />
+              </div>
+            </div>
+          </div>
+
+          {/* Users Table */}
+          <div className="card">
+            <div className="card-body">
+              <div className="table-responsive">
+                <table className="table table-striped">
+                  <thead>
+                    <tr>
+                      <th>ID</th>
+                      <th>First Name</th>
+                      <th>Last Name</th>
+                      <th>Name</th>
+                      <th>Gender</th>
+                      <th>Email</th>
+                      <th>Role</th>
+                      <th>Created</th>
+                      <th>Start Date</th>
+                      <th>End Date</th>
+                      <th>Enabled</th>
+                      <th>Actions</th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    {users.map((user) => (
+                      <tr key={user.id}>
+                        <td className="text-muted small">{user.id}</td>
+                        <td>
+                          {editingUser === user.id ? (
+                            <input
+                              type="text"
+                              className="form-control form-control-sm"
+                              value={editForm.firstName}
+                              onChange={(e) =>
+                                setEditForm((prev) => ({
+                                  ...prev,
+                                  firstName: e.target.value,
+                                }))
+                              }
+                            />
+                          ) : (
+                            user.firstName || ""
+                          )}
+                        </td>
+                        <td>
+                          {editingUser === user.id ? (
+                            <input
+                              type="text"
+                              className="form-control form-control-sm"
+                              value={editForm.lastName}
+                              onChange={(e) =>
+                                setEditForm((prev) => ({
+                                  ...prev,
+                                  lastName: e.target.value,
+                                }))
+                              }
+                            />
+                          ) : (
+                            user.lastName || ""
+                          )}
+                        </td>
+                        <td>
+                          {editingUser === user.id ? (
+                            <input
+                              type="text"
+                              className="form-control form-control-sm"
+                              value={editForm.name}
+                              onChange={(e) =>
+                                setEditForm((prev) => ({
+                                  ...prev,
+                                  name: e.target.value,
+                                }))
+                              }
+                            />
+                          ) : (
+                            user.name || ""
+                          )}
+                        </td>
+                        <td>
+                          {editingUser === user.id ? (
+                            <select
+                              className="form-control form-control-sm"
+                              value={editForm.gender}
+                              onChange={(e) =>
+                                setEditForm((prev) => ({
+                                  ...prev,
+                                  gender: e.target.value,
+                                }))
+                              }
+                            >
+                              <option value="">Select...</option>
+                              <option value="M">Male</option>
+                              <option value="F">Female</option>
+                              <option value="O">Other</option>
+                            </select>
+                          ) : (
+                            user.gender || ""
+                          )}
+                        </td>
+                        <td className="text-muted small">{user.emailId}</td>
+                        <td>
+                          {editingUser === user.id ? (
+                            <select
+                              className="form-control form-control-sm"
+                              value={editForm.roleType}
+                              onChange={(e) =>
+                                setEditForm((prev) => ({
+                                  ...prev,
+                                  roleType: e.target.value,
+                                }))
+                              }
+                            >
+                              <option value="user">User</option>
+                              <option value="buyer">Buyer</option>
+                              <option value="administrator">
+                                Administrator
+                              </option>
+                            </select>
+                          ) : (
+                            user.roleType || ""
+                          )}
+                        </td>
+                        <td className="small">{formatDate(user.createdAt)}</td>
+                        <td>
+                          {editingUser === user.id ? (
+                            <input
+                              type="date"
+                              className="form-control form-control-sm"
+                              value={editForm.startDate || ""}
+                              onChange={(e) =>
+                                setEditForm((prev) => ({
+                                  ...prev,
+                                  startDate: e.target.value,
+                                }))
+                              }
+                            />
+                          ) : (
+                            formatDate(user.startDate) || ""
+                          )}
+                        </td>
+                        <td>
+                          {editingUser === user.id ? (
+                            <input
+                              type="date"
+                              className="form-control form-control-sm"
+                              value={editForm.endDate || ""}
+                              onChange={(e) =>
+                                setEditForm((prev) => ({
+                                  ...prev,
+                                  endDate: e.target.value,
+                                }))
+                              }
+                            />
+                          ) : (
+                            formatDate(user.endDate) || ""
+                          )}
+                        </td>
+                        <td>
+                          {editingUser === user.id ? (
+                            <select
+                              className="form-control form-control-sm"
+                              value={editForm.enabled ? "true" : "false"}
+                              onChange={(e) =>
+                                setEditForm((prev) => ({
+                                  ...prev,
+                                  enabled: e.target.value === "true",
+                                }))
+                              }
+                            >
+                              <option value="true">Yes</option>
+                              <option value="false">No</option>
+                            </select>
+                          ) : (
+                            <span
+                              className={`badge ${user.enabled ? "badge-success" : "badge-danger"}`}
+                            >
+                              {user.enabled ? "Yes" : "No"}
+                            </span>
+                          )}
+                        </td>
+                        <td>
+                          {editingUser === user.id ? (
+                            <div className="btn-group btn-group-sm">
+                              <button
+                                className="btn btn-success btn-sm"
+                                onClick={() => handleSave(user.id)}
+                              >
+                                <i className="fas fa-check"></i> Save
+                              </button>
+                              <button
+                                className="btn btn-secondary btn-sm"
+                                onClick={handleCancel}
+                              >
+                                <i className="fas fa-times"></i> Cancel
+                              </button>
+                            </div>
+                          ) : (
+                            <button
+                              className="btn btn-primary btn-sm"
+                              onClick={() => handleEdit(user)}
+                            >
+                              <i className="fas fa-edit"></i> Edit
+                            </button>
+                          )}
+                        </td>
+                      </tr>
+                    ))}
+                  </tbody>
+                </table>
+              </div>
+
+              {loading && (
+                <div className="text-center py-3">
+                  <div
+                    className="spinner-border spinner-border-sm"
+                    role="status"
+                  >
+                    <span className="sr-only">Loading...</span>
+                  </div>
+                  <span className="ml-2">Loading users...</span>
+                </div>
+              )}
+
+              {hasMore && !loading && users.length > 0 && (
+                <div className="text-center py-3">
+                  <button
+                    className="btn btn-primary"
+                    onClick={() => loadUsers()}
+                  >
+                    Load More Users
+                  </button>
+                </div>
+              )}
+
+              {!hasMore && users.length > 0 && (
+                <div className="text-center py-3 text-muted">
+                  No more users to load.
+                </div>
+              )}
+            </div>
+          </div>
+        </>
+      )}
+
+      {activeTab === "reactivation" && (
+        <div className="card">
+          <div className="card-body">
+            <div className="table-responsive">
+              <table className="table table-striped">
+                <thead>
+                  <tr>
+                    <th>ID</th>
+                    <th>User ID</th>
+                    <th>Reason</th>
+                    <th>Requested At</th>
+                    <th>Actions</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  {reactivationRequests.map((request) => (
+                    <tr key={request.id}>
+                      <td className="text-muted small">{request.id}</td>
+                      <td>{request.userId}</td>
+                      <td>{request.reason || "N/A"}</td>
+                      <td className="small">
+                        {formatDate(request.requestedAt)}
+                      </td>
+                      <td>
                         <div className="btn-group btn-group-sm">
                           <button
-                            className="btn btn-success"
-                            onClick={() => handleSave(user.id)}
+                            className="btn btn-success btn-sm"
+                            onClick={() =>
+                              handleReactivationAction(request.id, "approve")
+                            }
                           >
-                            <i className="fas fa-check"></i> Save
+                            <i className="fas fa-check"></i> Approve
                           </button>
                           <button
-                            className="btn btn-secondary"
-                            onClick={handleCancel}
+                            className="btn btn-danger btn-sm"
+                            onClick={() =>
+                              handleReactivationAction(request.id, "reject")
+                            }
                           >
-                            <i className="fas fa-times"></i> Cancel
+                            <i className="fas fa-times"></i> Reject
                           </button>
                         </div>
-                      ) : (
-                        <button
-                          className="btn btn-primary btn-sm"
-                          onClick={() => handleEdit(user)}
-                        >
-                          <i className="fas fa-edit"></i> Edit
-                        </button>
-                      )}
-                    </td>
-                  </tr>
-                ))}
-              </tbody>
-            </table>
-          </div>
-
-          {loading && (
-            <div className="text-center py-3">
-              <div className="spinner-border spinner-border-sm" role="status">
-                <span className="sr-only">Loading...</span>
+                      </td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+            </div>
+            {reactivationRequests.length === 0 && (
+              <div className="text-center py-3 text-muted">
+                No reactivation requests.
               </div>
-              <span className="ml-2">Loading users...</span>
-            </div>
-          )}
-
-          {hasMore && !loading && users.length > 0 && (
-            <div className="text-center py-3">
-              <button className="btn btn-primary" onClick={() => loadUsers()}>
-                Load More Users
-              </button>
-            </div>
-          )}
-
-          {!hasMore && users.length > 0 && (
-            <div className="text-center py-3 text-muted">
-              No more users to load.
-            </div>
-          )}
+            )}
+          </div>
         </div>
-      </div>
+      )}
     </div>
   );
 }

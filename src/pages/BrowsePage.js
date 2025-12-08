@@ -131,46 +131,31 @@ function BrowsePage() {
     const mySeq = (reqSeqRef.current += 1);
     setLoading(true);
     try {
-      let rt = "user";
-      try {
-        const getCurrentUser = () => {
-          const s = sessionStorage.getItem("currentUser");
-          if (s) {
-            try {
-              return JSON.parse(s);
-            } catch (_e) {
-              /* ignore parse error */
-            }
-          }
-          if (localStorage.getItem("rememberMe") === "true") {
-            const l = localStorage.getItem("currentUser");
-            if (l) {
-              try {
-                return JSON.parse(l);
-              } catch (_e) {
-                /* ignore parse error */
-              }
-            }
-          }
-          return null;
-        };
-        const cu = getCurrentUser();
-        if (cu) {
-          const r = String(cu.roleType || "user").toLowerCase();
-          rt = r === "administrative" ? "administrator" : r;
-        }
-      } catch (e) {
-        /* ignore */
-      }
       const limit = itemsPerPage;
       const offset = (page - 1) * itemsPerPage;
-      // Use /api/users/public for logged-in users (region-filtered), /api/users for admins
-      const endpoint = currentUser ? `${API_BASE}/api/users/public?limit=${limit}&offset=${offset}` : `${API_BASE}/api/users?roleType=${encodeURIComponent(rt)}&limit=${limit}&offset=${offset}`;
+
+      // Check if user is admin
+      const isAdmin = currentUser && (String(currentUser.roleType || "").toLowerCase() === "administrative" ||
+                      String(currentUser.roleType || "").toLowerCase() === "administrator");
+
+      let endpoint, headers;
+      if (isAdmin) {
+        // For admins: show all active users across all categories and countries
+        endpoint = `${API_BASE}/api/users?roleType=user&limit=${limit}&offset=${offset}`;
+        headers = {};
+      } else if (currentUser) {
+        // For regular logged-in users: region-filtered users
+        endpoint = `${API_BASE}/api/users/public?limit=${limit}&offset=${offset}`;
+        headers = { 'x-current-user': JSON.stringify(currentUser) };
+      } else {
+        // For non-logged-in users: show all users (limited view)
+        endpoint = `${API_BASE}/api/users?roleType=user&limit=${limit}&offset=${offset}`;
+        headers = {};
+      }
+
       const res = await fetch(endpoint, {
         cache: "no-store",
-        headers: currentUser ? {
-          'x-current-user': JSON.stringify(currentUser)
-        } : {}
+        headers: headers
       });
       const data = await res.json().catch(() => ({}));
       if (!res.ok) {
@@ -248,7 +233,15 @@ function BrowsePage() {
   // Set available countries based on user region and auto-set default country
   useEffect(() => {
     const setupUserRegionAndCountry = async () => {
-      if (currentUser && countries.length > 0) {
+      // Check if user is admin
+      const isAdmin = currentUser && (String(currentUser.roleType || "").toLowerCase() === "administrative" ||
+                      String(currentUser.roleType || "").toLowerCase() === "administrator");
+
+      if (isAdmin && countries.length > 0) {
+        // For admins: show all countries
+        setAvailableCountries(countries);
+        setLocationDetected(true);
+      } else if (currentUser && countries.length > 0) {
         try {
           // Get user's region
           const regionRes = await fetch(`${API_BASE}/api/users/region`, {
