@@ -1,8 +1,7 @@
 import React, { useEffect, useState, useRef } from "react";
 import { useNavigate } from "react-router-dom";
 import API_BASE from "../utils/apiBase";
-// import countries from "../data/countries.json";
-import countryCodes from "../data/countryCodes.json";
+import { getCountries } from "../utils/countryUtils";
 import { validateMobile, validateSummary } from "../utils/validation";
 import "./profile.css";
 /* eslint-disable prettier/prettier */
@@ -242,10 +241,9 @@ function Profile() {
     // Load countries with codes
     async function loadCountriesWithCodes() {
       try {
-        const res = await fetch(`${API_BASE}/api/countries-with-codes`);
-        const data = await res.json().catch(() => ({}));
-        if (res.ok && Array.isArray(data.countries) && !ignore) {
-          setCountriesWithCodes(data.countries);
+        const countries = await getCountries(true);
+        if (!ignore) {
+          setCountriesWithCodes(countries);
         }
       } catch {
         // ignore fetch errors
@@ -409,12 +407,18 @@ function Profile() {
 
     try {
       setSaving(true);
+      // Find the selected country to get its code
+      const selectedCountry = countriesWithCodes.find(
+        (c) => c.name === form.address.country,
+      );
+      const countryCode = selectedCountry ? selectedCountry.isdCode : form.countryCode;
+
       const payload = {
         firstName: form.firstName,
         lastName: form.lastName,
         nickName: form.nickName,
         secondaryEmail: form.secondaryEmail,
-        countryCode: form.countryCode,
+        countryCode: countryCode, // Store country code in users table
         mobile: form.mobile,
         isWhatsappAvailable: form.isWhatsappAvailable,
         whatsappNumber: form.whatsappNumber,
@@ -435,7 +439,7 @@ function Profile() {
         roleType: form.roleType,
         showInDashboard: form.showInDashboard,
         showPhoto: form.showPhoto,
-        address: { ...form.address },
+        address: { ...form.address }, // Keep country name in address table
       };
       const res = await fetch(`${API_BASE}/api/users/${userId}`, {
         method: "PUT",
@@ -776,14 +780,14 @@ function Profile() {
                             onChange={onChange}
                             disabled
                           >
-                            {countryCodes
-                              .filter((country) => country.enabled === "Y")
+                            {countriesWithCodes
+                              .filter((country) => country.name)
                               .map((country) => (
                                 <option
-                                  key={country.iso}
-                                  value={country.code}
+                                  key={country.name}
+                                  value={country.isdCode}
                                 >
-                                  {country.code} ({country.name})
+                                  {country.isdCode} ({country.name})
                                 </option>
                               ))}
                           </select>
@@ -1244,7 +1248,7 @@ function Profile() {
                               checked={form.showInDashboard}
                               onChange={onChange}
                             />{" "}
-                            Allow my profile to appear on the dashboard
+                            Allow my profile to appear in browse skills
                           </label>
                         </div>
                       </div>
@@ -1270,6 +1274,24 @@ function Profile() {
                   </div>
                 </div>
               )}
+
+              {/* Close Account section */}
+              <div className="panel panel-body no-left-right-padding">
+                <div className="panel panel-title">
+                  <h3>Close Account</h3>
+                </div>
+                <div className="form-group row set-padding-left-right">
+                  <div className="col-12">
+                    <div className="alert alert-info" role="alert">
+                      <strong>Account Closure:</strong> If you want to close your account then please click on{" "}
+                      <a href="/support" className="alert-link">
+                        Support
+                      </a>{" "}
+                      and send a message to Admin. We will take the action as required and inform you soon. Thanks for your support.
+                    </div>
+                  </div>
+                </div>
+              </div>
 
               <div className="panel panel-body no-left-right-padding set-padding-top">
                 <div className="form-group panel-body">

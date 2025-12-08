@@ -1,14 +1,11 @@
 import { PhoneNumberUtil } from "google-libphonenumber";
-import countryCodes from "../data/countryCodes.json";
+import { getCountryCodeMapping } from "./countryUtils";
 
 // Initialize the phone number utility
 const phoneUtil = PhoneNumberUtil.getInstance();
 
-// Create a mapping from calling code to ISO code
-const callingCodeToIso = {};
-countryCodes.forEach((country) => {
-  callingCodeToIso[country.code] = country.iso;
-});
+// Get country code mapping from JSON file
+const callingCodeToIso = getCountryCodeMapping();
 
 /**
  * Validates mobile number format using Google libphonenumber

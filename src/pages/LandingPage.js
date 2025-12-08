@@ -1,5 +1,5 @@
 /* eslint-disable prettier/prettier */
-import React from "react";
+import React, { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import "./LandingPage.css";
 import landingPageData from "../data/landingPageData.json";
@@ -8,6 +8,52 @@ import { useLandingPageCards } from "../contexts/LandingPageCardsContext";
 function LandingPage() {
   const navigate = useNavigate();
   const { cards: dbCards } = useLandingPageCards();
+  const [currentUser, setCurrentUser] = useState(null);
+
+  // Check authentication status
+  useEffect(() => {
+    const getCurrentUser = () => {
+      try {
+        const s = sessionStorage.getItem("currentUser");
+        if (s) {
+          return JSON.parse(s);
+        }
+        if (localStorage.getItem("rememberMe") === "true") {
+          const l = localStorage.getItem("currentUser");
+          if (l) {
+            return JSON.parse(l);
+          }
+        }
+      } catch {
+        // ignore
+      }
+      return null;
+    };
+
+    setCurrentUser(getCurrentUser());
+
+    const handleAuth = () => {
+      setCurrentUser(getCurrentUser());
+    };
+
+    const handleStorage = (e) => {
+      if (!e || e.key === "currentUser") {
+        setCurrentUser(getCurrentUser());
+      }
+    };
+
+    if (typeof window !== "undefined") {
+      window.addEventListener("auth-changed", handleAuth);
+      window.addEventListener("storage", handleStorage);
+    }
+
+    return () => {
+      if (typeof window !== "undefined") {
+        window.removeEventListener("auth-changed", handleAuth);
+        window.removeEventListener("storage", handleStorage);
+      }
+    };
+  }, []);
 
   // Handle card click to navigate to browse page with category filter
   const handleCardClick = (categoryName) => {
@@ -111,14 +157,25 @@ function LandingPage() {
                 Find the perfect match for your projects or offer your expertise
                 to the world.
               </p>
-              <div className="d-flex flex-column flex-sm-row gap-3">
-                <a href="/register" className="btn btn-light btn-lg">
-                  Get Started
-                </a>
-                <a href="/login" className="btn btn-outline-light btn-lg">
-                  Sign In
-                </a>
-              </div>
+              {currentUser ? (
+                <div className="d-flex flex-column flex-sm-row gap-3">
+                  <a href="/browse" className="btn btn-light btn-lg">
+                    Browse
+                  </a>
+                  <a href="/my-engaged-list" className="btn btn-outline-light btn-lg">
+                    My Hired List
+                  </a>
+                </div>
+              ) : (
+                <div className="d-flex flex-column flex-sm-row gap-3">
+                  <a href="/register" className="btn btn-light btn-lg">
+                    Get Started
+                  </a>
+                  <a href="/login" className="btn btn-outline-light btn-lg">
+                    Sign In
+                  </a>
+                </div>
+              )}
             </div>
             <div className="col-lg-6 landing-page-img-padding-top">
               <img
@@ -165,20 +222,22 @@ function LandingPage() {
         </div>
       </section>
 
-      {/* CTA Section */}
-      <section className="cta-section bg-primary text-white py-3">
-        <div className="container text-center">
-          <h2 className="display-5 font-weight-bold mb-3">
-            Ready to Get Started?
-          </h2>
-          <p className="lead mb-4">
-            Join thousands of users already connecting through our platform.
-          </p>
-          <a href="/register" className="btn btn-light btn-lg">
-            Create Your Account
-          </a>
-        </div>
-      </section>
+      {/* CTA Section - Only show for non-logged-in users */}
+      {!currentUser && (
+        <section className="cta-section bg-primary text-white py-3">
+          <div className="container text-center">
+            <h2 className="display-5 font-weight-bold mb-3">
+              Ready to Get Started?
+            </h2>
+            <p className="lead mb-4">
+              Join thousands of users already connecting through our platform.
+            </p>
+            <a href="/register" className="btn btn-light btn-lg">
+              Create Your Account
+            </a>
+          </div>
+        </section>
+      )}
 
 
     </div>

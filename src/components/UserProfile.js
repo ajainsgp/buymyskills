@@ -326,7 +326,7 @@ function UserProfile({ userProfiles, showSensitive = false }) {
             </div>
             {!showSensitive && (
               <div className="text-muted" style={{ fontSize: "0.9em" }}>
-                Please login to view contact details. <a href="/login">Login</a>
+                Please login to connect. <a href="/login">Login</a>
               </div>
             )}
           </div>

@@ -153,7 +153,7 @@ function MyEngagedList() {
           {/* Header */}
           <div className="d-flex justify-content-between align-items-center mb-4">
             <div>
-              <h1 className="h3 mb-0 text-gray-800">My Engaged List</h1>
+              <h1 className="h3 mb-0 text-gray-800">My Hired List</h1>
               <p className="text-muted">
                 Sellers you&apos;ve worked with and their ratings
               </p>

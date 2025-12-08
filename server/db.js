@@ -143,7 +143,7 @@ async function initSchema() {
       id INT AUTO_INCREMENT PRIMARY KEY,
       name VARCHAR(100) NOT NULL UNIQUE,
       code VARCHAR(3) NOT NULL UNIQUE,
-      phone_code VARCHAR(10) NOT NULL DEFAULT '',
+      isd_code VARCHAR(10) NOT NULL DEFAULT '',
       currency_code VARCHAR(3) DEFAULT '',
       enabled TINYINT(1) NOT NULL DEFAULT 1,
       created_at DATETIME NOT NULL
@@ -205,7 +205,7 @@ async function initSchema() {
       user_id VARCHAR(64) NOT NULL,
       name VARCHAR(255) NOT NULL,
       rating TINYINT NOT NULL CHECK (rating >= 1 AND rating <= 5),
-      comment TEXT NOT NULL,
+      comment TEXT NULL,
       created_at DATETIME NOT NULL,
       INDEX idx_ratings_user (user_id),
       INDEX idx_ratings_created (created_at),
@@ -269,7 +269,7 @@ async function initSchema() {
           "QA Engineer",
           "Product Manager",
           "UI/UX Designer",
-          "Project Manager"
+          "Project Manager",
         ];
         const now = new Date();
         for (let i = 0; i < defaults.length; i++) {
@@ -281,6 +281,34 @@ async function initSchema() {
       }
     } catch (e) {
       console.warn("category seed warning:", e.message);
+    }
+
+    // Seed default countries from JSON file if empty
+    try {
+      const [countryCntRows] = await conn.query("SELECT COUNT(*) AS c FROM countries");
+      const countryCount = countryCntRows && countryCntRows[0] ? Number(countryCntRows[0].c || 0) : 0;
+      if (countryCount === 0) {
+        // Load country data from JSON file for seeding
+        const countryData = require("../src/data/countryCodes.json");
+        const now = new Date();
+
+        for (let i = 0; i < countryData.length; i++) {
+          const country = countryData[i];
+          await conn.query(
+            "INSERT INTO countries (name, code, isd_code, enabled, created_at) VALUES (?,?,?,?,?)",
+            [
+              country.name,
+              country.iso,
+              country.isdCode,
+              country.enabled === "Y" ? 1 : 0,
+              now
+            ],
+          );
+        }
+        console.log(`Seeded ${countryData.length} countries into database`);
+      }
+    } catch (e) {
+      console.warn("country seed warning:", e.message);
     }
 
     // Ensure 'enabled' column exists (for older deployments)
@@ -376,7 +404,8 @@ async function initSchema() {
         { name: "rate_type", sql: "ALTER TABLE users ADD COLUMN rate_type VARCHAR(1) NULL" },
         { name: "category", sql: "ALTER TABLE users ADD COLUMN category VARCHAR(100) NULL" },
         { name: "role_type", sql: "ALTER TABLE users ADD COLUMN role_type VARCHAR(64) NULL" },
-        { name: "country_code", sql: "ALTER TABLE users ADD COLUMN country_code VARCHAR(10) NULL" },
+        { name: "country_code", sql: "ALTER TABLE users ADD COLUMN country_code VARCHAR(3) NULL" },
+        { name: "isd_code", sql: "ALTER TABLE users ADD COLUMN isd_code VARCHAR(10) NULL" },
         { name: "show_in_dashboard", sql: "ALTER TABLE users ADD COLUMN show_in_dashboard TINYINT(1) NOT NULL DEFAULT 0" },
         { name: "show_photo", sql: "ALTER TABLE users ADD COLUMN show_photo TINYINT(1) NOT NULL DEFAULT 0" },
         { name: "enabled", sql: "ALTER TABLE users ADD COLUMN enabled TINYINT(1) NOT NULL DEFAULT 1" },
@@ -483,6 +512,31 @@ async function listUsers() {
      FROM users u
      LEFT JOIN address_current ac ON ac.user_id = u.id
      WHERE u.enabled = 1 AND CURDATE() BETWEEN DATE(u.start_date) AND COALESCE(DATE(u.end_date), CURDATE())
+     ORDER BY u.created_at DESC`,
+  );
+  return rows;
+}
+
+/**
+ * List public users for browsing (sanitized data).
+ * Excludes sensitive contact, financial, and address information.
+ * Returns flat rows for public browsing.
+ */
+async function listPublicUsersForBrowsing() {
+  const [rows] = await pool.execute(
+    `SELECT
+       u.id, u.name, u.first_name, u.last_name, u.nick_name, u.gender,
+       u.country_code,
+       u.summary, u.keyword_tags, u.work_preference, u.traveling, u.availability,
+       u.category, u.show_in_dashboard, u.show_photo,
+       u.allow_email_contact, u.allow_mobile_contact,
+       (p.user_id IS NOT NULL) AS photo_present
+     FROM users u
+     LEFT JOIN photos p ON p.user_id = u.id
+     WHERE u.enabled = 1
+       AND u.show_in_dashboard = 1
+       AND u.role_type = 'user'
+       AND CURDATE() BETWEEN DATE(u.start_date) AND COALESCE(DATE(u.end_date), CURDATE())
      ORDER BY u.created_at DESC`,
   );
   return rows;
@@ -806,20 +860,20 @@ async function deleteCategory(id) {
 
 async function listCountries() {
   const [rows] = await pool.execute(
-    `SELECT name, code, phone_code, currency_code FROM countries WHERE enabled = 1 ORDER BY name`,
+    `SELECT name, code, isd_code, currency_code FROM countries WHERE enabled = 1 ORDER BY name`,
   );
-  return rows.map((r) => ({ name: r.name, code: r.code, phoneCode: r.phone_code, currencyCode: r.currency_code }));
+  return rows.map((r) => ({ name: r.name, code: r.code, isdCode: r.isd_code, currencyCode: r.currency_code }));
 }
 
 async function listAllCountries() {
   const [rows] = await pool.execute(
-    `SELECT id, name, code, phone_code, currency_code, enabled, created_at FROM countries ORDER BY name`,
+    `SELECT id, name, code, isd_code, currency_code, enabled, created_at FROM countries ORDER BY name`,
   );
   return rows.map((r) => ({
     id: r.id,
     name: r.name,
     code: r.code,
-    phoneCode: r.phone_code,
+    isdCode: r.isd_code,
     currencyCode: r.currency_code,
     enabled: r.enabled === 1,
     createdAt:
@@ -827,11 +881,11 @@ async function listAllCountries() {
   }));
 }
 
-async function createCountry({ name, code, phoneCode = '', currencyCode = '', enabled = true }) {
+async function createCountry({ name, code, isdCode = '', currencyCode = '', enabled = true }) {
   const now = new Date();
   await pool.execute(
-    `INSERT INTO countries (name, code, phone_code, currency_code, enabled, created_at) VALUES (?,?,?,?,?,?)`,
-    [name, code.toUpperCase(), phoneCode, currencyCode.toUpperCase(), enabled ? 1 : 0, now],
+    `INSERT INTO countries (name, code, isd_code, currency_code, enabled, created_at) VALUES (?,?,?,?,?,?)`,
+    [name, code.toUpperCase(), isdCode, currencyCode.toUpperCase(), enabled ? 1 : 0, now],
   );
 }
 
@@ -846,9 +900,9 @@ async function updateCountry(id, patch) {
     sets.push("code = ?");
     vals.push(patch.code.toUpperCase());
   }
-  if (Object.prototype.hasOwnProperty.call(patch, "phoneCode")) {
-    sets.push("phone_code = ?");
-    vals.push(patch.phoneCode);
+  if (Object.prototype.hasOwnProperty.call(patch, "isdCode")) {
+    sets.push("isd_code = ?");
+    vals.push(patch.isdCode);
   }
   if (Object.prototype.hasOwnProperty.call(patch, "currencyCode")) {
     sets.push("currency_code = ?");
@@ -1298,6 +1352,7 @@ module.exports = {
   getUserByEmail,
   getUserById,
   listUsers,
+  listPublicUsersForBrowsing,
   listPublicUsers,
   createUser,
   updateUserFields,

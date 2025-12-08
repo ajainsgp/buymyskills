@@ -35,11 +35,11 @@ const USERS_FILE = path.resolve(DATA_DIR, "users.json");
 const ADDRESSES_FILE = path.resolve(DATA_DIR, "addresses.json");
 const PHOTOS_FILE = path.resolve(DATA_DIR, "photos.json");
 const CATEGORIES_FILE = path.resolve(DATA_DIR, "categories.json");
-const COUNTRIES_FILE = path.resolve(DATA_DIR, "countries.json");
 const LANDING_PAGE_CARDS_FILE = path.resolve(DATA_DIR, "landingPageCards.json");
 
 // Import landing page data for filesystem fallback
 const landingPageData = require("../src/data/landingPageData.json");
+const COUNTRIES_FILE = require("../src/data/countryCodes.json");
 
 
 // Optional MySQL DAL
@@ -498,23 +498,11 @@ async function readCountriesFS() {
     .map((c) => ({ name: c.name, code: c.code }));
 }
 
-// Read countries with phone codes by matching countries.json with countryCodes.json
+// Read countries with phone codes from database (no longer using filesystem)
 async function readCountriesWithCodesFS() {
-  const countries = await readAllCountriesFS();
-  const countryCodes = require("../src/data/countryCodes.json");
-
-  return countries
-    .filter((c) => c && (c.enabled === 1 || c.enabled === true || c.enabled === "Y"))
-    .map((country) => {
-      const codeEntry = countryCodes.find((cc) => cc.iso === country.code && cc.enabled === "Y");
-      return {
-        name: country.name,
-        code: country.code,
-        phoneCode: codeEntry ? codeEntry.code : "",
-      };
-    })
-    .filter((c) => c.phoneCode) // Only include countries that have phone codes
-    .sort((a, b) => String(a.name).localeCompare(String(b.name)));
+  // This function is now handled by the database API
+  // Return empty array since we use database for this now
+  return [];
 }
 
 
@@ -561,7 +549,8 @@ function mapDbUserRowToApiUser(row) {
     lastName: row.last_name || "",
     nickName: row.nick_name || "",
     gender: row.gender || "",
-    countryCode: row.country_code || "+1",
+    countryCode: row.country_code || "IN", // Now stores ISO country code
+    isdCode: row.isd_code || "+91", // New field for ISD code
     mobile: row.mobile || "",
     isWhatsappAvailable: !!row.is_whatsapp_available,
     whatsappNumber: row.whatsapp_number || "",
@@ -1590,45 +1579,107 @@ app.get("/api/verify-email", async (req, res) => {
 });
 
 /**
- * GET /api/users
+ * GET /api/users - Browse users with privacy protection
  */
-app.get("/api/users", async (_req, res) => {
+app.get("/api/users", async (req, res) => {
   try {
+    // Get current user to determine authentication and permissions
+    let currentUser = null;
+    try {
+      const s = (req.headers['x-current-user'] || "").toString().trim();
+      if (s) currentUser = JSON.parse(s);
+    } catch {
+      // ignore
+    }
+
+    const isAuthenticated = !!currentUser?.id;
+    const roleParamRaw = String((req.query.roleType || "user")).toLowerCase();
+    const roleParam = roleParamRaw === "administrative" ? "administrator" : roleParamRaw;
+    const limit = parseInt(req.query.limit) || 50;
+    const offset = parseInt(req.query.offset) || 0;
+
     if (USE_DB) {
-      const roleParamRaw = String(((_req.query && _req.query.roleType) || "user")).toLowerCase();
-      const roleParam = roleParamRaw === "administrative" ? "administrator" : roleParamRaw;
       const adminEmailLower = String(ADMIN_EMAIL).toLowerCase();
 
-      const rows = (await db.listUsers()).filter((r) => {
-        const rt = String(r.role_type || "user").toLowerCase();
-        const emailLower = String(r.email_id || "").toLowerCase();
-        if (roleParam === "administrator") {
+      let rows;
+      if (roleParam === "administrator") {
+        // Admin view - use full user data
+        rows = (await db.listUsers()).filter((r) => {
+          const rt = String(r.role_type || "user").toLowerCase();
+          const emailLower = String(r.email_id || "").toLowerCase();
           return rt === "administrator" || rt === "administrative" || emailLower === adminEmailLower;
+        });
+      } else {
+        // Public browsing view - use sanitized data
+        rows = await db.listPublicUsersForBrowsing();
+      }
+
+      // Apply pagination
+      const total = rows.length;
+      const paginatedRows = rows.slice(offset, offset + limit);
+
+      const users = paginatedRows.map((r) => {
+        const baseUser = {
+          id: r.id,
+          name: r.name || "",
+          firstName: r.first_name || "",
+          lastName: r.last_name || "",
+          nickName: r.nick_name || "",
+          gender: r.gender || "",
+          summary: r.summary || "",
+          keywordTags: r.keyword_tags || "",
+          workPreference: r.work_preference || "",
+          traveling: r.traveling || "",
+          availability: r.availability || "",
+          category: r.category || "",
+          createdAt: r.created_at instanceof Date ? r.created_at.toISOString() : r.created_at,
+          showInDashboard: !!r.show_in_dashboard,
+          showPhoto: !!r.show_photo,
+          photoPresent: !!r.photo_present,
+          allowEmailContact: !!r.allow_email_contact,
+          allowMobileContact: !!r.allow_mobile_contact,
+        };
+
+        // Add contact and financial information only for the current user's own profile
+        if (currentUser?.id === r.id) {
+          // Contact information for own profile
+          baseUser.emailId = r.email_id || "";
+          baseUser.secondaryEmail = r.secondary_email || "";
+          baseUser.countryCode = r.country_code || "";
+          baseUser.mobile = r.mobile || "";
+          baseUser.whatsappNumber = r.whatsapp_number || "";
+          baseUser.facebookUrl = r.facebook_url || "";
+          baseUser.linkedinUrl = r.linkedin_url || "";
+
+          // Address information for own profile
+          const addr =
+            r.address_line1 || r.address_line2 || r.city || r.state || r.postcode || r.country
+              ? {
+                  addressLine1: r.address_line1 || "",
+                  addressLine2: r.address_line2 || "",
+                  city: r.city || "",
+                  state: r.state || "",
+                  postcode: r.postcode || "",
+                  country: r.country || "",
+                }
+              : {};
+          baseUser.address = addr;
+
+          // Financial information for own profile
+          baseUser.startingPrice = r.starting_price ? parseFloat(r.starting_price) : null;
+          baseUser.negotiable = !!r.negotiable;
+          baseUser.currencyCode = r.currency_code || "";
+          baseUser.rateType = r.rate_type || "";
+        } else {
+          // For other users, include countryCode for filtering purposes
+          baseUser.countryCode = r.country_code || "";
         }
-        // Non-admin view explicitly excludes the bootstrap admin email
-        return rt === roleParam && emailLower !== adminEmailLower;
+
+        return baseUser;
       });
-      const users = rows.map((r) => {
-        const u = mapDbUserRowToApiUser(r);
-        const addr =
-          r.address_line1 || r.address_line2 || r.city || r.state || r.postcode || r.country
-            ? {
-                addressLine1: r.address_line1 || "",
-                addressLine2: r.address_line2 || "",
-                city: r.city || "",
-                state: r.state || "",
-                postcode: r.postcode || "",
-                country: r.country || "",
-              }
-            : {};
-        return { ...sanitizeUser(u), address: addr, category: r.category || "" };
-      });
-      const limit = parseInt(_req.query.limit) || 50;
-      const offset = parseInt(_req.query.offset) || 0;
-      const total = users.length;
-      const paginatedUsers = users.slice(offset, offset + limit);
+
       return res.json({
-        users: paginatedUsers,
+        users,
         pagination: {
           page: Math.floor(offset / limit) + 1,
           limit,
@@ -1638,33 +1689,55 @@ app.get("/api/users", async (_req, res) => {
       });
     }
 
-    // FS flow
+    // FS mode - simplified implementation
     const store = await readUsersFS();
     const addrStore = await readAddressesFS();
+    const photos = await readPhotosFS();
 
-    const roleParamRaw = String(((_req.query && _req.query.roleType) || "user")).toLowerCase();
-    const roleParam = roleParamRaw === "administrative" ? "administrator" : roleParamRaw;
+    const fsRoleParamRaw = String((req.query.roleType || "user")).toLowerCase();
+    const fsRoleParam = fsRoleParamRaw === "administrative" ? "administrator" : fsRoleParamRaw;
     const adminEmailLower = String(ADMIN_EMAIL).toLowerCase();
 
-    const users = store.users
+    let users = store.users
       .filter((u) => {
         const rt = String(u.roleType || "user").toLowerCase();
         const emailLower = String(u.emailId || "").toLowerCase();
         if (roleParam === "administrator") {
           return rt === "administrator" || rt === "administrative" || emailLower === adminEmailLower;
         }
-        return rt === roleParam && emailLower !== adminEmailLower;
+        // For public browsing, only show users with showInDashboard enabled
+        return rt === roleParam && emailLower !== adminEmailLower && !!u.showInDashboard;
       })
       .map((u) => {
-      const au = sanitizeUser(u);
-      const addrRec = addrStore.addresses.find((a) => a.userId === u.id);
-      au.address = addrRec ? { ...addrRec.current } : {};
-      if (au.address && au.address.from) {
-        const { from, ...rest } = au.address;
-        au.address = rest;
-      }
-      return au;
-    });
+        const au = sanitizeUser(u);
+        // Remove sensitive information for public browsing
+        delete au.emailId;
+        delete au.secondaryEmail;
+        delete au.mobile;
+        delete au.whatsappNumber;
+        delete au.facebookUrl;
+        delete au.linkedinUrl;
+        delete au.startingPrice;
+        delete au.currencyCode;
+        delete au.rateType;
+
+        // Add address only for current user's own profile
+        if (currentUser?.id === u.id) {
+          const addrRec = addrStore.addresses.find((a) => a.userId === u.id);
+          au.address = addrRec ? { ...addrRec.current } : {};
+          if (au.address && au.address.from) {
+            const { from, ...rest } = au.address;
+            au.address = rest;
+          }
+        }
+
+        // Add photo information
+        const hasPhoto = photos.photos.some((p) => p.userId === u.id);
+        au.photoPresent = hasPhoto;
+
+        return au;
+      });
+
     return res.json({ users });
   } catch (err) {
     console.error("Users list error:", err);
@@ -1672,9 +1745,15 @@ app.get("/api/users", async (_req, res) => {
   }
 });
 
-/**
- * GET /api/users/region - get current user's region
- */
+
+
+
+
+
+
+
+
+// Get current user's region
 app.get("/api/users/region", async (req, res) => {
   try {
     // Get current user
@@ -1697,10 +1776,6 @@ app.get("/api/users/region", async (req, res) => {
     return res.status(500).json({ error: "Internal server error" });
   }
 });
-
-
-
-
 
 /**
  * GET /api/users/public?category=Software%20Engineer
@@ -1750,20 +1825,27 @@ app.get("/api/users/public", async (req, res) => {
           category: r.category || "",
           showInDashboard: r.show_in_dashboard === 1,
           showPhoto: r.show_photo === 1,
-          address: addr,
           photoPresent: !!r.photo_present,
         };
       });
       return res.json({ users, region: userRegion.name });
     }
 
-    // FS flow - For now, return all users (region filtering not implemented for FS mode)
-    // TODO: Implement region filtering for filesystem mode
+    // FS flow - Apply same filters as DB mode
     const store = await readUsersFS();
     const addrStore = await readAddressesFS();
     const photos = await readPhotosFS();
-    let users = store.users
-      .filter((u) => !!u.showInDashboard)
+    const currentDate = new Date();
+    const users = store.users
+      .filter((u) => !!u.showInDashboard) // Must have showInDashboard enabled
+      .filter((u) => u.roleType === "user") // Only sellers (role_type = "user")
+      .filter((u) => u.enabled === true || u.enabled === 1) // Must be enabled
+      .filter((u) => {
+        // Date range check: current date between start_date and end_date (or end_date null)
+        const startDate = u.startDate ? new Date(u.startDate) : null;
+        const endDate = u.endDate ? new Date(u.endDate) : null;
+        return (!startDate || currentDate >= startDate) && (!endDate || currentDate <= endDate);
+      })
       .filter((u) => (category ? String(u.category || "").toLowerCase() === category.toLowerCase() : true))
       .map((u) => {
         const addrRec = addrStore.addresses.find((a) => a.userId === u.id);
@@ -1780,27 +1862,13 @@ app.get("/api/users/public", async (req, res) => {
         const hasPhoto = photos.photos.some((p) => p.userId === u.id);
         return {
           ...sanitizeUser(u),
-          address: addr,
           category: u.category || "",
           showInDashboard: !!u.showInDashboard,
           showPhoto: !!u.showPhoto,
           photoPresent: hasPhoto,
         };
       });
-    const limit = parseInt(req.query.limit) || 50;
-    const offset = parseInt(req.query.offset) || 0;
-    const total = users.length;
-    users = users.slice(offset, offset + limit);
-    return res.json({
-      users,
-      region: "All Regions (FS Mode)",
-      pagination: {
-        page: Math.floor(offset / limit) + 1,
-        limit,
-        total,
-        totalPages: Math.ceil(total / limit),
-      }
-    });
+    return res.json({ users, region: "All Regions (FS Mode)" });
   } catch (err) {
     console.error("Public users error:", err);
     return res.status(500).json({ error: "Internal server error" });
@@ -1813,10 +1881,7 @@ app.get("/api/users/public", async (req, res) => {
 app.get("/api/users/:id", async (req, res) => {
   try {
     const { id } = req.params || {};
-    // Skip if this is a request for "region" or "public" - handled by routes above
-    if (id === 'region' || id === 'public') {
-      return res.status(404).json({ error: "Not found" });
-    }
+
 
     if (USE_DB) {
       const row = await db.getUserById(id);
@@ -2738,8 +2803,8 @@ app.get("/api/users/:id/rating", async (req, res) => {
 app.post("/api/ratings", async (req, res) => {
   try {
     const { userId, name, rating, comment } = req.body || {};
-    if (!userId || !name || !rating || !comment) {
-      return res.status(400).json({ error: "userId, name, rating, and comment are required" });
+    if (!userId || !name || !rating) {
+      return res.status(400).json({ error: "userId, name, and rating are required" });
     }
     if (rating < 1 || rating > 5) {
       return res.status(400).json({ error: "Rating must be between 1 and 5" });

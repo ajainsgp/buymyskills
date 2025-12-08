@@ -2,8 +2,7 @@ import React, { useState, useRef, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import "./register.css";
 import API_BASE from "../../utils/apiBase";
-import countries from "../../data/countries.json";
-import countryCodes from "../../data/countryCodes.json";
+import { getCountries } from "../../utils/countryUtils";
 import {
   validateEmail,
   validateMobile,
@@ -79,10 +78,9 @@ function RegisterUser() {
 
     async function loadCountriesWithCodes() {
       try {
-        const res = await fetch(`${API_BASE}/api/countries-with-codes`);
-        const data = await res.json().catch(() => ({}));
-        if (res.ok && Array.isArray(data.countries) && !ignore) {
-          setCountriesWithCodes(data.countries);
+        const countries = await getCountries(true);
+        if (!ignore) {
+          setCountriesWithCodes(countries);
         }
       } catch {
         // ignore fetch errors
@@ -111,10 +109,10 @@ function RegisterUser() {
           }));
         }
         // Auto-set mobile country code
-        if (selectedCountry.phoneCode) {
+        if (selectedCountry.isdCode) {
           setForm((prev) => ({
             ...prev,
-            countryCode: selectedCountry.phoneCode,
+            countryCode: selectedCountry.isdCode,
           }));
         }
       }
@@ -276,7 +274,17 @@ function RegisterUser() {
 
     try {
       setSubmitting(true);
-      const payload = { ...form };
+      // Find the selected country to get its code
+      const selectedCountry = countriesWithCodes.find(
+        (c) => c.name === form.country,
+      );
+      const countryCode = selectedCountry ? selectedCountry.isdCode : "+1";
+
+      const payload = {
+        ...form,
+        countryCode, // Add country code for users table
+        address: { ...form.address }, // Keep address for address table
+      };
       // Use relative URL; CRA will proxy to http://localhost:4000 if "proxy" is set in package.json
       const res = await fetch(`${API_BASE}/api/register`, {
         method: "POST",
@@ -580,10 +588,10 @@ function RegisterUser() {
                             onChange={onChange}
                           >
                             <option value="">Select...</option>
-                            {countries
-                              .filter((c) => c.enabled === "Y")
+                            {countriesWithCodes
+                              .filter((c) => c.name) // Filter out any invalid entries
                               .map((c) => (
-                                <option key={c.code} value={c.name}>
+                                <option key={c.name} value={c.name}>
                                   {c.name}
                                 </option>
                               ))}
@@ -659,14 +667,14 @@ function RegisterUser() {
                                 onChange={onChange}
                                 disabled
                               >
-                                {countryCodes
-                                  .filter((country) => country.enabled === "Y")
+                                {countriesWithCodes
+                                  .filter((country) => country.name)
                                   .map((country) => (
                                     <option
-                                      key={country.iso}
-                                      value={country.code}
+                                      key={country.name}
+                                      value={country.isdCode}
                                     >
-                                      {country.code} ({country.name})
+                                      {country.isdCode} ({country.name})
                                     </option>
                                   ))}
                               </select>
@@ -1259,7 +1267,7 @@ function RegisterUser() {
                                   checked={form.showInDashboard}
                                   onChange={onChange}
                                 />{" "}
-                                Allow my profile to appear on the dashboard
+                                Allow my profile to appear in browse skills
                               </label>
                             </div>
                           </div>
