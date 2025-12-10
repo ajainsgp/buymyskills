@@ -79,7 +79,6 @@ function Footer() {
 
   const handleRateSubmit = async (e) => {
     e.preventDefault();
-    if (!comment.trim()) return;
 
     setSubmitting(true);
     try {
@@ -190,7 +189,6 @@ function Footer() {
                       value={comment}
                       onChange={(e) => setComment(e.target.value)}
                       maxLength={600} // approx 100 words
-                      required
                     />
                   </div>
                 </div>
@@ -205,7 +203,7 @@ function Footer() {
                   <button
                     type="submit"
                     className="btn btn-primary"
-                    disabled={submitting || !comment.trim()}
+                    disabled={submitting}
                   >
                     {submitting ? "Submitting..." : "Submit"}
                   </button>
