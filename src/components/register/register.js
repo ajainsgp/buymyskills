@@ -154,10 +154,30 @@ function RegisterUser() {
     const { name, value, type, checked } = e.target;
     const newValue = type === "checkbox" ? checked : value;
 
-    setForm((prev) => ({
-      ...prev,
-      [name]: newValue,
-    }));
+    // Handle country selection specially to update countryCode synchronously
+    if (name === "country" && countriesWithCodes.length > 0) {
+      const selectedCountry = countriesWithCodes.find(
+        (c) => c.name === newValue,
+      );
+      if (selectedCountry) {
+        setForm((prev) => ({
+          ...prev,
+          [name]: newValue,
+          countryCode: selectedCountry.isdCode,
+          currencyCode: selectedCountry.currencyCode || prev.currencyCode,
+        }));
+      } else {
+        setForm((prev) => ({
+          ...prev,
+          [name]: newValue,
+        }));
+      }
+    } else {
+      setForm((prev) => ({
+        ...prev,
+        [name]: newValue,
+      }));
+    }
 
     // Real-time validation
     if (name === "emailId") {
@@ -167,7 +187,17 @@ function RegisterUser() {
         emailId: validation.message,
       }));
     } else if (name === "mobileNo") {
-      const validation = validateMobile(newValue, form.countryCode);
+      // For mobile validation, use the updated countryCode if country was just changed
+      let currentCountryCode = form.countryCode;
+      if (name === "country" && countriesWithCodes.length > 0) {
+        const selectedCountry = countriesWithCodes.find(
+          (c) => c.name === newValue,
+        );
+        if (selectedCountry) {
+          currentCountryCode = selectedCountry.isdCode;
+        }
+      }
+      const validation = validateMobile(newValue, currentCountryCode);
       setFieldErrors((prev) => ({
         ...prev,
         mobileNo: validation.message,
@@ -186,7 +216,17 @@ function RegisterUser() {
       }));
     } else if (name === "whatsappNumber") {
       if (newValue && newValue.trim() !== "") {
-        const validation = validateMobile(newValue, form.countryCode);
+        // For WhatsApp validation, use the updated countryCode if country was just changed
+        let currentCountryCode = form.countryCode;
+        if (name === "country" && countriesWithCodes.length > 0) {
+          const selectedCountry = countriesWithCodes.find(
+            (c) => c.name === newValue,
+          );
+          if (selectedCountry) {
+            currentCountryCode = selectedCountry.isdCode;
+          }
+        }
+        const validation = validateMobile(newValue, currentCountryCode);
         setFieldErrors((prev) => ({
           ...prev,
           whatsappNumber: validation.message,
@@ -813,10 +853,10 @@ function RegisterUser() {
                       <div className="form-group row set-padding-left-right">
                         <div className="col-12">
                           <div className="alert alert-warning" role="alert">
-                            <medium>
+                            <small>
                               <strong>{t("auth.register.warning")}:</strong>{" "}
                               {t("auth.register.contactWarning")}
-                            </medium>
+                            </small>
                           </div>
                         </div>
                       </div>
