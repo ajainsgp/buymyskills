@@ -79,15 +79,42 @@ function Profile() {
           }));
         }
         // Auto-set mobile country code
-        if (selectedCountry.phoneCode) {
+        if (selectedCountry.isdCode) {
           setForm((prev) => ({
             ...prev,
-            countryCode: selectedCountry.phoneCode,
+            countryCode: selectedCountry.isdCode,
           }));
         }
       }
     }
   }, [form.address.country, countriesWithCodes]);
+
+  // Ensure ISD code is set when countries data loads and we have profile data
+  useEffect(() => {
+    if (countriesWithCodes.length > 0 && form.address.country) {
+      // If country is already set, make sure ISD code matches
+      const selectedCountry = countriesWithCodes.find(
+        (c) => c.name === form.address.country,
+      );
+      if (selectedCountry && selectedCountry.isdCode !== form.countryCode) {
+        setForm((prev) => ({
+          ...prev,
+          countryCode: selectedCountry.isdCode,
+        }));
+      }
+    } else if (countriesWithCodes.length > 0 && !form.address.country && form.countryCode && form.countryCode !== "+1") {
+      // If no country is selected but we have a non-default countryCode, find the country that matches
+      const countryByCode = countriesWithCodes.find(
+        (c) => c.isdCode === form.countryCode,
+      );
+      if (countryByCode) {
+        setForm((prev) => ({
+          ...prev,
+          address: { ...prev.address, country: countryByCode.name },
+        }));
+      }
+    }
+  }, [countriesWithCodes, form.countryCode, form.address.country]);
 
   // Load current user (from localStorage first, then refresh from API)
   useEffect(() => {
