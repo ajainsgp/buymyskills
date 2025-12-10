@@ -45,7 +45,7 @@ export const getCountries = async (withCodes = false) => {
           .filter((country) => country.enabled === "Y")
           .map((country) => ({
             name: country.name,
-            code: country.iso,
+            code: country.code,
             isdCode: country.isdCode,
             currencyCode: "", // Not available in JSON
             enabled: true,
@@ -59,7 +59,7 @@ export const getCountries = async (withCodes = false) => {
           .filter((country) => country.enabled === "Y")
           .map((country) => ({
             name: country.name,
-            code: country.iso,
+            code: country.code,
             isdCode: country.isdCode,
             currencyCode: "", // Not available in JSON
           }));
@@ -77,7 +77,7 @@ export const getCountryCodeMapping = () => {
   const mapping = {};
   countryCodesData.forEach((country) => {
     if (country.enabled === "Y") {
-      mapping[country.isdCode] = country.iso;
+      mapping[country.isdCode] = country.code;
     }
   });
   return mapping;

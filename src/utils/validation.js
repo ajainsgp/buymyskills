@@ -46,15 +46,25 @@ export const validateMobile = (mobile, countryCode = "+1") => {
     // Check if it's a mobile number (not fixed line)
     const numberType = phoneUtil.getNumberType(phoneNumber);
     if (numberType !== 1) {
-      // MOBILE = 1
-      return {
-        isValid: false,
-        message: "Please enter a valid mobile phone number",
-      };
+      // MOBILE = 1, but also allow FIXED_LINE_OR_MOBILE = 3 for some countries
+      if (numberType !== 1 && numberType !== 3) {
+        return {
+          isValid: false,
+          message: "Please enter a valid mobile phone number",
+        };
+      }
     }
 
     return { isValid: true, message: "" };
   } catch (error) {
+    console.error(
+      "Phone validation error:",
+      error.message,
+      "for number:",
+      mobile,
+      "country:",
+      countryCode,
+    );
     return {
       isValid: false,
       message: "Please enter a valid mobile number for the selected country",
