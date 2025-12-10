@@ -3,11 +3,13 @@ import { useNavigate } from "react-router-dom";
 import API_BASE from "../utils/apiBase";
 import { getCountries } from "../utils/countryUtils";
 import { validateMobile, validateSummary } from "../utils/validation";
+import { useTranslation } from "react-i18next";
 import "./profile.css";
 /* eslint-disable prettier/prettier */
 
 function Profile() {
   const navigate = useNavigate();
+  const { t } = useTranslation();
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
   // eslint-disable-next-line no-unused-vars
@@ -486,7 +488,7 @@ function Profile() {
   if (loading) {
     return (
       <div className="container-fluid profile-loading">
-        Loading profile...
+        {t("profile.loading")}
       </div>
     );
   }
@@ -496,7 +498,7 @@ function Profile() {
       <div className="profile-container">
         <div className="d-sm-flex align-items-center justify-content-between mb-4">
           <h1 className="h3 mb-0 text-gray-800">
-            My Profile id is{" "}
+            {t("profile.title")}{" "}
             <span className="text-primary font-weight-bold">{form.emailId}</span>
           </h1>
         </div>
@@ -507,7 +509,7 @@ function Profile() {
             <div className="col-lg-8">
               <div className="panel panel-body no-left-right-padding">
                 <div className="panel panel-title">
-                  <h3>My Basic Profile</h3>
+                  <h3>{t("profile.basicProfile")}</h3>
                 </div>
 
                     <div className="form-group row set-padding-left-right">
@@ -515,14 +517,14 @@ function Profile() {
                     <div className="panel panel-info">
                       {form.roleType === "user" ? (
                         <div className="role-selection-with-label">
-                          <div className="role-label">My Role is</div>
+                          <div className="role-label">{t("profile.myRole")}</div>
                           <div className="role-value">
-                            <strong>Seller</strong>
+                            <strong>{t("profile.seller")}</strong>
                           </div>
                         </div>
                       ) : (
                         <div className="role-selection-with-label">
-                          <div className="role-label">My Role is</div>
+                          <div className="role-label">{t("profile.myRole")}</div>
                           <div className="role-options">
                             <div className="form-check form-check-inline">
                               <input
@@ -541,7 +543,7 @@ function Profile() {
                                 className="form-check-label"
                                 htmlFor="buyer"
                               >
-                                Buyer
+                                {t("profile.buyer")}
                               </label>
                             </div>
                             <div className="form-check form-check-inline">
@@ -558,7 +560,7 @@ function Profile() {
                                 }))}
                               />
                               <label className="form-check-label" htmlFor="seller">
-                                Seller
+                                {t("profile.seller")}
                               </label>
                             </div>
                           </div>
@@ -571,13 +573,13 @@ function Profile() {
                 <div className="form-group row set-padding-left-right">
                   <div className="col-sm-6">
                     <div className="panel panel-info">
-                      <div className="panel-heading">First Name</div>
+                      <div className="panel-heading">{t("profile.firstName")}</div>
                       <input
                         type="text"
                         name="firstName"
                         id="first_name"
                         className="form-control input-lg"
-                        placeholder="First Name"
+                        placeholder={t("profile.firstName")}
                         value={form.firstName}
                         onChange={onChange}
                       />
@@ -585,13 +587,13 @@ function Profile() {
                   </div>
                   <div className="col-sm-6">
                     <div className="panel panel-info">
-                      <div className="panel-heading">Last Name</div>
+                      <div className="panel-heading">{t("profile.lastName")}</div>
                       <input
                         type="text"
                         name="lastName"
                         id="last_name"
                         className="form-control input-lg"
-                        placeholder="Last Name"
+                        placeholder={t("profile.lastName")}
                         value={form.lastName}
                         onChange={onChange}
                       />
@@ -602,13 +604,13 @@ function Profile() {
                 <div className="form-group row set-padding-left-right">
                   <div className="col-sm-6">
                     <div className="panel panel-info">
-                      <div className="panel-heading">Nick Name</div>
+                      <div className="panel-heading">{t("profile.nickName")}</div>
                       <input
                         type="text"
                         name="nickName"
                         id="nick_name"
                         className="form-control input-lg"
-                        placeholder="Nick Name to display as"
+                        placeholder={t("profile.nickNamePlaceholder")}
                         value={form.nickName}
                         onChange={onChange}
                       />
@@ -616,7 +618,7 @@ function Profile() {
                   </div>
                   <div className="col-sm-6">
                     <div className="panel panel-info">
-                      <div className="panel-heading">Gender</div>
+                      <div className="panel-heading">{t("profile.gender")}</div>
                       <select
                         id="gender"
                         name="gender"
@@ -635,19 +637,19 @@ function Profile() {
 
               <div className="panel panel-body no-left-right-padding">
                 <div className="panel panel-title">
-                  <h3>My Location</h3>
+                  <h3>{t("profile.location")}</h3>
                 </div>
 
                 <div className="form-group row set-padding-left-right">
                   <div className="col-md-6">
                     <div className="panel panel-default">
-                      <div className="panel-heading">Address Line1</div>
+                      <div className="panel-heading">{t("profile.addressLine1")}</div>
                       <input
                         type="text"
                         name="address.addressLine1"
                         id="addressLine1"
                         className="form-control input-lg"
-                        placeholder="Address Line1"
+                        placeholder={t("profile.addressLine1")}
                         value={form.address.addressLine1}
                         onChange={onChange}
                       />
@@ -655,13 +657,13 @@ function Profile() {
                   </div>
                   <div className="col-md-6">
                     <div className="panel panel-default">
-                      <div className="panel-heading">Address Line2</div>
+                      <div className="panel-heading">{t("profile.addressLine2")}</div>
                       <input
                         type="text"
                         name="address.addressLine2"
                         id="addressLine2"
                         className="form-control input-lg"
-                        placeholder="Address Line 2"
+                        placeholder={t("profile.addressLine2")}
                         value={form.address.addressLine2}
                         onChange={onChange}
                       />
@@ -672,13 +674,13 @@ function Profile() {
                 <div className="form-group row set-padding-left-right">
                   <div className="col-md-6">
                     <div className="panel panel-default">
-                      <div className="panel-heading">City</div>
+                      <div className="panel-heading">{t("profile.city")}</div>
                       <input
                         type="text"
                         name="address.city"
                         id="city"
                         className="form-control input-lg"
-                        placeholder="City"
+                        placeholder={t("profile.city")}
                         value={form.address.city}
                         onChange={onChange}
                       />
@@ -686,13 +688,13 @@ function Profile() {
                   </div>
                   <div className="col-md-6">
                     <div className="panel panel-default">
-                      <div className="panel-heading">State</div>
+                      <div className="panel-heading">{t("profile.state")}</div>
                       <input
                         type="text"
                         name="address.state"
                         id="state"
                         className="form-control input-lg"
-                        placeholder="State"
+                        placeholder={t("profile.state")}
                         value={form.address.state}
                         onChange={onChange}
                       />
@@ -703,13 +705,13 @@ function Profile() {
                 <div className="form-group row set-padding-left-right">
                   <div className="col-md-6">
                     <div className="panel panel-default">
-                      <div className="panel-heading">Postcode</div>
+                      <div className="panel-heading">{t("profile.postcode")}</div>
                       <input
                         type="text"
                         name="address.postcode"
                         id="postcode"
                         className="form-control input-lg"
-                        placeholder="PostCode"
+                        placeholder={t("profile.postcode")}
                         value={form.address.postcode}
                         onChange={onChange}
                       />
@@ -717,7 +719,7 @@ function Profile() {
                   </div>
                   <div className="col-md-6">
                     <div className="panel panel-default">
-                      <div className="panel-heading">Country</div>
+                      <div className="panel-heading">{t("profile.country")}</div>
                       <select
                         id="country"
                         name="address.country"
@@ -741,27 +743,26 @@ function Profile() {
 
               <div className="panel panel-body no-left-right-padding">
                 <div className="panel panel-title">
-                  <h3>My Contact Details</h3>
+                  <h3>{t("profile.contactDetails")}</h3>
                 </div>
 
                 <div className="form-group row set-padding-left-right">
                   <div className="col-sm-6">
                     <div className="panel panel-info">
                       <div className="panel-heading">
-                        Secondary email Id to contact (optional)
+                        {t("profile.secondaryEmail")}
                       </div>
                       <input
                         type="email"
                         name="secondaryEmail"
                         id="secondaryEmail"
                         className="form-control input-lg"
-                        placeholder="secondary@example.com"
+                        placeholder={t("profile.secondaryEmailPlaceholder")}
                         value={form.secondaryEmail}
                         onChange={onChange}
                       />
                       <small className="form-text text-muted">
-                        if left blank then your primary email id will be used by
-                        users to contact you
+                        {t("profile.secondaryEmailHelp")}
                       </small>
                     </div>
                   </div>
@@ -770,7 +771,7 @@ function Profile() {
                 <div className="form-group row set-padding-left-right">
                   <div className="col-sm-6">
                     <div className="panel panel-info">
-                      <div className="panel-heading">Mobile</div>
+                      <div className="panel-heading">{t("profile.mobile")}</div>
                       <div className="row">
                         <div className="col-4">
                           <select
@@ -798,7 +799,7 @@ function Profile() {
                             name="mobile"
                             id="mobileNo"
                             className="form-control"
-                            placeholder="Mobile Number"
+                            placeholder={t("profile.mobileNumber")}
                             value={form.mobile}
                             onChange={onChange}
                           />
@@ -825,7 +826,7 @@ function Profile() {
                             className="form-check-label"
                             htmlFor="isWhatsappAvailable"
                           >
-                            This number is also available on WhatsApp
+                            {t("profile.whatsappAvailable")}
                           </label>
                         </div>
                       </div>
@@ -835,7 +836,7 @@ function Profile() {
                             type="text"
                             name="whatsappNumber"
                             className="form-control"
-                            placeholder="WhatsApp Contact Number"
+                            placeholder={t("profile.whatsappNumber")}
                             value={form.whatsappNumber}
                             onChange={onChange}
                           />
@@ -845,8 +846,7 @@ function Profile() {
                             </small>
                           )}
                           <small className="form-text text-muted">
-                            Enter your WhatsApp number if different from
-                            above
+                            {t("profile.whatsappHelp")}
                           </small>
                         </div>
                       )}
@@ -858,7 +858,7 @@ function Profile() {
                   <div className="col-sm-6">
                     <div className="panel panel-info">
                       <div className="panel-heading">
-                        Contact Preferences
+                        {t("profile.contactPreferences")}
                       </div>
                       <div
                         className="form-check contact-preferences"
@@ -875,7 +875,7 @@ function Profile() {
                           className="form-check-label"
                           htmlFor="allowEmailContact"
                         >
-                          Allow public to contact me on my email address
+                          {t("profile.allowEmailContact")}
                         </label>
                       </div>
                     </div>
@@ -883,7 +883,7 @@ function Profile() {
                   <div className="col-sm-6">
                     <div className="panel panel-info">
                       <div className="panel-heading">
-                        Contact Preferences
+                        {t("profile.contactPreferences")}
                       </div>
                       <div className="form-check">
                         <input
@@ -898,7 +898,7 @@ function Profile() {
                           className="form-check-label"
                           htmlFor="allowMobileContact"
                         >
-                          Allow public to contact me on my mobile number
+                          {t("profile.allowMobileContact")}
                         </label>
                       </div>
                     </div>
@@ -910,8 +910,7 @@ function Profile() {
                     <div className="col-12">
                       <div className="alert alert-warning" role="alert">
                         <small>
-                          <strong>Warning:</strong> You have disabled both email and mobile contact options.
-                          Public users can only send messages within this app to contact you.
+                          <strong>{t("profile.warning")}:</strong> {t("profile.contactWarning")}
                         </small>
                       </div>
                     </div>
@@ -923,13 +922,13 @@ function Profile() {
               {form.roleType === "user" && (
                 <div className="panel panel-body no-left-right-padding">
                   <div className="panel panel-title">
-                    <h3>My Skills</h3>
+                    <h3>{t("profile.skills")}</h3>
                   </div>
 
                   <div className="form-group row set-padding-left-right">
                     <div className="col-md-6">
                       <div className="panel panel-default">
-                        <div className="panel-heading">Category</div>
+                        <div className="panel-heading">{t("profile.category")}</div>
                         <select
                           id="category"
                           name="category"
@@ -952,14 +951,14 @@ function Profile() {
                     <div className="col-md-6">
                       <div className="panel panel-default">
                         <div className="panel-heading">
-                          Tags * (Add up to 5 relevant tags)
+                          {t("profile.tags")}
                         </div>
                         <input
                           type="text"
                           className="form-control"
                           id="keywordTags"
                           name="keywordTags"
-                          placeholder="Like Software Development, Data Migration, AI & LLM Development"
+                          placeholder={t("profile.tagsPlaceholder")}
                           value={form.keywordTags}
                           onChange={onChange}
                         />
@@ -971,12 +970,12 @@ function Profile() {
                     <div className="col-md-12">
                       <div className="panel panel-default">
                         <div className="panel-heading">
-                          Summary of your skills
+                          {t("profile.summary")}
                         </div>
                         <textarea
                           name="summary"
                           className="form-control"
-                          placeholder="Briefly describe your key skills and expertise (150 characters)"
+                          placeholder={t("profile.summaryPlaceholder")}
                           value={form.summary}
                           onChange={onChange}
                           maxLength={150}
@@ -998,7 +997,7 @@ function Profile() {
                     <div className="col-md-6">
                       <div className="panel panel-default">
                         <div className="panel-heading">
-                          Facebook URL (optional)
+                          {t("profile.facebookUrl")}
                         </div>
                         <input
                           type="url"
@@ -1009,14 +1008,14 @@ function Profile() {
                           onChange={onChange}
                         />
                         <small className="form-text text-muted">
-                          Your Facebook profile or page URL
+                          {t("profile.facebookHelp")}
                         </small>
                       </div>
                     </div>
                     <div className="col-md-6">
                       <div className="panel panel-default">
                         <div className="panel-heading">
-                          LinkedIn URL (optional)
+                          {t("profile.linkedinUrl")}
                         </div>
                         <input
                           type="url"
@@ -1027,7 +1026,7 @@ function Profile() {
                           onChange={onChange}
                         />
                         <small className="form-text text-muted">
-                          Your LinkedIn profile URL
+                          {t("profile.linkedinHelp")}
                         </small>
                       </div>
                     </div>
@@ -1039,13 +1038,13 @@ function Profile() {
               {form.roleType === "user" && (
                 <div className="panel panel-body no-left-right-padding">
                   <div className="panel panel-title">
-                    <h3>My Pricing</h3>
+                    <h3>{t("profile.pricing")}</h3>
                   </div>
 
                   <div className="form-group row set-padding-left-right">
                     <div className="col-md-6">
                       <div className="panel panel-default">
-                        <div className="panel-heading">Starting Price</div>
+                        <div className="panel-heading">{t("profile.startingPrice")}</div>
                         <div className="row">
                           <div className="col-md-8">
                             <div className="input-group">
@@ -1070,7 +1069,7 @@ function Profile() {
                                 type="number"
                                 name="startingPrice"
                                 className="form-control"
-                                placeholder="Enter starting price"
+                                placeholder={t("profile.startingPricePlaceholder")}
                                 value={form.startingPrice}
                                 onChange={onChange}
                                 min="0"
@@ -1098,7 +1097,7 @@ function Profile() {
                                 className="form-check-label"
                                 htmlFor="hourly"
                               >
-                                Hourly
+                                {t("profile.hourly")}
                               </label>
                             </div>
                             <div className="form-check form-check-inline">
@@ -1118,19 +1117,19 @@ function Profile() {
                                 className="form-check-label"
                                 htmlFor="daily"
                               >
-                                Daily
+                                {t("profile.daily")}
                               </label>
                             </div>
                           </div>
                         </div>
                         <small className="form-text text-muted">
-                          Your minimum hourly/daily rate
+                          {t("profile.rateHelp")}
                         </small>
                       </div>
                     </div>
                     <div className="col-md-6">
                       <div className="panel panel-default">
-                        <div className="panel-heading">Negotiable</div>
+                        <div className="panel-heading">{t("profile.negotiable")}</div>
                         <div className="negotiable-checkbox">
                           <div className="form-check">
                             <input
@@ -1148,11 +1147,11 @@ function Profile() {
                               className="form-check-label"
                               htmlFor="negotiable"
                             >
-                              Price is negotiable
+                              {t("profile.priceNegotiable")}
                             </label>
                           </div>
                           <small className="form-text text-muted">
-                            Check if you&apos;re open to negotiating your rates
+                            {t("profile.negotiableHelp")}
                           </small>
                         </div>
                       </div>
@@ -1165,13 +1164,13 @@ function Profile() {
               {form.roleType === "user" && (
                 <div className="panel panel-body no-left-right-padding">
                   <div className="panel panel-title">
-                    <h3>My Availability</h3>
+                    <h3>{t("profile.availability")}</h3>
                   </div>
 
                   <div className="form-group row set-padding-left-right">
                     <div className="col-md-6">
                       <div className="panel panel-default">
-                        <div className="panel-heading">Preference</div>
+                        <div className="panel-heading">{t("profile.preference")}</div>
                         <select
                           id="workPreference"
                           name="workPreference"
@@ -1188,7 +1187,7 @@ function Profile() {
                     </div>
                     <div className="col-md-6">
                       <div className="panel panel-default">
-                        <div className="panel-heading">Traveling</div>
+                        <div className="panel-heading">{t("profile.traveling")}</div>
                         <select
                           id="traveling"
                           name="traveling"
@@ -1208,7 +1207,7 @@ function Profile() {
                   <div className="form-group row set-padding-left-right">
                     <div className="col-md-6">
                       <div className="panel panel-default">
-                        <div className="panel-heading">Available</div>
+                        <div className="panel-heading">{t("profile.available")}</div>
                         <select
                           id="available"
                           name="available"
@@ -1232,13 +1231,13 @@ function Profile() {
               {form.roleType === "user" && (
                 <div className="panel panel-body no-left-right-padding">
                   <div className="panel panel-title">
-                    <h3>My Visibility</h3>
+                    <h3>{t("profile.visibility")}</h3>
                   </div>
                   <div className="form-group row set-padding-left-right">
                     <div className="col-md-6">
                       <div className="panel panel-default">
                         <div className="panel-heading">
-                          Show my profile on the public dashboard
+                          {t("profile.showInDashboard")}
                         </div>
                         <div className="checkbox visibility-checkbox">
                           <label>
@@ -1248,7 +1247,7 @@ function Profile() {
                               checked={form.showInDashboard}
                               onChange={onChange}
                             />{" "}
-                            Allow my profile to appear in browse skills
+                            {t("profile.allowDashboard")}
                           </label>
                         </div>
                       </div>
@@ -1256,7 +1255,7 @@ function Profile() {
                     <div className="col-md-6">
                       <div className="panel panel-default">
                         <div className="panel-heading">
-                          Show my photo publicly
+                          {t("profile.showPhoto")}
                         </div>
                         <div className="checkbox visibility-checkbox">
                           <label>
@@ -1266,7 +1265,7 @@ function Profile() {
                               checked={form.showPhoto}
                               onChange={onChange}
                             />{" "}
-                            Allow my uploaded photo to be shown
+                            {t("profile.allowPhoto")}
                           </label>
                         </div>
                       </div>
@@ -1278,16 +1277,16 @@ function Profile() {
               {/* Close Account section */}
               <div className="panel panel-body no-left-right-padding">
                 <div className="panel panel-title">
-                  <h3>Close Account</h3>
+                  <h3>{t("profile.closeAccount")}</h3>
                 </div>
                 <div className="form-group row set-padding-left-right">
                   <div className="col-12">
                     <div className="alert alert-info" role="alert">
-                      <strong>Account Closure:</strong> If you want to close your account then please click on{" "}
+                      <strong>{t("profile.accountClosure")}:</strong> {t("profile.accountClosureText")}{" "}
                       <a href="/support" className="alert-link">
-                        Support
+                        {t("profile.support")}
                       </a>{" "}
-                      and send a message to Admin. We will take the action as required and inform you soon. Thanks for your support.
+                      {t("profile.accountClosureHelp")}
                     </div>
                   </div>
                 </div>
@@ -1301,7 +1300,7 @@ function Profile() {
                     disabled={saving}
                   >
                     <i className="fa fa-fw fa-times" aria-hidden="true"></i>{" "}
-                    Cancel
+                    {t("profile.cancel")}
                   </button>
                   <button
                     className="btn btn-primary update-button"
@@ -1309,7 +1308,7 @@ function Profile() {
                     disabled={saving}
                   >
                     <i className="fa fa-fw fa-check" aria-hidden="true"></i>{" "}
-                    {saving ? "Updating..." : "Update"}
+                    {saving ? t("profile.updating") : t("profile.update")}
                   </button>
                 </div>
               </div>
@@ -1339,7 +1338,7 @@ function Profile() {
             <div className="col-lg-4">
               <div className="panel panel-body">
                 <div className="panel panel-title">
-                  <h3>Profile Photo</h3>
+                  <h3>{t("profile.photoTitle")}</h3>
                 </div>
                 <div className="text-center">
                   <img
@@ -1358,7 +1357,7 @@ function Profile() {
                     onClick={onPickPhoto}
                     disabled={uploading || saving}
                   >
-                    {uploading ? "Uploading..." : "Upload Photo"}
+                    {uploading ? t("profile.uploading") : t("profile.uploadPhoto")}
                   </button>
                   {photoUrl && photoUrl !== "http://ssl.gstatic.com/accounts/ui/avatar_2x.png" && (
                     <button
@@ -1377,9 +1376,9 @@ function Profile() {
                           if (fileInputRef.current) {
                             fileInputRef.current.value = "";
                           }
-                          setNotice("Photo removed successfully");
+                          setNotice(t("profile.photoRemoved"));
                         } catch (err) {
-                          setPhotoError("Failed to remove photo");
+                          setPhotoError(t("profile.photoRemoveError"));
                         } finally {
                           setUploading(false);
                         }
@@ -1387,7 +1386,7 @@ function Profile() {
                       disabled={uploading || saving}
                     >
                       <i className="fa fa-trash" aria-hidden="true"></i>{" "}
-                      Remove Photo
+                      {t("profile.removePhoto")}
                     </button>
                   )}
                   <input
@@ -1398,7 +1397,7 @@ function Profile() {
                     onChange={onFileChange}
                   />
                   <div className="file-info">
-                    Allowed types: .jpg, .jpeg, .png, .gif. Max size: 500KB.
+                    {t("profile.fileInfo")}
                   </div>
                   {photoError ? (
                     <div className="photo-error">

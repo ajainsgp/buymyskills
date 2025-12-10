@@ -21,6 +21,7 @@ import LandingPage from "./pages/LandingPage";
 import BrowsePage from "./pages/BrowsePage";
 import AboutUs from "./pages/AboutUs";
 import { LandingPageCardsProvider } from "./contexts/LandingPageCardsContext";
+import "./i18n";
 
 function App() {
   // On initial load, ensure no auto-login unless user explicitly chose "Remember Me"

@@ -4,8 +4,10 @@ import API_BASE from "../utils/apiBase";
 import UserProfile from "../components/UserProfile";
 import { useLocation, useSearchParams } from "react-router-dom";
 import { getCountries } from "../utils/countryUtils";
+import { useTranslation } from "react-i18next";
 
 function BrowsePage() {
+  const { t } = useTranslation();
   const [users, setUsers] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState("");
@@ -362,23 +364,23 @@ function BrowsePage() {
         <div className="container-fluid">
           <div className="text-center">
             <h1 className="display-4 font-weight-bold mb-4">
-              Find the Perfect Skill for Your Project
+              {t("browse.title")}
             </h1>
-            <h4>Connect with talented freelancers who can deliver quality work.</h4>
+            <h4>{t("browse.subtitle")}</h4>
             <div className="row justify-content-center">
               <div className="col-md-6">
                 <div className="input-group mb-3">
                   <input
                     type="text"
                     className="form-control form-control-lg"
-                    placeholder="Search for skills..."
-                    aria-label="Search for skills"
+                    placeholder={t("browse.searchPlaceholder")}
+                    aria-label={t("browse.searchPlaceholder")}
                     value={searchKw}
                     onChange={(e) => setSearchKw(e.target.value)}
                   />
                   <div className="input-group-append">
                     <button className="btn btn-primary btn-lg" type="button" onClick={handleSearch}>
-                      <i className="fas fa-search"></i> Search
+                      <i className="fas fa-search"></i> {t("browse.searchButton")}
                     </button>
                   </div>
                 </div>
@@ -388,7 +390,7 @@ function BrowsePage() {
               <div className="row">
                 <div className="col-12 col-sm-6 col-md-3 mb-3">
                   <button className="btn btn-light btn-lg w-100">
-                    <i className="fas fa-star"></i> Popular Skills
+                    <i className="fas fa-star"></i> {t("browse.popularSkills")}
                   </button>
                 </div>
                 <div className="col-12 col-sm-6 col-md-3 mb-3">
@@ -397,7 +399,7 @@ function BrowsePage() {
                     value={selectedCategory}
                     onChange={handleCategoryChange}
                   >
-                    <option value="all">All Categories</option>
+                    <option value="all">{t("browse.allCategories")}</option>
                     {categories.map(name => (
                       <option key={name} value={name}>{name}</option>
                     ))}
@@ -409,7 +411,7 @@ function BrowsePage() {
                     value={selectedCountry}
                     onChange={handleCountryChange}
                   >
-                    <option value="all">All Countries</option>
+                    <option value="all">{t("browse.allCountries")}</option>
                     {availableCountries.map(country => (
                       <option key={country.code} value={country.code}>{country.name}</option>
                     ))}
@@ -419,7 +421,7 @@ function BrowsePage() {
                   <input
                     type="text"
                     className="form-control form-control-lg w-100"
-                    placeholder="City"
+                    placeholder={t("browse.cityPlaceholder")}
                     value={cityFilter}
                     onChange={handleCityChange}
                   />
@@ -433,7 +435,7 @@ function BrowsePage() {
       {/* Users Section */}
       <section className="py-5">
         <div className="container">
-          {loading && <div className="text-center">Loading users...</div>}
+          {loading && <div className="text-center">{t("browse.loading")}</div>}
           {error && (
             <div className="alert alert-danger text-center" role="alert">
               {error}
@@ -449,7 +451,7 @@ function BrowsePage() {
                 ))
               ) : (
                 <div className="col-12 text-center">
-                  <p>No users found matching your criteria.</p>
+                  <p>{t("browse.noUsersFound")}</p>
                 </div>
               )}
             </div>
@@ -457,7 +459,7 @@ function BrowsePage() {
           {hasMore && !loading && displayUsers.length > 0 && (
             <div className="text-center mt-4">
               <button className="btn btn-primary" onClick={handleLoadMore}>
-                Load More Users
+                {t("browse.loadMore")}
               </button>
             </div>
           )}

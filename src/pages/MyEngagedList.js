@@ -1,7 +1,9 @@
 import React, { useState, useEffect } from "react";
+import { useTranslation } from "react-i18next";
 import API_BASE from "../utils/apiBase";
 
 function MyEngagedList() {
+  const { t } = useTranslation();
   const [engagedList, setEngagedList] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState("");
@@ -53,10 +55,10 @@ function MyEngagedList() {
         const data = await response.json();
         setEngagedList(data.engagedList || []);
       } else {
-        setError("Failed to load engaged list");
+        setError(t("engagedList.failedToLoad"));
       }
     } catch (err) {
-      setError("Failed to load engaged list");
+      setError(t("engagedList.failedToLoad"));
     } finally {
       setLoading(false);
     }
@@ -64,7 +66,7 @@ function MyEngagedList() {
 
   const handleRating = async (engagedId) => {
     if (rating < 1 || rating > 5) {
-      alert("Please select a rating between 1 and 5");
+      alert(t("engagedList.selectRating"));
       return;
     }
 
@@ -82,18 +84,18 @@ function MyEngagedList() {
       );
 
       if (response.ok) {
-        alert("Rating submitted successfully!");
+        alert(t("engagedList.ratingSubmitted"));
         setRatingSeller(null);
         setRating(0);
         // Reload the list to show updated ratings
         loadEngagedList(currentUser);
       } else {
         const data = await response.json();
-        alert(data.error || "Failed to submit rating");
+        alert(data.error || t("engagedList.failedToSubmit"));
       }
     } catch (error) {
       console.error("Rating error:", error);
-      alert("Failed to submit rating");
+      alert(t("engagedList.failedToSubmit"));
     }
   };
 
@@ -126,7 +128,7 @@ function MyEngagedList() {
           <span
             style={{ fontSize: "12px", marginLeft: "8px", color: "#6c757d" }}
           >
-            Click to rate
+            {t("engagedList.clickToRate")}
           </span>
         )}
       </div>
@@ -140,7 +142,7 @@ function MyEngagedList() {
           <div className="spinner-border" role="status">
             <span className="sr-only">Loading...</span>
           </div>
-          <p className="mt-2">Loading your engaged list...</p>
+          <p className="mt-2">{t("engagedList.loading")}</p>
         </div>
       </div>
     );
@@ -153,14 +155,14 @@ function MyEngagedList() {
           {/* Header */}
           <div className="d-flex justify-content-between align-items-center mb-4">
             <div>
-              <h1 className="h3 mb-0 text-gray-800">My Hired List</h1>
-              <p className="text-muted">
-                Sellers you&apos;ve worked with and their ratings
-              </p>
+              <h1 className="h3 mb-0 text-gray-800">
+                {t("engagedList.title")}
+              </h1>
+              <p className="text-muted">{t("engagedList.subtitle")}</p>
             </div>
             <div>
               <span className="badge badge-info">
-                Total Engaged: {engagedList.length}
+                {t("engagedList.totalEngaged")} {engagedList.length}
               </span>
             </div>
           </div>
@@ -182,7 +184,8 @@ function MyEngagedList() {
                 <div className="modal-content">
                   <div className="modal-header">
                     <h5 className="modal-title">
-                      Rate {ratingSeller.sellerName}
+                      {t("engagedList.rateSellerTitle")}{" "}
+                      {ratingSeller.sellerName}
                     </h5>
                     <button
                       type="button"
@@ -197,14 +200,14 @@ function MyEngagedList() {
                   </div>
                   <div className="modal-body">
                     <p>
-                      How would you rate your experience with{" "}
+                      {t("engagedList.ratingExperience")}{" "}
                       {ratingSeller.sellerName}?
                     </p>
                     <div className="text-center my-4">
                       {renderStars(rating, true)}
                     </div>
                     <small className="text-muted">
-                      1 star = Poor, 5 stars = Excellent
+                      {t("engagedList.ratingScale")}
                     </small>
                   </div>
                   <div className="modal-footer">
@@ -216,7 +219,7 @@ function MyEngagedList() {
                         setRating(0);
                       }}
                     >
-                      Cancel
+                      {t("engagedList.cancel")}
                     </button>
                     <button
                       type="button"
@@ -224,7 +227,7 @@ function MyEngagedList() {
                       onClick={() => handleRating(ratingSeller.id)}
                       disabled={rating === 0}
                     >
-                      Submit Rating
+                      {t("engagedList.submitRating")}
                     </button>
                   </div>
                 </div>
@@ -238,12 +241,14 @@ function MyEngagedList() {
               {engagedList.length === 0 ? (
                 <div className="text-center py-5">
                   <i className="fa fa-handshake-o fa-3x text-muted mb-3"></i>
-                  <h5 className="text-muted">No engagements yet</h5>
+                  <h5 className="text-muted">
+                    {t("engagedList.noEngagements")}
+                  </h5>
                   <p className="text-muted">
-                    When you mark sellers as engaged after using their skills,
-                    they&apos;ll appear here.
+                    {t("engagedList.noEngagementsDesc")}
                     <br />
-                    <a href="/browse">Browse sellers</a> to get started.
+                    <a href="/browse">{t("engagedList.browseSellers")}</a>{" "}
+                    {t("engagedList.toGetStarted")}
                   </p>
                 </div>
               ) : (
@@ -251,11 +256,11 @@ function MyEngagedList() {
                   <table className="table table-hover">
                     <thead className="thead-light">
                       <tr>
-                        <th>Seller</th>
-                        <th>Category</th>
-                        <th>Engaged Date</th>
-                        <th>Your Rating</th>
-                        <th>Actions</th>
+                        <th>{t("engagedList.seller")}</th>
+                        <th>{t("engagedList.category")}</th>
+                        <th>{t("engagedList.engagedDate")}</th>
+                        <th>{t("engagedList.yourRating")}</th>
+                        <th>{t("engagedList.actions")}</th>
                       </tr>
                     </thead>
                     <tbody>
@@ -266,7 +271,8 @@ function MyEngagedList() {
                               <strong>{engagement.sellerName}</strong>
                               <br />
                               <small className="text-muted">
-                                ID: {engagement.sellerId}
+                                {t("engagedList.sellerId")}{" "}
+                                {engagement.sellerId}
                               </small>
                             </div>
                           </td>
@@ -278,11 +284,14 @@ function MyEngagedList() {
                                 {renderStars(engagement.rating)}
                                 <br />
                                 <small className="text-muted">
-                                  Rated on {formatDate(engagement.ratingDate)}
+                                  {t("engagedList.ratedOn")}{" "}
+                                  {formatDate(engagement.ratingDate)}
                                 </small>
                               </div>
                             ) : (
-                              <span className="text-muted">Not rated yet</span>
+                              <span className="text-muted">
+                                {t("engagedList.notRatedYet")}
+                              </span>
                             )}
                           </td>
                           <td>
@@ -292,7 +301,7 @@ function MyEngagedList() {
                                 onClick={() => setRatingSeller(engagement)}
                               >
                                 <i className="fa fa-star mr-1"></i>
-                                Rate Seller
+                                {t("engagedList.rateSeller")}
                               </button>
                             )}
                           </td>

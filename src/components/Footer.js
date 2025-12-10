@@ -1,7 +1,9 @@
 import React, { useState, useEffect } from "react";
+import { useTranslation } from "react-i18next";
 import API_BASE from "../utils/apiBase";
 
 function Footer() {
+  const { t } = useTranslation();
   const [isLoggedIn, setIsLoggedIn] = useState(false);
   const [showModal, setShowModal] = useState(false);
   const [rating, setRating] = useState(5);
@@ -121,15 +123,15 @@ function Footer() {
         <hr className="border-white" />
         <div className="row">
           <div className="col-md-6">
-            <p>Connecting talent with opportunity.</p>
-            <h5>BuyMySkills</h5>
+            <p>{t("footer.aboutDescription")}</p>
+            <h5>{t("brand.title")}</h5>
           </div>
           <div className="col-md-6 text-md-right">
             <p>
               {averageRating !== null && (
                 <>
-                  Apps Rating: {renderStars(Math.floor(averageRating))}{" "}
-                  {averageRating}/5
+                  {t("footer.appsRating")}{" "}
+                  {renderStars(Math.floor(averageRating))} {averageRating}/5
                   {isLoggedIn && " | "}
                 </>
               )}
@@ -142,11 +144,11 @@ function Footer() {
                   }}
                   className="text-white"
                 >
-                  Rate this app
+                  {t("footer.rateThisApp")}
                 </a>
               )}
             </p>
-            <p>&copy; 2025 BuyMySkills. All rights reserved.</p>
+            <p>{t("footer.copyright")}</p>
           </div>
         </div>
       </div>
@@ -162,7 +164,7 @@ function Footer() {
           <div className="modal-dialog" role="document">
             <div className="modal-content">
               <div className="modal-header">
-                <h5 className="modal-title">Rate this app</h5>
+                <h5 className="modal-title">{t("footer.rateThisApp")}</h5>
                 <button
                   type="button"
                   className="close"
@@ -174,7 +176,7 @@ function Footer() {
               <form onSubmit={handleRateSubmit}>
                 <div className="modal-body">
                   <div className="form-group">
-                    <label>Rating (click stars):</label>
+                    <label>{t("footer.ratingLabel")}</label>
                     <div>
                       {renderStars(rating, true, (newRating) =>
                         setRating(newRating),
@@ -182,7 +184,7 @@ function Footer() {
                     </div>
                   </div>
                   <div className="form-group">
-                    <label>Comment (up to 100 words):</label>
+                    <label>{t("footer.commentLabel")}</label>
                     <textarea
                       className="form-control"
                       rows={3}
@@ -198,14 +200,14 @@ function Footer() {
                     className="btn btn-secondary"
                     onClick={() => setShowModal(false)}
                   >
-                    Cancel
+                    {t("footer.cancel")}
                   </button>
                   <button
                     type="submit"
                     className="btn btn-primary"
                     disabled={submitting}
                   >
-                    {submitting ? "Submitting..." : "Submit"}
+                    {submitting ? t("footer.submitting") : t("footer.submit")}
                   </button>
                 </div>
               </form>

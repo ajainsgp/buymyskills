@@ -1,8 +1,10 @@
 import React, { useState, useEffect, useRef } from "react";
+import { useTranslation } from "react-i18next";
 import API_BASE from "../utils/apiBase";
 import "./Feedback.css";
 
 function Feedback() {
+  const { t } = useTranslation();
   const [conversations, setConversations] = useState([]);
   const [selectedContactId, setSelectedContactId] = useState(null);
   const [messages, setMessages] = useState([]);
@@ -58,13 +60,11 @@ function Feedback() {
         const data = await response.json();
         setConversations(data.conversations || []);
       } else {
-        setError("Unable to load conversations. Please try again later.");
+        setError(t("feedback.unableToLoad"));
         setConversations([]);
       }
     } catch (err) {
-      setError(
-        "Unable to connect to the server. Please check your internet connection.",
-      );
+      setError(t("feedback.unableToConnect"));
       setConversations([]);
     } finally {
       setLoading(false);
@@ -200,11 +200,11 @@ function Feedback() {
           window.dispatchEvent(new Event("feedback-updated"));
         }
       } else {
-        alert("Failed to send message");
+        alert(t("feedback.failedToSend"));
       }
     } catch (error) {
       console.error("Send message error:", error);
-      alert("Failed to send message");
+      alert(t("feedback.failedToSend"));
     } finally {
       setSendingMessage(false);
     }
@@ -222,7 +222,7 @@ function Feedback() {
         minute: "2-digit",
       });
     } else if (date.toDateString() === yesterday.toDateString()) {
-      return "Yesterday";
+      return t("feedback.yesterday");
     } else {
       return date.toLocaleDateString();
     }
@@ -240,7 +240,7 @@ function Feedback() {
         minute: "2-digit",
       });
     } else if (date.toDateString() === yesterday.toDateString()) {
-      return `Yesterday ${date.toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" })}`;
+      return `${t("feedback.yesterday")} ${date.toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" })}`;
     } else {
       return (
         date.toLocaleDateString() +
@@ -287,7 +287,7 @@ function Feedback() {
           <div className="spinner-border" role="status">
             <span className="sr-only">Loading...</span>
           </div>
-          <p className="mt-2">Loading your feedback...</p>
+          <p className="mt-2">{t("feedback.loading")}</p>
         </div>
       </div>
     );
@@ -300,10 +300,8 @@ function Feedback() {
           {/* Header */}
           <div className="d-flex justify-content-between align-items-center mb-3">
             <div>
-              <h1 className="h3 mb-0 text-gray-800">Support & Feedback</h1>
-              <p className="text-muted mb-0">
-                Chat with our support team for assistance
-              </p>
+              <h1 className="h3 mb-0 text-gray-800">{t("feedback.title")}</h1>
+              <p className="text-muted mb-0">{t("feedback.subtitle")}</p>
             </div>
           </div>
 
@@ -321,7 +319,7 @@ function Feedback() {
                 <div className="card-header contacts-header">
                   <h6 className="mb-0">
                     <i className="fa fa-comments mr-2"></i>
-                    Conversations ({conversations.length})
+                    {t("feedback.conversations")} ({conversations.length})
                   </h6>
                 </div>
                 <div className="card-body contacts-body">
@@ -329,10 +327,10 @@ function Feedback() {
                     <div className="empty-sidebar">
                       <i className="fa fa-comments empty-sidebar-icon"></i>
                       <p className="empty-sidebar-title">
-                        No conversations yet
+                        {t("feedback.noConversationsYet")}
                       </p>
                       <small className="empty-sidebar-text">
-                        Start chatting with support!
+                        {t("feedback.startChatting")}
                       </small>
                     </div>
                   ) : (
@@ -380,7 +378,8 @@ function Feedback() {
                   <div className="card-header chat-header">
                     <h6 className="mb-0">
                       <i className="fa fa-user mr-2"></i>
-                      {selectedConversation?.contactName || "Support Chat"}
+                      {selectedConversation?.contactName ||
+                        t("feedback.supportChat")}
                     </h6>
                   </div>
 
@@ -389,9 +388,11 @@ function Feedback() {
                     {Object.keys(groupedMessages).length === 0 ? (
                       <div className="empty-chat">
                         <i className="fa fa-comments empty-chat-icon"></i>
-                        <p className="empty-chat-title">No messages yet</p>
+                        <p className="empty-chat-title">
+                          {t("feedback.noMessagesYet")}
+                        </p>
                         <small className="empty-chat-text">
-                          Send a message to start the conversation!
+                          {t("feedback.startConversation")}
                         </small>
                       </div>
                     ) : (
@@ -403,12 +404,12 @@ function Feedback() {
                               <span className="date-badge">
                                 {new Date(date).toDateString() ===
                                 new Date().toDateString()
-                                  ? "Today"
+                                  ? t("feedback.today")
                                   : new Date(date).toDateString() ===
                                       new Date(
                                         Date.now() - 86400000,
                                       ).toDateString()
-                                    ? "Yesterday"
+                                    ? t("feedback.yesterday")
                                     : new Date(date).toLocaleDateString()}
                               </span>
                             </div>
@@ -421,7 +422,7 @@ function Feedback() {
                               >
                                 {message.isSentByMe && (
                                   <div className="message-sender-label">
-                                    <small>You</small>
+                                    <small>{t("feedback.you")}</small>
                                   </div>
                                 )}
                                 <div
@@ -442,7 +443,7 @@ function Feedback() {
                                         <div className="admin-reply-note">
                                           <small>
                                             <em>
-                                              replied to{" "}
+                                              {t("feedback.repliedTo")}{" "}
                                               {selectedConversation?.contactName ||
                                                 "user"}
                                             </em>
@@ -465,7 +466,7 @@ function Feedback() {
                     <div className="message-input-group">
                       <textarea
                         className="form-control message-textarea"
-                        placeholder="Type your message..."
+                        placeholder={t("feedback.typeMessage")}
                         value={newMessage}
                         onChange={(e) => setNewMessage(e.target.value)}
                         onKeyPress={(e) => {
@@ -495,10 +496,10 @@ function Feedback() {
                 <div className="card shadow h-100 d-flex align-items-center justify-content-center">
                   <div className="text-center">
                     <i className="fa fa-comments fa-4x text-muted mb-4"></i>
-                    <h4 className="text-muted">Select a conversation</h4>
-                    <p className="text-muted">
-                      Choose a contact from the sidebar to start chatting
-                    </p>
+                    <h4 className="text-muted">
+                      {t("feedback.selectConversation")}
+                    </h4>
+                    <p className="text-muted">{t("feedback.chooseContact")}</p>
                   </div>
                 </div>
               )}

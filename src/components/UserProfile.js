@@ -1,8 +1,10 @@
 import React, { useEffect, useState } from "react";
+import { useTranslation } from "react-i18next";
 import "./UserProfile.css";
 import API_BASE from "../utils/apiBase";
 
 function UserProfile({ userProfiles, showSensitive = false }) {
+  const { t } = useTranslation();
   const [flips, setFlips] = useState(Array(userProfiles.length).fill(false));
   const [photos, setPhotos] = useState({});
   const [ratings, setRatings] = useState({});
@@ -137,12 +139,12 @@ function UserProfile({ userProfiles, showSensitive = false }) {
           },
           body: JSON.stringify({ sellerUserId: sellerId }),
         });
-        alert("Successfully marked as engaged with this seller!");
+        alert(t("userProfile.engagedSuccess"));
       }
       // If not engaged, we don't do anything - they can always change later
     } catch (error) {
       console.error("Engagement error:", error);
-      alert("Failed to update engagement status");
+      alert(t("userProfile.engagementFailed"));
     }
   };
 
@@ -165,7 +167,7 @@ function UserProfile({ userProfiles, showSensitive = false }) {
       });
 
       if (response.ok) {
-        alert("Message sent successfully!");
+        alert(t("userProfile.messageSent"));
         setShowMessageForm(null);
         setMessageSubject("");
         setMessageContent("");
@@ -175,11 +177,11 @@ function UserProfile({ userProfiles, showSensitive = false }) {
           window.dispatchEvent(new Event("message-updated"));
         }
       } else {
-        alert("Failed to send message");
+        alert(t("userProfile.messageFailed"));
       }
     } catch (error) {
       console.error("Send message error:", error);
-      alert("Failed to send message");
+      alert(t("userProfile.messageFailed"));
     } finally {
       setSendingMessage(false);
     }
@@ -212,7 +214,7 @@ function UserProfile({ userProfiles, showSensitive = false }) {
             fontWeight: "500",
           }}
         >
-          No ratings yet
+          {t("userProfile.noRatingsYet")}
         </div>
       );
     }
@@ -254,7 +256,9 @@ function UserProfile({ userProfiles, showSensitive = false }) {
           }
         }}
         title={
-          showSensitive ? "Click to flip" : "Login to view contact details"
+          showSensitive
+            ? t("userProfile.clickToFlip")
+            : t("userProfile.loginToViewContact")
         }
         style={{ cursor: showSensitive ? "pointer" : "default" }}
       >
@@ -284,7 +288,7 @@ function UserProfile({ userProfiles, showSensitive = false }) {
           <div className="card-body body-front">
             <div className="user-profile-skills-rating-row">
               <div className="skill-bubble">
-                <strong>Skills</strong>
+                <strong>{t("userProfile.skills")}</strong>
               </div>
               {ratings[profile.id] && (
                 <div className="rating-bubble">
@@ -298,35 +302,37 @@ function UserProfile({ userProfiles, showSensitive = false }) {
           <div className="card-footer bg-transparent">
             <div className="card-footer-grid">
               <div>
-                <strong>Availability:</strong>{" "}
+                <strong>{t("userProfile.availability")}</strong>{" "}
                 {profile.availability === "0"
-                  ? "Immediate"
+                  ? t("userProfile.immediate")
                   : profile.availability === "1"
-                    ? "In 1 month"
+                    ? t("userProfile.in1Month")
                     : profile.availability === "2"
-                      ? "In 2 months"
+                      ? t("userProfile.in2Months")
                       : profile.availability === "3"
-                        ? "In 3 months"
+                        ? t("userProfile.in3Months")
                         : profile.availability}
               </div>
               <div>
-                <strong>Location:</strong> {profile.address?.city || "N/A"},{" "}
+                <strong>{t("userProfile.location")}</strong>{" "}
+                {profile.address?.city || "N/A"},{" "}
                 {profile.address?.country || "N/A"}
               </div>
               <div>
-                <strong>Work Preference:</strong>{" "}
+                <strong>{t("userProfile.workPreference")}</strong>{" "}
                 {profile.workPreference === "R"
-                  ? "Remote"
+                  ? t("userProfile.remote")
                   : profile.workPreference === "OS"
-                    ? "On Site"
+                    ? t("userProfile.onSite")
                     : profile.workPreference === "H"
-                      ? "Hybrid"
+                      ? t("userProfile.hybrid")
                       : profile.workPreference}
               </div>
             </div>
             {!showSensitive && (
               <div className="text-muted" style={{ fontSize: "0.9em" }}>
-                Please login to connect. <a href="/login">Login</a>
+                {t("userProfile.pleaseLoginToConnect")}{" "}
+                <a href="/login">{t("userProfile.login")}</a>
               </div>
             )}
           </div>
@@ -334,19 +340,19 @@ function UserProfile({ userProfiles, showSensitive = false }) {
 
         <div className={`back ${borderColor}`}>
           <div className="card-body header-back">
-            <h5 className="card-title">Contact Details</h5>
+            <h5 className="card-title">{t("userProfile.contactDetails")}</h5>
           </div>
           <div className="card-body body-back">
             <p style={{ marginBottom: 0 }}>
-              Email:{" "}
+              {t("userProfile.email")}{" "}
               {showSensitive
                 ? profile.allowEmailContact
                   ? profile.emailId
-                  : "Private"
-                : "Login to view"}
+                  : t("userProfile.private")
+                : t("userProfile.loginToView")}
             </p>
             <p style={{ marginBottom: 0 }}>
-              Mobile:{" "}
+              {t("userProfile.mobile")}{" "}
               {showSensitive ? (
                 profile.allowMobileContact ? (
                   showMobile[profile.id] ? (
@@ -357,22 +363,22 @@ function UserProfile({ userProfiles, showSensitive = false }) {
                       onClick={(e) => handleContactClick(profile.id, e)}
                       style={{ textDecoration: "none", color: "#007bff" }}
                     >
-                      Contact{" "}
+                      {t("userProfile.contact")}{" "}
                       {profile.firstName ||
                         profile.name?.split(" ")[0] ||
-                        "him/her"}
+                        t("userProfile.himHer")}
                     </button>
                   )
                 ) : (
-                  "Private"
+                  t("userProfile.private")
                 )
               ) : (
-                "Login to view"
+                t("userProfile.loginToView")
               )}
             </p>
             {showSensitive && profile.facebookUrl && (
               <p style={{ marginBottom: 0 }}>
-                Facebook:{" "}
+                {t("userProfile.facebook")}{" "}
                 <a
                   href={profile.facebookUrl}
                   target="_blank"
@@ -386,7 +392,7 @@ function UserProfile({ userProfiles, showSensitive = false }) {
             )}
             {showSensitive && profile.linkedinUrl && (
               <p style={{ marginBottom: 0 }}>
-                LinkedIn:{" "}
+                {t("userProfile.linkedin")}{" "}
                 <a
                   href={profile.linkedinUrl}
                   target="_blank"
@@ -400,7 +406,7 @@ function UserProfile({ userProfiles, showSensitive = false }) {
             )}
             {showSensitive && (profile.startingPrice || profile.negotiable) && (
               <p style={{ marginBottom: 0 }}>
-                <strong>Price:</strong>{" "}
+                <strong>{t("userProfile.price")}</strong>{" "}
                 {profile.startingPrice && profile.currencyCode
                   ? `${profile.currencyCode} ${parseFloat(profile.startingPrice).toFixed(2)}`
                   : ""}
@@ -408,7 +414,11 @@ function UserProfile({ userProfiles, showSensitive = false }) {
                   <span
                     style={{ marginLeft: profile.startingPrice ? "5px" : "0" }}
                   >
-                    ({profile.rateType === "H" ? "Hourly" : "Daily"})
+                    (
+                    {profile.rateType === "H"
+                      ? t("userProfile.hourly")
+                      : t("userProfile.daily")}
+                    )
                   </span>
                 )}
                 {profile.negotiable && (
@@ -418,7 +428,7 @@ function UserProfile({ userProfiles, showSensitive = false }) {
                         profile.startingPrice || profile.rateType ? "5px" : "0",
                     }}
                   >
-                    (Negotiable)
+                    ({t("userProfile.negotiable")})
                   </span>
                 )}
               </p>
@@ -426,7 +436,8 @@ function UserProfile({ userProfiles, showSensitive = false }) {
             {showSensitive && currentUser && currentUser.id !== profile.id && (
               <div className="d-flex align-items-center">
                 <strong style={{ fontSize: "14px" }}>
-                  Did you hire {getGenderPronoun(profile.gender)}?
+                  {t("userProfile.didYouHire")}{" "}
+                  {getGenderPronoun(profile.gender)}?
                 </strong>
                 <div className="btn-group btn-group-sm ml-2">
                   <button
@@ -434,14 +445,14 @@ function UserProfile({ userProfiles, showSensitive = false }) {
                     style={{ lineHeight: "0.75" }}
                     onClick={(e) => handleEngagement(profile.id, true, e)}
                   >
-                    Yes
+                    {t("userProfile.yes")}
                   </button>
                   <button
                     className="btn btn-secondary btn-sm"
                     style={{ lineHeight: "0.75" }}
                     onClick={(e) => handleEngagement(profile.id, false, e)}
                   >
-                    No
+                    {t("userProfile.no")}
                   </button>
                 </div>
               </div>
@@ -459,7 +470,7 @@ function UserProfile({ userProfiles, showSensitive = false }) {
                   style={{ fontSize: "12px", padding: "4px 8px" }}
                 >
                   <i className="fa fa-envelope mr-1"></i>
-                  Send Message
+                  {t("userProfile.sendMessage")}
                 </button>
               </div>
             )}
@@ -473,7 +484,7 @@ function UserProfile({ userProfiles, showSensitive = false }) {
                     <input
                       type="text"
                       className="form-control form-control-sm"
-                      placeholder="Subject"
+                      placeholder={t("userProfile.subject")}
                       value={messageSubject}
                       onChange={(e) => setMessageSubject(e.target.value)}
                     />
@@ -482,7 +493,7 @@ function UserProfile({ userProfiles, showSensitive = false }) {
                     <textarea
                       className="form-control form-control-sm"
                       rows="3"
-                      placeholder="Your message..."
+                      placeholder={t("userProfile.yourMessage")}
                       value={messageContent}
                       onChange={(e) => setMessageContent(e.target.value)}
                     ></textarea>
@@ -496,7 +507,7 @@ function UserProfile({ userProfiles, showSensitive = false }) {
                         setMessageContent("");
                       }}
                     >
-                      Cancel
+                      {t("userProfile.cancel")}
                     </button>
                     <button
                       className="btn btn-primary btn-sm"
@@ -507,7 +518,9 @@ function UserProfile({ userProfiles, showSensitive = false }) {
                         sendingMessage
                       }
                     >
-                      {sendingMessage ? "Sending..." : "Send"}
+                      {sendingMessage
+                        ? t("userProfile.sending")
+                        : t("userProfile.send")}
                     </button>
                   </div>
                 </div>
@@ -518,29 +531,30 @@ function UserProfile({ userProfiles, showSensitive = false }) {
             <div className="card-footer bg-transparent">
               <div className="card-footer-grid">
                 <div>
-                  <strong>Availability:</strong>{" "}
+                  <strong>{t("userProfile.availability")}:</strong>{" "}
                   {profile.availability === "0"
-                    ? "Immediate"
+                    ? t("userProfile.immediate")
                     : profile.availability === "1"
-                      ? "In 1 month"
+                      ? t("userProfile.in1Month")
                       : profile.availability === "2"
-                        ? "In 2 months"
+                        ? t("userProfile.in2Months")
                         : profile.availability === "3"
-                          ? "In 3 months"
+                          ? t("userProfile.in3Months")
                           : profile.availability}
                 </div>
                 <div>
-                  <strong>Location:</strong> {profile.address?.city || "N/A"},{" "}
+                  <strong>{t("userProfile.location")}:</strong>{" "}
+                  {profile.address?.city || "N/A"},{" "}
                   {profile.address?.country || "N/A"}
                 </div>
                 <div>
-                  <strong>Work Preference:</strong>{" "}
+                  <strong>{t("userProfile.workPreference")}:</strong>{" "}
                   {profile.workPreference === "R"
-                    ? "Remote"
+                    ? t("userProfile.remote")
                     : profile.workPreference === "OS"
-                      ? "On Site"
+                      ? t("userProfile.onSite")
                       : profile.workPreference === "H"
-                        ? "Hybrid"
+                        ? t("userProfile.hybrid")
                         : profile.workPreference}
                 </div>
               </div>
