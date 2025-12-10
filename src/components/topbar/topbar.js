@@ -1,10 +1,13 @@
 /* eslint-disable prettier/prettier */
 import React, { useState, useEffect } from "react";
+import { useTranslation } from "react-i18next";
 import API_BASE from "../../utils/apiBase";
 
 function Topbar() {
+  const { t, i18n } = useTranslation();
   const [currentUser, setCurrentUser] = useState(null);
   const [dropdownOpen, setDropdownOpen] = useState(false);
+  const [languageDropdownOpen, setLanguageDropdownOpen] = useState(false);
   const [unreadCount, setUnreadCount] = useState(0);
   const [unreadFeedbackCount, setUnreadFeedbackCount] = useState(0);
 
@@ -164,6 +167,11 @@ function Topbar() {
   const isAdmin = currentUser && (String(currentUser.roleType || "").toLowerCase() === "administrative" ||
                   String(currentUser.roleType || "").toLowerCase() === "administrator");
 
+  const changeLanguage = (lng) => {
+    i18n.changeLanguage(lng);
+    setLanguageDropdownOpen(false);
+  };
+
   return (
     <div className="topbar mb-4 sticky-top" style={{ zIndex: 1020 }}>
       <nav className="navbar navbar-expand-lg navbar-light bg-white shadow position-relative">
@@ -177,7 +185,7 @@ function Topbar() {
           />
           <div>
             <div className="font-weight-bold">Buy My Skills</div>
-            <small className="text-muted">Connecting people, powering possibilities</small>
+            <small className="text-muted">{t('brand.subtitle')}</small>
           </div>
         </a>
 
@@ -199,24 +207,24 @@ function Topbar() {
           <ul className="navbar-nav">
             <li className="nav-item">
               <a className="nav-link text-dark" href="/browse">
-                Browse Skills
+                {t('nav.browseSkills')}
               </a>
             </li>
             <li className="nav-item">
               <a className="nav-link text-dark" href="/how-it-works">
-                How it Works
+                {t('nav.howItWorks')}
               </a>
             </li>
             <li className="nav-item">
               <a className="nav-link text-dark" href="/about-us">
-                About
+                {t('nav.about')}
               </a>
             </li>
             {currentUser && (
               <>
                 <li className="nav-item">
                   <a className="nav-link text-dark" href="/feedback">
-                    Support
+                    {t('nav.support')}
                     {unreadFeedbackCount > 0 && (
                       <span className="badge badge-danger ml-1" style={{ fontSize: '10px' }}>
                         {unreadFeedbackCount}
@@ -226,7 +234,7 @@ function Topbar() {
                 </li>
                 <li className="nav-item">
                   <a className="nav-link text-dark" href="/my-engaged-list">
-                    My Hired List
+                    {t('nav.myHiredList')}
                   </a>
                 </li>
               </>
@@ -239,7 +247,7 @@ function Topbar() {
               <input
                 type="text"
                 className="form-control bg-light border-0 small"
-                placeholder="Search for any skill..."
+                placeholder={t('search.placeholder')}
                 aria-label="Search"
                 aria-describedby="basic-addon2"
               />
@@ -251,12 +259,44 @@ function Topbar() {
             </div>
           </form>
 
+          {/* Language Selector */}
+          <ul className="navbar-nav mr-3">
+            <li className="nav-item dropdown">
+              <a
+                className="nav-link dropdown-toggle text-dark"
+                href="#"
+                role="button"
+                onClick={() => setLanguageDropdownOpen(!languageDropdownOpen)}
+                style={{ cursor: 'pointer' }}
+              >
+                <i className="fas fa-globe"></i>
+              </a>
+              <div className="dropdown-menu dropdown-menu-right" style={{ display: languageDropdownOpen ? 'block' : 'none' }}>
+                <a className="dropdown-item" href="#" onClick={() => changeLanguage('en')}>
+                  {t('language.english')}
+                </a>
+                <a className="dropdown-item" href="#" onClick={() => changeLanguage('es')}>
+                  {t('language.spanish')}
+                </a>
+                <a className="dropdown-item" href="#" onClick={() => changeLanguage('fr')}>
+                  {t('language.french')}
+                </a>
+                <a className="dropdown-item" href="#" onClick={() => changeLanguage('hi')}>
+                  {t('language.hindi')}
+                </a>
+                <a className="dropdown-item" href="#" onClick={() => changeLanguage('pt')}>
+                  {t('language.portuguese')}
+                </a>
+              </div>
+            </li>
+          </ul>
+
           {/* Right side buttons */}
           {currentUser ? (
             <ul className="navbar-nav ml-auto">
               <li className="nav-item">
                 <a className="nav-link text-dark" href="/messages">
-                  Messages
+                  {t('nav.messages')}
                   {unreadCount > 0 && (
                     <span className="badge badge-danger ml-1" style={{ fontSize: '10px' }}>
                       {unreadCount}
@@ -276,40 +316,40 @@ function Topbar() {
                 </a>
                 <div className="dropdown-menu dropdown-menu-right" style={{ display: dropdownOpen ? 'block' : 'none' }}>
                   <a className="dropdown-item" href="/profile" onClick={() => setDropdownOpen(false)}>
-                    View Profile
+                    {t('nav.viewProfile')}
                   </a>
                   <a className="dropdown-item" href="/update-password" onClick={() => setDropdownOpen(false)}>
-                    Update Password
+                    {t('nav.updatePassword')}
                   </a>
                   {isAdmin && (
                     <>
                       <div className="dropdown-divider"></div>
                       <a className="dropdown-item" href="/users" onClick={() => setDropdownOpen(false)}>
-                        Users
+                        {t('admin.users')}
                       </a>
                       <a className="dropdown-item" href="/admin/categories" onClick={() => setDropdownOpen(false)}>
-                        Manage Categories
+                        {t('admin.manageCategories')}
                       </a>
                       <a className="dropdown-item" href="/admin/countries" onClick={() => setDropdownOpen(false)}>
-                        Manage Countries
+                        {t('admin.manageCountries')}
                       </a>
                       <a className="dropdown-item" href="/admin/landing-page-cards" onClick={() => setDropdownOpen(false)}>
-                        Manage Landing Page Cards
+                        {t('admin.manageLandingPageCards')}
                       </a>
                       <a className="dropdown-item" href="/admin/feedback" onClick={() => setDropdownOpen(false)}>
-                        Manage Feedback
+                        {t('admin.manageFeedback')}
                       </a>
                       <a className="dropdown-item" href="/admin/regions" onClick={() => setDropdownOpen(false)}>
-                        Manage Regions
+                        {t('admin.manageRegions')}
                       </a>
                       <a className="dropdown-item" href="/readme" onClick={() => setDropdownOpen(false)}>
-                        Read Me
+                        {t('admin.readMe')}
                       </a>
                     </>
                   )}
                   <div className="dropdown-divider"></div>
                   <a className="dropdown-item" href="#" onClick={() => { handleLogout(); setDropdownOpen(false); }}>
-                    Sign Out
+                    {t('nav.signOut')}
                   </a>
                 </div>
               </li>
@@ -319,24 +359,24 @@ function Topbar() {
               <ul className="navbar-nav ml-auto d-none d-lg-flex">
                 <li className="nav-item">
                   <a className="btn btn-outline-primary mr-2 text-nowrap" href="/login">
-                    Sign In
+                    {t('nav.signIn')}
                   </a>
                 </li>
                 <li className="nav-item">
                   <a className="btn btn-primary text-nowrap" href="/register">
-                    Become a Seller
+                    {t('nav.becomeSeller')}
                   </a>
                 </li>
               </ul>
               <ul className="navbar-nav ml-auto d-lg-none">
                 <li className="nav-item">
                   <a className="nav-link text-dark" href="/login">
-                    Sign In
+                    {t('nav.signIn')}
                   </a>
                 </li>
                 <li className="nav-item">
                   <a className="nav-link text-dark" href="/register">
-                    Become a Seller
+                    {t('nav.becomeSeller')}
                   </a>
                 </li>
               </ul>

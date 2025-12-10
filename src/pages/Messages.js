@@ -1,8 +1,10 @@
 import React, { useState, useEffect, useRef } from "react";
+import { useTranslation } from "react-i18next";
 import API_BASE from "../utils/apiBase";
 import "./Messages.css";
 
 function Messages() {
+  const { t } = useTranslation();
   const [conversations, setConversations] = useState([]);
   const [selectedContactId, setSelectedContactId] = useState(null);
   const [messages, setMessages] = useState([]);
@@ -60,20 +62,16 @@ function Messages() {
       } else {
         // Only show error for actual HTTP errors (5xx, 4xx except 404)
         if (response.status >= 500) {
-          setError("Unable to load conversations. Please try again later.");
+          setError(t("messages.unableToLoad"));
         } else if (response.status >= 400 && response.status !== 404) {
-          setError(
-            "Failed to load conversations. Please check your connection.",
-          );
+          setError(t("messages.failedToLoad"));
         }
         // For 404 or other cases, just set empty conversations without error
         setConversations([]);
       }
     } catch (err) {
       // Network errors or other failures
-      setError(
-        "Unable to connect to the server. Please check your internet connection.",
-      );
+      setError(t("messages.unableToConnect"));
       setConversations([]);
     } finally {
       setLoading(false);
@@ -176,11 +174,11 @@ function Messages() {
           window.dispatchEvent(new Event("message-updated"));
         }
       } else {
-        alert("Failed to send message");
+        alert(t("messages.failedToSend"));
       }
     } catch (error) {
       console.error("Send message error:", error);
-      alert("Failed to send message");
+      alert(t("messages.failedToSend"));
     } finally {
       setSendingMessage(false);
     }
@@ -216,7 +214,7 @@ function Messages() {
         minute: "2-digit",
       });
     } else if (date.toDateString() === yesterday.toDateString()) {
-      return `Yesterday ${date.toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" })}`;
+      return `${t("messages.yesterday")} ${date.toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" })}`;
     } else {
       return (
         date.toLocaleDateString() +
@@ -258,7 +256,7 @@ function Messages() {
           <div className="spinner-border" role="status">
             <span className="sr-only">Loading...</span>
           </div>
-          <p className="mt-2">Loading your messages...</p>
+          <p className="mt-2">{t("messages.loading")}</p>
         </div>
       </div>
     );
@@ -271,8 +269,8 @@ function Messages() {
           {/* Header */}
           <div className="d-flex justify-content-between align-items-center mb-3">
             <div>
-              <h1 className="h3 mb-0 text-gray-800">Messages</h1>
-              <p className="text-muted mb-0">Chat with other users</p>
+              <h1 className="h3 mb-0 text-gray-800">{t("messages.title")}</h1>
+              <p className="text-muted mb-0">{t("messages.subtitle")}</p>
             </div>
           </div>
 
@@ -290,7 +288,7 @@ function Messages() {
                 <div className="card-header contacts-header">
                   <h6 className="mb-0">
                     <i className="fa fa-comments mr-2"></i>
-                    Conversations ({conversations.length})
+                    {t("messages.conversations")} ({conversations.length})
                   </h6>
                 </div>
                 <div className="card-body contacts-body">
@@ -298,10 +296,10 @@ function Messages() {
                     <div className="empty-sidebar">
                       <i className="fa fa-comments empty-sidebar-icon"></i>
                       <p className="empty-sidebar-title">
-                        No conversations yet
+                        {t("messages.noConversationsYet")}
                       </p>
                       <small className="empty-sidebar-text">
-                        Start chatting with users from their profiles!
+                        {t("messages.startChatting")}
                       </small>
                     </div>
                   ) : (
@@ -358,9 +356,11 @@ function Messages() {
                     {Object.keys(groupedMessages).length === 0 ? (
                       <div className="empty-chat">
                         <i className="fa fa-comments empty-chat-icon"></i>
-                        <p className="empty-chat-title">No messages yet</p>
+                        <p className="empty-chat-title">
+                          {t("messages.noMessagesYet")}
+                        </p>
                         <small className="empty-chat-text">
-                          Send a message to start the conversation!
+                          {t("messages.startConversation")}
                         </small>
                       </div>
                     ) : (
@@ -372,12 +372,12 @@ function Messages() {
                               <span className="date-badge">
                                 {new Date(date).toDateString() ===
                                 new Date().toDateString()
-                                  ? "Today"
+                                  ? t("messages.today")
                                   : new Date(date).toDateString() ===
                                       new Date(
                                         Date.now() - 86400000,
                                       ).toDateString()
-                                    ? "Yesterday"
+                                    ? t("messages.yesterday")
                                     : new Date(date).toLocaleDateString()}
                               </span>
                             </div>
@@ -390,7 +390,7 @@ function Messages() {
                               >
                                 {message.isSentByMe && (
                                   <div className="message-sender-label">
-                                    <small>You</small>
+                                    <small>{t("messages.you")}</small>
                                   </div>
                                 )}
                                 <div
@@ -421,7 +421,7 @@ function Messages() {
                     <div className="message-input-group">
                       <textarea
                         className="form-control message-textarea"
-                        placeholder="Type your message..."
+                        placeholder={t("messages.typeMessage")}
                         value={newMessage}
                         onChange={(e) => setNewMessage(e.target.value)}
                         onKeyPress={(e) => {
@@ -451,10 +451,10 @@ function Messages() {
                 <div className="card shadow h-100 d-flex align-items-center justify-content-center">
                   <div className="text-center">
                     <i className="fa fa-comments fa-4x text-muted mb-4"></i>
-                    <h4 className="text-muted">Select a conversation</h4>
-                    <p className="text-muted">
-                      Choose a contact from the sidebar to start chatting
-                    </p>
+                    <h4 className="text-muted">
+                      {t("messages.selectConversation")}
+                    </h4>
+                    <p className="text-muted">{t("messages.chooseContact")}</p>
                   </div>
                 </div>
               )}

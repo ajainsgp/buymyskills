@@ -1,5 +1,6 @@
 import React, { useState, useRef, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
+import { useTranslation } from "react-i18next";
 import "./register.css";
 import API_BASE from "../../utils/apiBase";
 import { getCountries } from "../../utils/countryUtils";
@@ -12,6 +13,7 @@ import {
 
 function RegisterUser() {
   const navigate = useNavigate();
+  const { t } = useTranslation();
   const [submitting, setSubmitting] = useState(false);
   const [error, setError] = useState("");
   const [success, setSuccess] = useState("");
@@ -339,7 +341,7 @@ function RegisterUser() {
         <div className="bg-primary text-white py-3 mb-4">
           <div className="container">
             <h1 className="h3 mb-0 text-center">
-              Register your skills to the world of opportunities waiting for you
+              {t("auth.register.pageTitle")}
             </h1>
           </div>
         </div>
@@ -349,7 +351,9 @@ function RegisterUser() {
             <div className="col-lg-3 col-md-3 hidden-sm hidden-xs">
               <div className="panel panel-body">
                 <div className="col-md-12 no-left-right-padding">
-                  <h3 className="panel-title">My Profile Photo</h3>
+                  <h3 className="panel-title">
+                    {t("auth.register.profilePhoto")}
+                  </h3>
                   <div className="text-center">
                     <div className="col-lg-12 col-md-12">
                       <img
@@ -370,7 +374,7 @@ function RegisterUser() {
                         disabled={submitting}
                       >
                         <i className="fa fa-upload" aria-hidden="true"></i>{" "}
-                        Upload a new profile photo
+                        {t("auth.register.uploadPhoto")}
                       </button>
                       {photoDataUrl && (
                         <button
@@ -420,14 +424,16 @@ function RegisterUser() {
                 <div className="row">
                   <div className="panel panel-body no-left-right-padding">
                     <div className="panel panel-title">
-                      <h3>My Basic Profile</h3>
+                      <h3>{t("auth.register.basicProfile")}</h3>
                     </div>
 
                     <div className="form-group row set-padding-left-right">
                       <div className="col-sm-12">
                         <div className="panel panel-info">
                           <div className="role-selection-with-label">
-                            <div className="role-label">I want to</div>
+                            <div className="role-label">
+                              {t("auth.register.iWantTo")}
+                            </div>
                             <div className="role-options">
                               <div className="form-check form-check-inline">
                                 <input
@@ -443,7 +449,7 @@ function RegisterUser() {
                                   className="form-check-label"
                                   htmlFor="seller"
                                 >
-                                  Become a Seller
+                                  {t("auth.register.becomeSeller")}
                                 </label>
                               </div>
                               <div className="form-check form-check-inline">
@@ -460,7 +466,7 @@ function RegisterUser() {
                                   className="form-check-label"
                                   htmlFor="buyer"
                                 >
-                                  Become a Buyer
+                                  {t("auth.register.becomeBuyer")}
                                 </label>
                               </div>
                             </div>
@@ -472,13 +478,15 @@ function RegisterUser() {
                     <div className="form-group row set-padding-left-right">
                       <div className="col-sm-6">
                         <div className="panel panel-info">
-                          <div className="panel-heading">First Name</div>
+                          <div className="panel-heading">
+                            {t("auth.register.firstName")}
+                          </div>
                           <input
                             type="text"
                             name="firstName"
                             id="first_name"
                             className="form-control input-lg"
-                            placeholder="First Name"
+                            placeholder={t("auth.register.firstName")}
                             value={form.firstName}
                             onChange={onChange}
                           />
@@ -486,13 +494,15 @@ function RegisterUser() {
                       </div>
                       <div className="col-sm-6">
                         <div className="panel panel-info">
-                          <div className="panel-heading">Last Name</div>
+                          <div className="panel-heading">
+                            {t("auth.register.lastName")}
+                          </div>
                           <input
                             type="text"
                             name="lastName"
                             id="last_name"
                             className="form-control input-lg"
-                            placeholder="Last Name"
+                            placeholder={t("auth.register.lastName")}
                             value={form.lastName}
                             onChange={onChange}
                           />
@@ -503,13 +513,15 @@ function RegisterUser() {
                     <div className="form-group row set-padding-left-right">
                       <div className="col-md-6">
                         <div className="panel panel-default">
-                          <div className="panel-heading">Address Line1</div>
+                          <div className="panel-heading">
+                            {t("auth.register.addressLine1")}
+                          </div>
                           <input
                             type="text"
                             name="addressLine1"
                             id="addressLine1"
                             className="form-control input-lg"
-                            placeholder="Address Line1"
+                            placeholder={t("auth.register.addressLine1")}
                             value={form.addressLine1}
                             onChange={onChange}
                           />
@@ -517,13 +529,15 @@ function RegisterUser() {
                       </div>
                       <div className="col-md-6">
                         <div className="panel panel-default">
-                          <div className="panel-heading">Address Line2</div>
+                          <div className="panel-heading">
+                            {t("auth.register.addressLine2")}
+                          </div>
                           <input
                             type="text"
                             name="addressLine2"
                             id="addressLine2"
                             className="form-control input-lg"
-                            placeholder="Address Line 2"
+                            placeholder={t("auth.register.addressLine2")}
                             value={form.addressLine2}
                             onChange={onChange}
                           />
@@ -534,13 +548,15 @@ function RegisterUser() {
                     <div className="form-group row set-padding-left-right">
                       <div className="col-md-6">
                         <div className="panel panel-default">
-                          <div className="panel-heading">City</div>
+                          <div className="panel-heading">
+                            {t("auth.register.city")}
+                          </div>
                           <input
                             type="text"
                             name="city"
                             id="city"
                             className="form-control input-lg"
-                            placeholder="City"
+                            placeholder={t("auth.register.city")}
                             value={form.city}
                             onChange={onChange}
                           />
@@ -548,13 +564,15 @@ function RegisterUser() {
                       </div>
                       <div className="col-md-6">
                         <div className="panel panel-default">
-                          <div className="panel-heading">State</div>
+                          <div className="panel-heading">
+                            {t("auth.register.state")}
+                          </div>
                           <input
                             type="text"
                             name="state"
                             id="state"
                             className="form-control input-lg"
-                            placeholder="State"
+                            placeholder={t("auth.register.state")}
                             value={form.state}
                             onChange={onChange}
                           />
@@ -565,13 +583,15 @@ function RegisterUser() {
                     <div className="form-group row set-padding-left-right">
                       <div className="col-md-6">
                         <div className="panel panel-default">
-                          <div className="panel-heading">Postcode</div>
+                          <div className="panel-heading">
+                            {t("auth.register.postcode")}
+                          </div>
                           <input
                             type="text"
                             name="postcode"
                             id="postcode"
                             className="form-control input-lg"
-                            placeholder="PostCode"
+                            placeholder={t("auth.register.postcode")}
                             value={form.postcode}
                             onChange={onChange}
                           />
@@ -579,7 +599,9 @@ function RegisterUser() {
                       </div>
                       <div className="col-md-6">
                         <div className="panel panel-default">
-                          <div className="panel-heading">Country</div>
+                          <div className="panel-heading">
+                            {t("auth.register.country")}
+                          </div>
                           <select
                             id="country"
                             name="country"
@@ -589,7 +611,7 @@ function RegisterUser() {
                           >
                             <option value="">Select...</option>
                             {countriesWithCodes
-                              .filter((c) => c.name) // Filter out any invalid entries
+                              .filter((c) => c.name)
                               .map((c) => (
                                 <option key={c.name} value={c.name}>
                                   {c.name}
@@ -603,21 +625,21 @@ function RegisterUser() {
 
                   <div className="panel panel-body no-left-right-padding">
                     <div className="panel panel-title">
-                      <h3>My Contact Details</h3>
+                      <h3>{t("auth.register.contactDetails")}</h3>
                     </div>
 
                     <div className="form-group row set-padding-left-right">
                       <div className="col-sm-6">
                         <div className="panel panel-info">
                           <div className="panel-heading">
-                            Your email Id to login
+                            {t("auth.register.email")}
                           </div>
                           <input
                             type="email"
                             name="emailId"
                             id="emailId"
                             className="form-control input-lg"
-                            placeholder="you@example.com"
+                            placeholder={t("auth.register.email")}
                             value={form.emailId}
                             onChange={onChange}
                           />
@@ -627,28 +649,26 @@ function RegisterUser() {
                             </small>
                           )}
                           <small className="form-text text-muted">
-                            this email id cannot be changed once registered with
-                            this id
+                            {t("auth.register.emailHelp")}
                           </small>
                         </div>
                       </div>
                       <div className="col-sm-6">
                         <div className="panel panel-info">
                           <div className="panel-heading">
-                            Secondary email Id to contact (optional)
+                            {t("auth.register.secondaryEmail")}
                           </div>
                           <input
                             type="email"
                             name="secondaryEmail"
                             id="secondaryEmail"
                             className="form-control input-lg"
-                            placeholder="secondary@example.com"
+                            placeholder={t("auth.register.email")}
                             value={form.secondaryEmail}
                             onChange={onChange}
                           />
                           <small className="form-text text-muted">
-                            if left blank then your primary email id will be
-                            used by users to contact you
+                            {t("auth.register.secondaryEmailHelp")}
                           </small>
                         </div>
                       </div>
@@ -657,7 +677,9 @@ function RegisterUser() {
                     <div className="form-group row set-padding-left-right">
                       <div className="col-sm-6">
                         <div className="panel panel-info">
-                          <div className="panel-heading">Mobile</div>
+                          <div className="panel-heading">
+                            {t("auth.register.mobile")}
+                          </div>
                           <div className="row">
                             <div className="col-4">
                               <select
@@ -685,7 +707,7 @@ function RegisterUser() {
                                 name="mobileNo"
                                 id="mobileNo"
                                 className="form-control"
-                                placeholder="Mobile Number"
+                                placeholder={t("auth.register.mobileNumber")}
                                 value={form.mobileNo}
                                 onChange={onChange}
                               />
@@ -710,7 +732,7 @@ function RegisterUser() {
                                 className="form-check-label"
                                 htmlFor="isWhatsappAvailable"
                               >
-                                This number is also available on WhatsApp
+                                {t("auth.register.whatsappAvailable")}
                               </label>
                             </div>
                           </div>
@@ -720,7 +742,7 @@ function RegisterUser() {
                                 type="text"
                                 name="whatsappNumber"
                                 className="form-control"
-                                placeholder="WhatsApp Contact Number"
+                                placeholder={t("auth.register.whatsappNumber")}
                                 value={form.whatsappNumber}
                                 onChange={onChange}
                               />
@@ -730,8 +752,7 @@ function RegisterUser() {
                                 </small>
                               )}
                               <small className="form-text text-muted">
-                                Enter your WhatsApp number if different from
-                                above
+                                {t("auth.register.whatsappHelp")}
                               </small>
                             </div>
                           )}
@@ -743,7 +764,7 @@ function RegisterUser() {
                       <div className="col-sm-6">
                         <div className="panel panel-info">
                           <div className="panel-heading">
-                            Contact Preferences
+                            {t("auth.register.contactPreferences")}
                           </div>
                           <div className="form-check">
                             <input
@@ -758,7 +779,7 @@ function RegisterUser() {
                               className="form-check-label"
                               htmlFor="allowEmailContact"
                             >
-                              Allow public to contact me on my email address
+                              {t("auth.register.allowEmailContact")}
                             </label>
                           </div>
                         </div>
@@ -766,7 +787,7 @@ function RegisterUser() {
                       <div className="col-sm-6">
                         <div className="panel panel-info">
                           <div className="panel-heading">
-                            Contact Preferences
+                            {t("auth.register.contactPreferences")}
                           </div>
                           <div className="form-check">
                             <input
@@ -781,7 +802,7 @@ function RegisterUser() {
                               className="form-check-label"
                               htmlFor="allowMobileContact"
                             >
-                              Allow public to contact me on my mobile number
+                              {t("auth.register.allowMobileContact")}
                             </label>
                           </div>
                         </div>
@@ -793,9 +814,8 @@ function RegisterUser() {
                         <div className="col-12">
                           <div className="alert alert-warning" role="alert">
                             <medium>
-                              <strong>Warning:</strong> You have disabled both
-                              email and mobile contact options. Users can only
-                              send messages within this app to contact you.
+                              <strong>{t("auth.register.warning")}:</strong>{" "}
+                              {t("auth.register.contactWarning")}
                             </medium>
                           </div>
                         </div>
@@ -805,20 +825,20 @@ function RegisterUser() {
                     <div className="form-group row set-padding-left-right">
                       <div className="col-sm-6">
                         <div className="panel panel-info">
-                          <div className="panel-heading">Password</div>
+                          <div className="panel-heading">
+                            {t("auth.register.password")}
+                          </div>
                           <input
                             type="password"
                             name="password"
                             id="password"
                             className="form-control input-lg"
-                            placeholder="Password"
+                            placeholder={t("auth.register.password")}
                             value={form.password}
                             onChange={onChange}
                           />
                           <small className="form-text text-muted">
-                            Password must be at least 8 characters long and
-                            contain at least one number and one special
-                            character.
+                            {t("auth.register.passwordHelp")}
                           </small>
                         </div>
                       </div>
@@ -829,13 +849,15 @@ function RegisterUser() {
                   {form.userRole === "seller" && (
                     <div className="panel panel-body no-left-right-padding">
                       <div className="panel panel-title">
-                        <h3>My Skills</h3>
+                        <h3>{t("auth.register.skills")}</h3>
                       </div>
 
                       <div className="form-group row set-padding-left-right">
                         <div className="col-md-6">
                           <div className="panel panel-default">
-                            <div className="panel-heading">Category</div>
+                            <div className="panel-heading">
+                              {t("auth.register.category")}
+                            </div>
                             <select
                               id="category"
                               name="category"
@@ -858,14 +880,14 @@ function RegisterUser() {
                         <div className="col-md-6">
                           <div className="panel panel-default">
                             <div className="panel-heading">
-                              Tags * (Add up to 5 relevant tags)
+                              {t("auth.register.tags")}
                             </div>
                             <input
                               type="text"
                               className="form-control"
                               id="keywordTags"
                               name="keywordTags"
-                              placeholder="Like Software Development, Data Migration, AI & LLM Development"
+                              placeholder={t("auth.register.tagsPlaceholder")}
                               value={form.keywordTags}
                               onChange={onChange}
                             />
@@ -877,12 +899,14 @@ function RegisterUser() {
                         <div className="col-md-12">
                           <div className="panel panel-default">
                             <div className="panel-heading">
-                              Summary of your skills
+                              {t("auth.register.summary")}
                             </div>
                             <textarea
                               name="summary"
                               className="form-control"
-                              placeholder="Briefly describe your key skills and expertise (max 150 characters)"
+                              placeholder={t(
+                                "auth.register.summaryPlaceholder",
+                              )}
                               value={form.summary}
                               onChange={onChange}
                               maxLength={150}
@@ -904,7 +928,7 @@ function RegisterUser() {
                         <div className="col-md-6">
                           <div className="panel panel-default">
                             <div className="panel-heading">
-                              Facebook URL (optional)
+                              {t("auth.register.facebookUrl")}
                             </div>
                             <input
                               type="url"
@@ -915,14 +939,14 @@ function RegisterUser() {
                               onChange={onChange}
                             />
                             <small className="form-text text-muted">
-                              Your Facebook profile or page URL
+                              {t("auth.register.facebookHelp")}
                             </small>
                           </div>
                         </div>
                         <div className="col-md-6">
                           <div className="panel panel-default">
                             <div className="panel-heading">
-                              LinkedIn URL (optional)
+                              {t("auth.register.linkedinUrl")}
                             </div>
                             <input
                               type="url"
@@ -933,7 +957,7 @@ function RegisterUser() {
                               onChange={onChange}
                             />
                             <small className="form-text text-muted">
-                              Your LinkedIn profile URL
+                              {t("auth.register.linkedinHelp")}
                             </small>
                           </div>
                         </div>
@@ -945,13 +969,15 @@ function RegisterUser() {
                   {form.userRole === "seller" && (
                     <div className="panel panel-body no-left-right-padding">
                       <div className="panel panel-title">
-                        <h3>My Pricing</h3>
+                        <h3>{t("auth.register.pricing")}</h3>
                       </div>
 
                       <div className="form-group row set-padding-left-right">
                         <div className="col-md-6">
                           <div className="panel panel-default">
-                            <div className="panel-heading">Starting Price</div>
+                            <div className="panel-heading">
+                              {t("auth.register.startingPrice")}
+                            </div>
                             <div className="row">
                               <div className="col-md-8">
                                 <div className="input-group">
@@ -977,7 +1003,9 @@ function RegisterUser() {
                                     type="number"
                                     name="startingPrice"
                                     className="form-control"
-                                    placeholder="Enter starting price"
+                                    placeholder={t(
+                                      "auth.register.startingPricePlaceholder",
+                                    )}
                                     value={form.startingPrice}
                                     onChange={onChange}
                                     min="0"
@@ -1008,7 +1036,7 @@ function RegisterUser() {
                                     className="form-check-label"
                                     htmlFor="hourly"
                                   >
-                                    Hourly
+                                    {t("auth.register.hourly")}
                                   </label>
                                 </div>
                                 <div className="form-check form-check-inline">
@@ -1030,7 +1058,7 @@ function RegisterUser() {
                                     className="form-check-label"
                                     htmlFor="daily"
                                   >
-                                    Daily
+                                    {t("auth.register.daily")}
                                   </label>
                                 </div>
                               </div>
@@ -1123,7 +1151,9 @@ function RegisterUser() {
                         </div>
                         <div className="col-md-6">
                           <div className="panel panel-default">
-                            <div className="panel-heading">Negotiable</div>
+                            <div className="panel-heading">
+                              {t("auth.register.negotiable")}
+                            </div>
                             <div className="mt-2">
                               <div className="form-check">
                                 <input
@@ -1138,12 +1168,11 @@ function RegisterUser() {
                                   className="form-check-label"
                                   htmlFor="negotiable"
                                 >
-                                  Price is negotiable
+                                  {t("auth.register.priceNegotiable")}
                                 </label>
                               </div>
                               <small className="form-text text-muted">
-                                Check if you&apos;re open to negotiating your
-                                rates
+                                {t("auth.register.negotiableHelp")}
                               </small>
                             </div>
                           </div>
@@ -1156,13 +1185,15 @@ function RegisterUser() {
                   {form.userRole === "seller" && (
                     <div className="panel panel-body no-left-right-padding">
                       <div className="panel panel-title">
-                        <h3>My Availability</h3>
+                        <h3>{t("auth.register.availability")}</h3>
                       </div>
 
                       <div className="form-group row set-padding-left-right">
                         <div className="col-md-6">
                           <div className="panel panel-default">
-                            <div className="panel-heading">Preference</div>
+                            <div className="panel-heading">
+                              {t("auth.register.preference")}
+                            </div>
                             <select
                               id="workPreference"
                               name="workPreference"
@@ -1178,7 +1209,9 @@ function RegisterUser() {
                         </div>
                         <div className="col-md-6">
                           <div className="panel panel-default">
-                            <div className="panel-heading">Traveling</div>
+                            <div className="panel-heading">
+                              {t("auth.register.traveling")}
+                            </div>
                             <select
                               id="traveling"
                               name="traveling"
@@ -1197,7 +1230,9 @@ function RegisterUser() {
                       <div className="form-group row set-padding-left-right">
                         <div className="col-md-6">
                           <div className="panel panel-default">
-                            <div className="panel-heading">Available</div>
+                            <div className="panel-heading">
+                              {t("auth.register.available")}
+                            </div>
                             <select
                               id="available"
                               name="available"
@@ -1248,13 +1283,13 @@ function RegisterUser() {
                   {form.userRole === "seller" && (
                     <div className="panel panel-body no-left-right-padding">
                       <div className="panel panel-title">
-                        <h3>My Visibility</h3>
+                        <h3>{t("auth.register.visibility")}</h3>
                       </div>
                       <div className="form-group row set-padding-left-right">
                         <div className="col-md-6">
                           <div className="panel panel-default">
                             <div className="panel-heading">
-                              Show my profile on the public dashboard
+                              {t("auth.register.showInDashboard")}
                             </div>
                             <div
                               className="checkbox"
@@ -1267,7 +1302,7 @@ function RegisterUser() {
                                   checked={form.showInDashboard}
                                   onChange={onChange}
                                 />{" "}
-                                Allow my profile to appear in browse skills
+                                {t("auth.register.allowDashboard")}
                               </label>
                             </div>
                           </div>
@@ -1275,7 +1310,7 @@ function RegisterUser() {
                         <div className="col-md-6">
                           <div className="panel panel-default">
                             <div className="panel-heading">
-                              Show my photo publicly
+                              {t("auth.register.showPhoto")}
                             </div>
                             <div
                               className="checkbox"
@@ -1288,7 +1323,7 @@ function RegisterUser() {
                                   checked={form.showPhoto}
                                   onChange={onChange}
                                 />{" "}
-                                Allow my uploaded photo to be shown
+                                {t("auth.register.allowPhoto")}
                               </label>
                             </div>
                           </div>
@@ -1299,11 +1334,8 @@ function RegisterUser() {
 
                   <div className="panel no-left-right-padding">
                     <div className="alert alert-info">
-                      <strong>Privacy Notice:</strong> We may use your IP
-                      address to detect your approximate location for providing
-                      location-based features. This information is not stored
-                      permanently and is only used to enhance your browsing
-                      experience.
+                      <strong>{t("auth.register.privacyNotice")}:</strong>{" "}
+                      {t("auth.register.privacyText")}
                     </div>
                   </div>
 
@@ -1321,8 +1353,7 @@ function RegisterUser() {
                             onChange={(e) => setConfirmInfo(e.target.checked)}
                             required
                           />{" "}
-                          I confirm that all the information provided above is
-                          correct and up-to-date to the best of my knowledge.
+                          {t("auth.register.confirmInfo")}
                         </label>
                       </div>
                     </div>
@@ -1336,7 +1367,7 @@ function RegisterUser() {
                         disabled={submitting}
                       >
                         <i className="fa fa-fw fa-times" aria-hidden="true"></i>{" "}
-                        Cancel
+                        {t("auth.register.cancel")}
                       </button>
                       <button
                         className="btn btn-primary"
@@ -1344,14 +1375,17 @@ function RegisterUser() {
                         disabled={submitting || !confirmInfo}
                       >
                         <i className="fa fa-fw fa-check" aria-hidden="true"></i>{" "}
-                        {submitting ? "Registering..." : "Register my Profile"}
+                        {submitting
+                          ? t("auth.register.registering")
+                          : t("auth.register.registerProfile")}
                       </button>
                     </div>
                   </div>
                 </div>
               </form>
               <div style={{ paddingBottom: 24 }}>
-                Already have an account? <a href="/login">Login here</a>
+                {t("auth.register.haveAccount")}{" "}
+                <a href="/login">{t("auth.register.signIn")}</a>
               </div>
             </div>
           </div>

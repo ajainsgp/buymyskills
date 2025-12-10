@@ -2,10 +2,12 @@ import React, { useEffect, useMemo, useState } from "react";
 import { useNavigate, useSearchParams } from "react-router-dom";
 import API_BASE from "../../utils/apiBase";
 import { validatePassword } from "../../utils/validation";
+import { useTranslation } from "react-i18next";
 
 function UpdatePassword() {
   const navigate = useNavigate();
   const [searchParams] = useSearchParams();
+  const { t } = useTranslation();
 
   const [error, setError] = useState("");
   const [notice, setNotice] = useState("");
@@ -184,26 +186,25 @@ function UpdatePassword() {
 
   const validate = () => {
     if (mode === "change") {
-      if (!currentUser?.id) return "Not logged in.";
-      if (!currentPassword) return "Current password is required.";
-      if (!newPassword) return "New password is required.";
+      if (!currentUser?.id) return t("updatePassword.notLoggedIn");
+      if (!currentPassword) return t("updatePassword.currentPasswordRequired");
+      if (!newPassword) return t("updatePassword.newPasswordRequired");
       // Validate strong password requirements
       const passwordValidation = validatePassword(newPassword);
       if (!passwordValidation.isValid) return passwordValidation.message;
       if (newPassword !== confirmNewPassword)
-        return "New password and confirm do not match.";
+        return t("updatePassword.passwordMismatch");
       return "";
     }
     // reset mode
-    if (!emailId.trim()) return "Email is required.";
-    if (emailExists === false)
-      return "This email is not registered. Please register first.";
-    if (!newPassword) return "New password is required.";
+    if (!emailId.trim()) return t("updatePassword.emailRequired");
+    if (emailExists === false) return t("updatePassword.emailNotRegistered");
+    if (!newPassword) return t("updatePassword.newPasswordRequired");
     // Validate strong password requirements
     const passwordValidation = validatePassword(newPassword);
     if (!passwordValidation.isValid) return passwordValidation.message;
     if (newPassword !== confirmNewPassword)
-      return "New password and confirm do not match.";
+      return t("updatePassword.passwordMismatch");
     return "";
   };
 
@@ -257,7 +258,7 @@ function UpdatePassword() {
         if (!res.ok) {
           throw new Error(data?.error || `Failed (${res.status})`);
         }
-        setNotice("Password updated successfully.");
+        setNotice(t("updatePassword.passwordUpdated"));
         // Keep user logged in; no need to change localStorage user object
         setCurrentPassword("");
         setNewPassword("");
@@ -276,9 +277,7 @@ function UpdatePassword() {
         if (!res.ok) {
           throw new Error(data?.error || `Failed (${res.status})`);
         }
-        setNotice(
-          "Password reset successfully. You can now login with your new password.",
-        );
+        setNotice(t("updatePassword.passwordReset"));
         setCurrentPassword("");
         setNewPassword("");
         setConfirmNewPassword("");
@@ -296,7 +295,9 @@ function UpdatePassword() {
       <div style={{ paddingBottom: "1.5rem" }}>
         <div className="d-sm-flex align-items-center justify-content-between mb-4">
           <h1 className="h3 mb-0 text-gray-800">
-            {mode === "change" ? "Update Password" : "Reset Password"}
+            {mode === "change"
+              ? t("updatePassword.title")
+              : t("updatePassword.resetTitle")}
           </h1>
         </div>
 
@@ -318,7 +319,9 @@ function UpdatePassword() {
                 {mode === "reset" ? (
                   <div className="form-group">
                     <div className="panel panel-info">
-                      <div className="panel-heading">Your email Id</div>
+                      <div className="panel-heading">
+                        {t("updatePassword.yourEmail")}
+                      </div>
                       <input
                         type="email"
                         className="form-control input-lg"
@@ -327,17 +330,17 @@ function UpdatePassword() {
                       />
                       {checkingEmail && (
                         <small className="form-text text-info">
-                          Checking email...
+                          {t("updatePassword.checkingEmail")}
                         </small>
                       )}
                       {emailExists === false && emailId.trim() && (
                         <small className="form-text text-danger">
-                          This email is not registered. Please register first.
+                          {t("updatePassword.emailNotRegistered")}
                         </small>
                       )}
                       {emailExists === true && (
                         <small className="form-text text-success">
-                          Email found. You can reset your password.
+                          {t("updatePassword.emailFound")}
                         </small>
                       )}
                     </div>
@@ -345,7 +348,9 @@ function UpdatePassword() {
                 ) : (
                   <div className="form-group">
                     <div className="panel panel-info">
-                      <div className="panel-heading">Your email Id</div>
+                      <div className="panel-heading">
+                        {t("updatePassword.yourEmail")}
+                      </div>
                       <input
                         type="email"
                         className="form-control input-lg"
@@ -360,11 +365,15 @@ function UpdatePassword() {
                 {mode === "change" ? (
                   <div className="form-group">
                     <div className="panel panel-info">
-                      <div className="panel-heading">Current password</div>
+                      <div className="panel-heading">
+                        {t("updatePassword.currentPassword")}
+                      </div>
                       <input
                         type="password"
                         className="form-control input-lg"
-                        placeholder="Current password"
+                        placeholder={t(
+                          "updatePassword.currentPasswordPlaceholder",
+                        )}
                         value={currentPassword}
                         onChange={(e) => setCurrentPassword(e.target.value)}
                       />
@@ -374,17 +383,18 @@ function UpdatePassword() {
 
                 <div className="form-group">
                   <div className="panel panel-info">
-                    <div className="panel-heading">New password</div>
+                    <div className="panel-heading">
+                      {t("updatePassword.newPassword")}
+                    </div>
                     <input
                       type="password"
                       className="form-control input-lg"
-                      placeholder="New password"
+                      placeholder={t("updatePassword.newPasswordPlaceholder")}
                       value={newPassword}
                       onChange={handleNewPasswordChange}
                     />
                     <small className="form-text text-muted">
-                      Password must be at least 8 characters long and contain at
-                      least one number and one special character.
+                      {t("updatePassword.passwordHelp")}
                     </small>
                     {fieldErrors.newPassword && (
                       <small className="form-text text-danger">
@@ -396,17 +406,21 @@ function UpdatePassword() {
 
                 <div className="form-group">
                   <div className="panel panel-info">
-                    <div className="panel-heading">Confirm new password</div>
+                    <div className="panel-heading">
+                      {t("updatePassword.confirmNewPassword")}
+                    </div>
                     <input
                       type="password"
                       className="form-control input-lg"
-                      placeholder="Confirm new password"
+                      placeholder={t(
+                        "updatePassword.confirmNewPasswordPlaceholder",
+                      )}
                       value={confirmNewPassword}
                       onChange={handleConfirmPasswordChange}
                     />
                     {fieldErrors.confirmPassword && (
                       <small className="form-text text-danger">
-                        {fieldErrors.confirmPassword}
+                        {t("updatePassword.passwordMismatch")}
                       </small>
                     )}
                   </div>
@@ -435,7 +449,7 @@ function UpdatePassword() {
                         navigate("/login");
                       }}
                     >
-                      Log Out
+                      {t("updatePassword.logOut")}
                     </button>
                   ) : (
                     <>
@@ -446,11 +460,11 @@ function UpdatePassword() {
                       >
                         {submitting
                           ? mode === "change"
-                            ? "Updating..."
-                            : "Resetting..."
+                            ? t("updatePassword.updating")
+                            : t("updatePassword.resetting")
                           : mode === "change"
-                            ? "Update Password"
-                            : "Reset Password"}
+                            ? t("updatePassword.updatePassword")
+                            : t("updatePassword.resetPassword")}
                       </button>
                       {mode === "reset" ? (
                         <button
@@ -460,7 +474,7 @@ function UpdatePassword() {
                           style={{ marginLeft: 8 }}
                           onClick={() => navigate("/login")}
                         >
-                          Back to Login
+                          {t("updatePassword.backToLogin")}
                         </button>
                       ) : (
                         <button
@@ -470,7 +484,7 @@ function UpdatePassword() {
                           style={{ marginLeft: 8 }}
                           onClick={() => navigate(-1)}
                         >
-                          Cancel
+                          {t("updatePassword.cancel")}
                         </button>
                       )}
                     </>

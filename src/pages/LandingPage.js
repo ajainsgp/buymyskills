@@ -1,12 +1,14 @@
 /* eslint-disable prettier/prettier */
 import React, { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
+import { useTranslation } from "react-i18next";
 import "./LandingPage.css";
 import landingPageData from "../data/landingPageData.json";
 import { useLandingPageCards } from "../contexts/LandingPageCardsContext";
 
 function LandingPage() {
   const navigate = useNavigate();
+  const { t } = useTranslation();
   const { cards: dbCards } = useLandingPageCards();
   const [currentUser, setCurrentUser] = useState(null);
 
@@ -60,13 +62,34 @@ function LandingPage() {
     navigate(`/browse?category=${encodeURIComponent(categoryName)}`);
   };
 
-  // Render section header (title and subtitle)
-  const renderSectionHeader = (sectionTitle, sectionText) => (
-    <div className="text-center mb-3">
-      <h2 className="display-5 font-weight-bold">{sectionTitle}</h2>
-      <p className="lead text-muted">{sectionText}</p>
-    </div>
-  );
+  // Render section header (title and subtitle) using translation keys
+  const renderSectionHeader = (sectionKey) => {
+    let titleKey, subtitleKey;
+    switch (sectionKey) {
+      case 'features':
+        titleKey = 'landing.featuresTitle';
+        subtitleKey = 'landing.featuresSubtitle';
+        break;
+      case 'categories':
+        titleKey = 'landing.categoriesTitle';
+        subtitleKey = 'landing.categoriesSubtitle';
+        break;
+      case 'skills':
+        titleKey = 'landing.skillsTitle';
+        subtitleKey = 'landing.skillsSubtitle';
+        break;
+      default:
+        titleKey = 'landing.featuresTitle';
+        subtitleKey = 'landing.featuresSubtitle';
+    }
+
+    return (
+      <div className="text-center mb-3">
+        <h2 className="display-5 font-weight-bold">{t(titleKey)}</h2>
+        <p className="lead text-muted">{t(subtitleKey)}</p>
+      </div>
+    );
+  };
 
   // Render feature cards (Why Choose Us section)
   const renderFeatureCard = (cardData, cardKey) => (
@@ -127,7 +150,7 @@ function LandingPage() {
     return (
       <section className={`py-3 ${sectionClass}`}>
         <div className="container">
-          {renderSectionHeader(sectionData.sectionTitle, sectionData.sectionText)}
+          {renderSectionHeader(sectionKey)}
           <div className="row">
             {Array.isArray(cardsToRender)
               ? cardsToRender.map((cardData, index) => cardRenderer(cardData, index))
@@ -150,29 +173,27 @@ function LandingPage() {
           <div className="row align-items-center">
             <div className="col-lg-6">
               <h1 className="display-4 font-weight-bold mb-4">
-                Find the perfect skills for your business
+                {t("landing.heroTitle")}
               </h1>
               <p className="lead mb-4">
-                Connect with talented professionals and discover amazing skills.
-                Find the perfect match for your projects or offer your expertise
-                to the world.
+                {t("landing.heroSubtitle")}
               </p>
               {currentUser ? (
                 <div className="d-flex flex-column flex-sm-row gap-3">
                   <a href="/browse" className="btn btn-light btn-lg">
-                    Browse
+                    {t("nav.browseSkills")}
                   </a>
                   <a href="/my-engaged-list" className="btn btn-outline-light btn-lg">
-                    My Hired List
+                    {t("nav.myHiredList")}
                   </a>
                 </div>
               ) : (
                 <div className="d-flex flex-column flex-sm-row gap-3">
                   <a href="/register" className="btn btn-light btn-lg">
-                    Get Started
+                    {t("landing.getStarted")}
                   </a>
                   <a href="/login" className="btn btn-outline-light btn-lg">
-                    Sign In
+                    {t("nav.signIn")}
                   </a>
                 </div>
               )}
@@ -227,13 +248,13 @@ function LandingPage() {
         <section className="cta-section bg-primary text-white py-3">
           <div className="container text-center">
             <h2 className="display-5 font-weight-bold mb-3">
-              Ready to Get Started?
+              {t("landing.whyChooseUs")}
             </h2>
             <p className="lead mb-4">
-              Join thousands of users already connecting through our platform.
+              {t("landing.heroSubtitle")}
             </p>
             <a href="/register" className="btn btn-light btn-lg">
-              Create Your Account
+              {t("auth.register.createAccount")}
             </a>
           </div>
         </section>

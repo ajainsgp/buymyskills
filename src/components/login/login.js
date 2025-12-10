@@ -1,11 +1,13 @@
 import React, { useState } from "react";
 import { useNavigate } from "react-router-dom";
+import { useTranslation } from "react-i18next";
 import "./login.css";
 import API_BASE from "../../utils/apiBase";
 import { validateEmail } from "../../utils/validation";
 
 function LoginApps() {
   const navigate = useNavigate();
+  const { t } = useTranslation();
   const [form, setForm] = useState({ emailId: "", password: "" });
   const [submitting, setSubmitting] = useState(false);
   const [error, setError] = useState("");
@@ -129,17 +131,15 @@ function LoginApps() {
                       alt="Buy My Skills Icon"
                       className="login-icon"
                     />
-                    <h3 className="title">Buy My Skills</h3>
+                    <h3 className="title">{t("brand.title")}</h3>
                   </div>
-                  <h4 className="sub-title">
-                    Welcome to the world of opportunities
-                  </h4>
+                  <h4 className="sub-title">{t("auth.login.title")}</h4>
                 </div>
                 <div className="right-content col-lg-6">
-                  <h3 className="form-title">Login</h3>
+                  <h3 className="form-title">{t("auth.login.signIn")}</h3>
                   <form className="form-horizontal" onSubmit={onSubmit}>
                     <div className="form-group">
-                      <label>Username / Email</label>
+                      <label>{t("auth.login.email")}</label>
                       <input
                         type="email"
                         name="emailId"
@@ -155,7 +155,7 @@ function LoginApps() {
                       )}
                     </div>
                     <div className="form-group">
-                      <label>Password</label>
+                      <label>{t("auth.login.password")}</label>
                       <input
                         type="password"
                         name="password"
@@ -175,7 +175,9 @@ function LoginApps() {
                       type="submit"
                       disabled={submitting}
                     >
-                      {submitting ? "Logging in..." : "Login"}
+                      {submitting
+                        ? t("common.loading")
+                        : t("auth.login.signIn")}
                     </button>
                     <div className="remember-me">
                       <input
@@ -184,7 +186,9 @@ function LoginApps() {
                         checked={remember}
                         onChange={(e) => setRemember(e.target.checked)}
                       />
-                      <span className="check-label">Remember Me</span>
+                      <span className="check-label">
+                        {t("auth.login.rememberMe")}
+                      </span>
                     </div>
                     <a
                       href="#"
@@ -194,7 +198,7 @@ function LoginApps() {
                         navigate("/update-password?mode=reset");
                       }}
                     >
-                      Forgot password
+                      {t("auth.login.forgotPassword")}
                     </a>
                   </form>
                   {/* <span className="separator">OR</span>
@@ -212,8 +216,8 @@ function LoginApps() {
                     </li>
                   </ul> */}
                   <span className="signup-link">
-                    Don&#39;t have an account? Sign up{" "}
-                    <a href="/register">here</a>
+                    {t("auth.login.noAccount")}{" "}
+                    <a href="/register">{t("auth.login.signUp")}</a>
                   </span>
                 </div>
               </div>
