@@ -63,6 +63,8 @@ function RegisterUser() {
   const [confirmInfo, setConfirmInfo] = useState(false);
   const [categoryPriceRange, setCategoryPriceRange] = useState(null);
   const [loadingPriceRange, setLoadingPriceRange] = useState(false);
+  const [tagSuggestions, setTagSuggestions] = useState([]);
+  const [loadingSuggestions, setLoadingSuggestions] = useState(false);
 
   useEffect(() => {
     let ignore = false;
@@ -148,6 +150,35 @@ function RegisterUser() {
     };
 
     fetchPriceRange();
+  }, [form.category]);
+
+  // Fetch tag suggestions when category changes
+  useEffect(() => {
+    const fetchTagSuggestions = async () => {
+      if (form.category) {
+        setLoadingSuggestions(true);
+        try {
+          const response = await fetch(
+            `${API_BASE}/api/tags/suggest?category=${encodeURIComponent(form.category)}`,
+          );
+          if (response.ok) {
+            const data = await response.json();
+            setTagSuggestions(data.tags || []);
+          } else {
+            setTagSuggestions([]);
+          }
+        } catch (error) {
+          console.error("Error fetching tag suggestions:", error);
+          setTagSuggestions([]);
+        } finally {
+          setLoadingSuggestions(false);
+        }
+      } else {
+        setTagSuggestions([]);
+      }
+    };
+
+    fetchTagSuggestions();
   }, [form.category]);
 
   const onChange = (e) => {
@@ -931,6 +962,86 @@ function RegisterUser() {
                               value={form.keywordTags}
                               onChange={onChange}
                             />
+                            {/* AI Tag Suggestions */}
+                            {tagSuggestions.length > 0 && (
+                              <div
+                                style={{
+                                  marginTop: "8px",
+                                  padding: "8px",
+                                  backgroundColor: "#f8f9fa",
+                                  borderRadius: "4px",
+                                  border: "1px solid #dee2e6",
+                                }}
+                              >
+                                <small
+                                  style={{
+                                    color: "#495057",
+                                    fontWeight: "bold",
+                                    display: "block",
+                                    marginBottom: "4px",
+                                  }}
+                                >
+                                  🤖 AI Suggestions for {form.category}:
+                                </small>
+                                <div
+                                  style={{
+                                    display: "flex",
+                                    flexWrap: "wrap",
+                                    gap: "4px",
+                                  }}
+                                >
+                                  {tagSuggestions.map((tag, index) => (
+                                    <button
+                                      key={index}
+                                      type="button"
+                                      className="btn btn-sm btn-outline-primary"
+                                      style={{
+                                        padding: "2px 8px",
+                                        fontSize: "12px",
+                                        borderRadius: "12px",
+                                      }}
+                                      onClick={() => {
+                                        const currentTags =
+                                          form.keywordTags.trim();
+                                        const newTags = currentTags
+                                          ? `${currentTags}, ${tag}`
+                                          : tag;
+                                        setForm((prev) => ({
+                                          ...prev,
+                                          keywordTags: newTags,
+                                        }));
+                                      }}
+                                    >
+                                      + {tag}
+                                    </button>
+                                  ))}
+                                </div>
+                                <small
+                                  style={{
+                                    color: "#6c757d",
+                                    fontSize: "11px",
+                                    display: "block",
+                                    marginTop: "4px",
+                                  }}
+                                >
+                                  Click to add suggested tags to your profile
+                                </small>
+                              </div>
+                            )}
+                            {loadingSuggestions && form.category && (
+                              <div
+                                style={{
+                                  marginTop: "8px",
+                                  padding: "8px",
+                                  backgroundColor: "#f8f9fa",
+                                  borderRadius: "4px",
+                                }}
+                              >
+                                <small style={{ color: "#6c757d" }}>
+                                  🤖 Generating AI tag suggestions...
+                                </small>
+                              </div>
+                            )}
                           </div>
                         </div>
                       </div>

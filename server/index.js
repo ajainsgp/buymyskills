@@ -16,6 +16,7 @@ const compression = require("compression");
 const morgan = require("morgan");
 const bcrypt = require("bcrypt");
 const sgMail = require('@sendgrid/mail');
+const OpenAI = require('openai');
 
 if (process.env.SENDGRID_API_KEY) {
   sgMail.setApiKey(process.env.SENDGRID_API_KEY);
@@ -678,6 +679,50 @@ app.get("/api/categories/:category/price-range", async (req, res) => {
   } catch (err) {
     console.error("Category price range error:", err);
     return res.status(500).json({ error: "Internal server error" });
+  }
+});
+
+/**
+ * GET /api/tags/suggest?category=Software%20Engineer
+ * Returns AI-suggested tags for a category if USE_AI_FOR_TAGS is enabled
+ */
+app.get("/api/tags/suggest", async (req, res) => {
+  try {
+    const { category } = req.query || {};
+    if (!category || !String(category).trim()) {
+      return res.status(400).json({ error: "Category is required" });
+    }
+
+    const useAI = String(process.env.USE_AI_FOR_TAGS || "").toLowerCase() === "true";
+    const openaiKey = process.env.OPENAI_API_KEY;
+
+    if (!useAI) {
+      return res.json({ tags: [], aiEnabled: false });
+    }
+
+    if (!openaiKey) {
+      console.warn("USE_AI_FOR_TAGS is true but OPENAI_API_KEY is not set");
+      return res.json({ tags: [], aiEnabled: false });
+    }
+
+    const openai = new OpenAI({ apiKey: openaiKey });
+
+    const prompt = `Suggest 10-15 relevant tags or keywords for someone working as a ${category} in a freelance marketplace. Focus on skills, technologies, and expertise areas. Return only a comma-separated list of tags, no other text.`;
+
+    const completion = await openai.chat.completions.create({
+      model: "gpt-3.5-turbo",
+      messages: [{ role: "user", content: prompt }],
+      max_tokens: 200,
+      temperature: 0.7,
+    });
+
+    const response = completion.choices[0]?.message?.content?.trim() || "";
+    const tags = response.split(',').map(tag => tag.trim()).filter(tag => tag.length > 0);
+
+    return res.json({ tags, aiEnabled: true });
+  } catch (err) {
+    console.error("Tags suggest error:", err);
+    return res.status(500).json({ error: "Failed to generate tag suggestions" });
   }
 });
 
