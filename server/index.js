@@ -2115,9 +2115,17 @@ app.get("/api/users/public", async (req, res) => {
           baseUser.whatsappNumber = r.whatsapp_number || "";
         }
 
+        // Add social media and pricing information for logged-in users (not privacy-restricted)
+        baseUser.facebookUrl = r.facebook_url || "";
+        baseUser.linkedinUrl = r.linkedin_url || "";
+        baseUser.currencyCode = r.currency_code || "";
+        baseUser.startingPrice = r.starting_price ? parseFloat(r.starting_price) : null;
+        baseUser.rateType = r.rate_type || "";
+        baseUser.negotiable = !!r.negotiable;
+
         // Add basic location information for filtering and display (not full address for privacy)
         baseUser.city = r.city || "";
-        baseUser.country = r.country || "";
+        baseUser.country = r.country_name || "";
         baseUser.countryCode = r.country_code || "";
 
         return baseUser;

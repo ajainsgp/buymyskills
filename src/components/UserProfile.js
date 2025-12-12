@@ -375,7 +375,7 @@ function UserProfile({ userProfiles, showSensitive = false }) {
                 t("userProfile.loginToView")
               )}
             </p>
-            {showSensitive && profile.facebookUrl && (
+            {profile.facebookUrl && (
               <p style={{ marginBottom: 0 }}>
                 {t("userProfile.facebook")}{" "}
                 <a
@@ -389,7 +389,7 @@ function UserProfile({ userProfiles, showSensitive = false }) {
                 </a>
               </p>
             )}
-            {showSensitive && profile.linkedinUrl && (
+            {profile.linkedinUrl && (
               <p style={{ marginBottom: 0 }}>
                 {t("userProfile.linkedin")}{" "}
                 <a
@@ -403,7 +403,7 @@ function UserProfile({ userProfiles, showSensitive = false }) {
                 </a>
               </p>
             )}
-            {showSensitive && (profile.startingPrice || profile.negotiable) && (
+            {(profile.startingPrice || profile.negotiable) && (
               <p style={{ marginBottom: 0 }}>
                 <strong>{t("userProfile.price")}</strong>{" "}
                 {profile.startingPrice && profile.currencyCode
