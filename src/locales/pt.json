@@ -375,7 +375,7 @@
     "hourly": "Por Hora",
     "daily": "Diário",
     "negotiable": "Negociável",
-    "private": "Privado",
+    "private": "Manter Privado",
     "loginToView": "Faça login para ver",
     "contact": "Contatar",
     "himHer": "ele/ela",
@@ -414,6 +414,8 @@
     "typeMessage": "Digite sua mensagem...",
     "failedToSend": "Falha ao enviar mensagem",
     "supportChat": "Chat de Suporte",
+    "supportChatHistory": "Histórico do chat de suporte",
+    "feedbackChatHistory": "Histórico do chat de comentários",
     "repliedTo": "respondeu a"
   },
   "feedback": {

@@ -453,15 +453,10 @@ async function ensureCountriesFile() {
             createdAt: now,
           }));
           await fs.writeFile(COUNTRIES_FILE, JSON.stringify({ countries }, null, 2), "utf8");
-        } else {
-          // Fallback empty
-          await fs.writeFile(COUNTRIES_FILE, JSON.stringify({ countries: [] }, null, 2), "utf8");
         }
-      } else {
-        await fs.writeFile(COUNTRIES_FILE, JSON.stringify({ countries: [] }, null, 2), "utf8");
       }
     } catch {
-      await fs.writeFile(COUNTRIES_FILE, JSON.stringify({ countries: [] }, null, 2), "utf8");
+      // Ignore errors when trying to load from countries.json
     }
   }
 }
@@ -1121,6 +1116,83 @@ app.delete("/api/admin/landing-page-cards/:id", async (req, res) => {
 });
 
 /**
+ * Admin: Get all support messages
+ * - GET /api/admin/support
+ */
+app.get("/api/admin/support", async (req, res) => {
+  try {
+    // Check if user is admin
+    let currentUser = null;
+    try {
+      const userHeader = req.headers['x-current-user'];
+      if (userHeader) {
+        currentUser = JSON.parse(userHeader);
+      }
+    } catch (e) {
+      // ignore parse errors
+    }
+
+    // console.log('Admin support check - currentUser:', currentUser);
+    // console.log('Admin support check - roleType:', currentUser?.roleType);
+
+    const isAdmin = currentUser &&
+      (String(currentUser.roleType || "").toLowerCase() === "administrative" ||
+       String(currentUser.roleType || "").toLowerCase() === "administrator");
+
+    // console.log('Admin support check - isAdmin:', isAdmin);
+
+    if (!isAdmin) {
+      return res.status(403).json({ error: "Admin access required" });
+    }
+
+    if (USE_DB) {
+      const [rows] = await db.pool.execute(`
+        SELECT
+          f.id,
+          f.sender_id as senderId,
+          f.receiver_id as receiverId,
+          f.content,
+          f.created_at as createdAt,
+          f.is_read as isRead,
+          su.name as senderName,
+          su.email_id as senderEmail,
+          ru.name as receiverName,
+          ru.email_id as receiverEmail
+        FROM bms_support f
+        LEFT JOIN users su ON f.sender_id = su.id
+        LEFT JOIN users ru ON f.receiver_id = ru.id
+        ORDER BY f.created_at DESC
+      `);
+
+      const support = rows.map(row => ({
+        id: row.id,
+        sender: {
+          id: row.senderId,
+          name: row.senderName || (row.senderId === 'admin' ? 'Support Team' : 'Unknown'),
+          email: row.senderEmail || null,
+        },
+        receiver: {
+          id: row.receiverId,
+          name: row.receiverName || (row.receiverId === 'admin' ? 'Support Team' : 'Unknown'),
+          email: row.receiverEmail || null,
+        },
+        content: row.content,
+        createdAt: row.createdAt,
+        isRead: row.isRead === 1,
+      }));
+
+      return res.json({ support });
+    }
+
+    // FS mode - not implemented for support system
+    return res.json({ support: [] });
+  } catch (err) {
+    console.error("Admin get support error:", err);
+    return res.status(500).json({ error: "Internal server error" });
+  }
+});
+
+/**
  * Admin: Get all feedback messages
  * - GET /api/admin/feedback
  */
@@ -1170,7 +1242,7 @@ app.get("/api/admin/feedback", async (req, res) => {
         id: row.id,
         sender: {
           id: row.senderId,
-          name: row.senderName || (row.senderId === 'admin' ? 'Support Team' : 'Unknown'),
+          name: row.senderName || (row.senderId === 'admin' ? 'Feedback Team' : 'Unknown'),
           email: row.senderEmail || null,
         },
         receiver: {
@@ -1188,6 +1260,78 @@ app.get("/api/admin/feedback", async (req, res) => {
     return res.json({ feedback: [] });
   } catch (err) {
     console.error("Admin get feedback error:", err);
+    return res.status(500).json({ error: "Internal server error" });
+  }
+});
+
+/**
+ * Admin: Get all support messages
+ * - GET /api/admin/support
+ */
+app.get("/api/admin/support", async (req, res) => {
+  try {
+    // Check if user is admin
+    let currentUser = null;
+    try {
+      const userHeader = req.headers['x-current-user'];
+      if (userHeader) {
+        currentUser = JSON.parse(userHeader);
+      }
+    } catch (e) {
+      // ignore parse errors
+    }
+
+    // console.log('Admin support check - currentUser:', currentUser);
+    // console.log('Admin support check - roleType:', currentUser?.roleType);
+
+    const isAdmin = currentUser &&
+      (String(currentUser.roleType || "").toLowerCase() === "administrative" ||
+       String(currentUser.roleType || "").toLowerCase() === "administrator");
+
+    // console.log('Admin support check - isAdmin:', isAdmin);
+
+    if (!isAdmin) {
+      return res.status(403).json({ error: "Admin access required" });
+    }
+
+    if (USE_DB) {
+      const [rows] = await db.pool.execute(`
+        SELECT
+          f.id,
+          f.sender_id as senderId,
+          f.receiver_id as receiverId,
+          f.content,
+          f.created_at as createdAt,
+          f.is_read as isRead,
+          u.name as senderName,
+          u.email_id as senderEmail
+        FROM bms_support f
+        LEFT JOIN users u ON f.sender_id = u.id
+        ORDER BY f.created_at DESC
+      `);
+
+      const support = rows.map(row => ({
+        id: row.id,
+        sender: {
+          id: row.senderId,
+          name: row.senderName || (row.senderId === 'admin' ? 'Support Team' : 'Unknown'),
+          email: row.senderEmail || null,
+        },
+        receiver: {
+          id: row.receiverId,
+        },
+        content: row.content,
+        createdAt: row.createdAt,
+        isRead: row.isRead === 1,
+      }));
+
+      return res.json({ support });
+    }
+
+    // FS mode - not implemented for support system
+    return res.json({ support: [] });
+  } catch (err) {
+    console.error("Admin get support error:", err);
     return res.status(500).json({ error: "Internal server error" });
   }
 });
@@ -1762,6 +1906,9 @@ app.get("/api/users", async (req, res) => {
           photoPresent: !!r.photo_present,
           allowEmailContact: !!r.allow_email_contact,
           allowMobileContact: !!r.allow_mobile_contact,
+          city: !!r.city || "",
+          country: !!r.country_name || "",
+          countryCode: !!r.country_code || "",
         };
 
         // Add contact and financial information only for the current user's own profile
@@ -1769,7 +1916,6 @@ app.get("/api/users", async (req, res) => {
           // Contact information for own profile
           baseUser.emailId = r.email_id || "";
           baseUser.secondaryEmail = r.secondary_email || "";
-          baseUser.countryCode = r.country_code || "";
           baseUser.mobile = r.mobile || "";
           baseUser.whatsappNumber = r.whatsapp_number || "";
           baseUser.facebookUrl = r.facebook_url || "";
@@ -1795,7 +1941,9 @@ app.get("/api/users", async (req, res) => {
           baseUser.currencyCode = r.currency_code || "";
           baseUser.rateType = r.rate_type || "";
         } else {
-          // For other users, include countryCode for filtering purposes
+          // For other users in public browsing,  include countryCode and city for filtering
+          baseUser.city = r.city || "";
+          baseUser.country = r.country_name || "";
           baseUser.countryCode = r.country_code || "";
         }
 
@@ -1932,25 +2080,47 @@ app.get("/api/users/public", async (req, res) => {
 
       const rows = await db.listPublicUsersInRegion(userRegion.id, category || null);
       const users = rows.map((r) => {
-        const u = mapDbUserRowToApiUser(r);
-        const addr =
-          r.address_line1 || r.address_line2 || r.city || r.state || r.postcode || r.country
-            ? {
-                addressLine1: r.address_line1 || "",
-                addressLine2: r.address_line2 || "",
-                city: r.city || "",
-                state: r.state || "",
-                postcode: r.postcode || "",
-                country: r.country || "",
-              }
-            : {};
-        return {
-          ...sanitizeUser(u),
+        // Create base user object respecting privacy settings
+        const baseUser = {
+          id: r.id,
+          name: r.name || "",
+          firstName: r.first_name || "",
+          lastName: r.last_name || "",
+          nickName: r.nick_name || "",
+          gender: r.gender || "",
+          summary: r.summary || "",
+          keywordTags: r.keyword_tags || "",
+          workPreference: r.work_preference || "",
+          traveling: r.traveling || "",
+          availability: r.availability || "",
           category: r.category || "",
-          showInDashboard: r.show_in_dashboard === 1,
-          showPhoto: r.show_photo === 1,
+          createdAt: r.created_at instanceof Date ? r.created_at.toISOString() : r.created_at,
+          showInDashboard: !!r.show_in_dashboard,
+          showPhoto: !!r.show_photo,
           photoPresent: !!r.photo_present,
+          allowEmailContact: !!r.allow_email_contact,
+          allowMobileContact: !!r.allow_mobile_contact,
         };
+
+        // Add contact information only if privacy settings allow
+        if (r.allow_email_contact) {
+          baseUser.emailId = r.email_id || "";
+          baseUser.secondaryEmail = r.secondary_email || "";
+        }
+        if (r.allow_mobile_contact) {
+          baseUser.countryCode = r.country_code || "";
+          baseUser.isdCode = r.isd_code || "+91";
+          baseUser.mobile = r.mobile || "";
+          baseUser.isWhatsappAvailable = !!r.is_whatsapp_available;
+          baseUser.whatsappNumber = r.whatsapp_number || "";
+        }
+
+        // Add basic location information for filtering and display (not full address for privacy)
+        baseUser.city = r.city || "";
+        baseUser.country = r.country || "";
+        baseUser.countryCode = r.country_code || "";
+
+        return baseUser;
       });
       return res.json({ users, region: userRegion.name });
     }
@@ -1972,25 +2142,48 @@ app.get("/api/users/public", async (req, res) => {
       })
       .filter((u) => (category ? String(u.category || "").toLowerCase() === category.toLowerCase() : true))
       .map((u) => {
-        const addrRec = addrStore.addresses.find((a) => a.userId === u.id);
-        const addr = addrRec
-          ? {
-              addressLine1: addrRec.current.addressLine1 || "",
-              addressLine2: addrRec.current.addressLine2 || "",
-              city: addrRec.current.city || "",
-              state: addrRec.current.state || "",
-              postcode: addrRec.current.postcode || "",
-              country: addrRec.current.country || "",
-            }
-          : {};
-        const hasPhoto = photos.photos.some((p) => p.userId === u.id);
-        return {
-          ...sanitizeUser(u),
+        // Create base user object respecting privacy settings
+        const baseUser = {
+          id: u.id,
+          name: u.name || "",
+          firstName: u.firstName || "",
+          lastName: u.lastName || "",
+          nickName: u.nickName || "",
+          gender: u.gender || "",
+          summary: u.summary || "",
+          keywordTags: u.keywordTags || "",
+          workPreference: u.workPreference || "",
+          traveling: u.traveling || "",
+          availability: u.availability || "",
           category: u.category || "",
+          createdAt: u.createdAt || "",
           showInDashboard: !!u.showInDashboard,
           showPhoto: !!u.showPhoto,
-          photoPresent: hasPhoto,
+          photoPresent: !!photos.photos.some((p) => p.userId === u.id),
+          allowEmailContact: !!u.allowEmailContact,
+          allowMobileContact: !!u.allowMobileContact,
         };
+
+        // Add contact information only if privacy settings allow
+        if (u.allowEmailContact) {
+          baseUser.emailId = u.emailId || "";
+          baseUser.secondaryEmail = u.secondaryEmail || "";
+        }
+        if (u.allowMobileContact) {
+          baseUser.countryCode = u.countryCode || "";
+          baseUser.isdCode = u.isdCode || "+91";
+          baseUser.mobile = u.mobile || "";
+          baseUser.isWhatsappAvailable = !!u.isWhatsappAvailable;
+          baseUser.whatsappNumber = u.whatsappNumber || "";
+        }
+
+        // Add basic location information for filtering and display (not full address for privacy)
+        const addrRec = addrStore.addresses.find((a) => a.userId === u.id);
+        baseUser.city = addrRec?.current?.city || "";
+        baseUser.country = addrRec?.current?.country || "";
+        baseUser.countryCode = u.countryCode || "";
+
+        return baseUser;
       });
     return res.json({ users, region: "All Regions (FS Mode)" });
   } catch (err) {
@@ -2311,12 +2504,12 @@ app.get("/api/users/:id/photo", async (req, res) => {
 });
 
 /**
- * Feedback conversation endpoints (like messages but with admin)
- * - GET /api/feedback/conversations - get conversations for current user
- * - GET /api/feedback/messages - get messages for a conversation
- * - POST /api/feedback - send feedback message
- * - PUT /api/feedback/:messageId/read - mark message as read
- * - GET /api/feedback/unread-count - get unread feedback count
+ * support conversation endpoints (like messages but with admin)
+ * - GET /api/support/conversations - get conversations for current user
+ * - GET /api/support/messages - get messages for a conversation
+ * - POST /api/support - send support message
+ * - PUT /api/support/:messageId/read - mark message as read
+ * - GET /api/support/unread-count - get unread support count
  */
 
 /**
@@ -2582,7 +2775,8 @@ app.get("/api/users/public", async (req, res) => {
           category: r.category || "",
           showInDashboard: r.show_in_dashboard === 1,
           showPhoto: r.show_photo === 1,
-          address: addr,
+          city: r.city || "",
+          country: r.country || "",
           photoPresent: !!r.photo_present,
         };
       });
@@ -2956,9 +3150,9 @@ app.get("/api/ratings/average", async (req, res) => {
   }
 });
 
-// Feedback conversation endpoints (like messages but with admin)
-// Get feedback conversations for current user
-app.get("/api/feedback/conversations", async (req, res) => {
+// Support conversation endpoints (like messages but with admin)
+// Get support conversations for current user
+app.get("/api/support/conversations", async (req, res) => {
   try {
     // Get current user
     let currentUser = null;
@@ -2979,7 +3173,7 @@ app.get("/api/feedback/conversations", async (req, res) => {
       const isAdmin = user && String(user.role_type || "").toLowerCase() === "administrator";
 
       if (isAdmin) {
-        // Admin sees all users who have feedback
+        // Admin sees all users who have support
         const [rows] = await db.pool.execute(`
           SELECT DISTINCT
             f.sender_id as contactId,
@@ -2987,17 +3181,17 @@ app.get("/api/feedback/conversations", async (req, res) => {
             MAX(f.created_at) as lastMessageTime,
             (
               SELECT content
-              FROM bms_feedback
+              FROM bms_support
               WHERE (sender_id = f.sender_id AND receiver_id = 'admin') OR (sender_id = 'admin' AND receiver_id = f.sender_id)
               ORDER BY created_at DESC
               LIMIT 1
             ) as lastMessageContent,
             (
               SELECT COUNT(*)
-              FROM bms_feedback
+              FROM bms_support
               WHERE sender_id = f.sender_id AND receiver_id = 'admin' AND is_read = 0
             ) as unreadCount
-          FROM bms_feedback f
+          FROM bms_support f
           JOIN users u ON f.sender_id = u.id
           WHERE f.receiver_id = 'admin' AND f.sender_id != 'admin'
           GROUP BY f.sender_id, u.name
@@ -3020,17 +3214,17 @@ app.get("/api/feedback/conversations", async (req, res) => {
             MAX(f.created_at) as lastMessageTime,
             (
               SELECT content
-              FROM bms_feedback
+              FROM bms_support
               WHERE (sender_id = ? AND receiver_id = 'admin') OR (sender_id = 'admin' AND receiver_id = ?)
               ORDER BY created_at DESC
               LIMIT 1
             ) as lastMessageContent,
             (
               SELECT COUNT(*)
-              FROM bms_feedback
+              FROM bms_support
               WHERE sender_id = 'admin' AND receiver_id = ? AND is_read = 0
             ) as unreadCount
-          FROM bms_feedback f
+          FROM bms_support f
           WHERE (f.sender_id = ? AND f.receiver_id = 'admin') OR (f.sender_id = 'admin' AND f.receiver_id = ?)
         `, [currentUser.id, currentUser.id, currentUser.id, currentUser.id, currentUser.id]);
 
@@ -3046,13 +3240,13 @@ app.get("/api/feedback/conversations", async (req, res) => {
       }
     }
   } catch (err) {
-    console.error("Get feedback conversations error:", err);
+    console.error("Get support conversations error:", err);
     return res.status(500).json({ error: "Internal server error" });
   }
 });
 
-// Get feedback messages for a conversation
-app.get("/api/feedback/messages", async (req, res) => {
+// Get support messages for a conversation
+app.get("/api/support/messages", async (req, res) => {
   try {
     // Get current user
     let currentUser = null;
@@ -3087,7 +3281,7 @@ app.get("/api/feedback/messages", async (req, res) => {
             f.is_read as isRead,
             CASE WHEN f.sender_id = 'admin' THEN 1 ELSE 0 END as isSentByMe,
             u.name as senderName
-          FROM bms_feedback f
+          FROM bms_support f
           LEFT JOIN users u ON f.sender_id = u.id
           WHERE f.sender_id = 'admin' OR f.receiver_id = 'admin'
           ORDER BY f.created_at ASC
@@ -3104,7 +3298,7 @@ app.get("/api/feedback/messages", async (req, res) => {
             f.is_read as isRead,
             CASE WHEN f.sender_id = ? THEN 1 ELSE 0 END as isSentByMe,
             u.name as senderName
-          FROM bms_feedback f
+          FROM bms_support f
           LEFT JOIN users u ON f.sender_id = u.id
           WHERE (f.sender_id = ? AND f.receiver_id = 'admin') OR (f.sender_id = 'admin' AND f.receiver_id = ?)
           ORDER BY f.created_at ASC
@@ -3132,13 +3326,13 @@ app.get("/api/feedback/messages", async (req, res) => {
       return res.json({ messages });
     }
   } catch (err) {
-    console.error("Get feedback messages error:", err);
+    console.error("Get support messages error:", err);
     return res.status(500).json({ error: "Internal server error" });
   }
 });
 
-// Send feedback message
-app.post("/api/feedback", async (req, res) => {
+// Send support message
+app.post("/api/support", async (req, res) => {
   try {
     const { receiverId, content } = req.body || {};
     if (!receiverId || !content || !content.trim()) {
@@ -3165,23 +3359,23 @@ app.post("/api/feedback", async (req, res) => {
       const actualSenderId = currentUser.roleType === 'administrator' ? 'admin' : currentUser.id;
 
       const [result] = await db.pool.execute(`
-        INSERT INTO bms_feedback (sender_id, receiver_id, content, created_at, is_read)
+        INSERT INTO bms_support (sender_id, receiver_id, content, created_at, is_read)
         VALUES (?, ?, ?, NOW(), 0)
       `, [actualSenderId, actualReceiverId, content.trim()]);
 
       return res.status(201).json({
         messageId: result.insertId,
-        message: "Feedback sent successfully"
+        message: "support sent successfully"
       });
     }
   } catch (err) {
-    console.error("Send feedback error:", err);
+    console.error("Send support error:", err);
     return res.status(500).json({ error: "Internal server error" });
   }
 });
 
-// Mark feedback message as read
-app.put("/api/feedback/:messageId/read", async (req, res) => {
+// Mark support message as read
+app.put("/api/support/:messageId/read", async (req, res) => {
   try {
     const { messageId } = req.params || {};
 
@@ -3208,7 +3402,7 @@ app.put("/api/feedback/:messageId/read", async (req, res) => {
       const receiverId = isAdmin ? 'admin' : currentUser.id;
 
       await db.pool.execute(`
-        UPDATE bms_feedback
+        UPDATE bms_support
         SET is_read = 1
         WHERE id = ? AND receiver_id = ?
       `, [messageId, receiverId]);
@@ -3216,13 +3410,280 @@ app.put("/api/feedback/:messageId/read", async (req, res) => {
       return res.json({ message: "Message marked as read" });
     }
   } catch (err) {
-    console.error("Mark feedback read error:", err);
+    console.error("Mark support read error:", err);
     return res.status(500).json({ error: "Internal server error" });
   }
 });
 
-// Get unread feedback count
-app.get("/api/feedback/unread-count", async (req, res) => {
+/**
+ * Send support message
+ * - POST /api/support
+ */
+app.post("/api/support", async (req, res) => {
+  try {
+    const { receiverId, content } = req.body || {};
+    if (!receiverId || !content || !content.trim()) {
+      return res.status(400).json({ error: "receiverId and content are required" });
+    }
+
+    // Get current user
+    let currentUser = null;
+    try {
+      const s = (req.headers['x-current-user'] || "").toString().trim();
+      if (s) currentUser = JSON.parse(s);
+    } catch {
+      // ignore
+    }
+
+    if (!currentUser || !currentUser.id) {
+      return res.status(401).json({ error: "Authentication required" });
+    }
+
+    if (USE_DB) {
+      // For users, receiverId should be 'admin'
+      // For admin, receiverId should be the user ID
+      const actualReceiverId = currentUser.roleType === 'administrator' ? receiverId : 'admin';
+      const actualSenderId = currentUser.roleType === 'administrator' ? 'admin' : currentUser.id;
+
+      const [result] = await db.pool.execute(`
+        INSERT INTO bms_support (sender_id, receiver_id, content, created_at, is_read)
+        VALUES (?, ?, ?, NOW(), 0)
+      `, [actualSenderId, actualReceiverId, content.trim()]);
+
+      return res.status(201).json({
+        messageId: result.insertId,
+        message: "support sent successfully"
+      });
+    }
+  } catch (err) {
+    console.error("Send support error:", err);
+    return res.status(500).json({ error: "Internal server error" });
+  }
+});
+
+// Mark support message as read
+app.put("/api/support/:messageId/read", async (req, res) => {
+  try {
+    const { messageId } = req.params || {};
+
+    // Get current user
+    let currentUser = null;
+    try {
+      const s = (req.headers['x-current-user'] || "").toString().trim();
+      if (s) currentUser = JSON.parse(s);
+    } catch {
+      // ignore
+    }
+
+    if (!currentUser || !currentUser.id) {
+      return res.status(401).json({ error: "Authentication required" });
+    }
+
+    if (USE_DB) {
+      // Check if user is admin
+      const user = await db.getUserById(currentUser.id);
+      const isAdmin = user && String(user.role_type || "").toLowerCase() === "administrator";
+
+      // For admin, messages are sent to 'admin', not to admin's user ID
+      // For regular users, messages are sent to their user ID
+      const receiverId = isAdmin ? 'admin' : currentUser.id;
+
+      await db.pool.execute(`
+        UPDATE bms_support
+        SET is_read = 1
+        WHERE id = ? AND receiver_id = ?
+      `, [messageId, receiverId]);
+
+      return res.json({ message: "Message marked as read" });
+    }
+  } catch (err) {
+    console.error("Mark support read error:", err);
+    return res.status(500).json({ error: "Internal server error" });
+  }
+});
+
+// Get support conversations for current user
+app.get("/api/support/conversations", async (req, res) => {
+  try {
+    // Get current user
+    let currentUser = null;
+    try {
+      const s = (req.headers['x-current-user'] || "").toString().trim();
+      if (s) currentUser = JSON.parse(s);
+    } catch {
+      // ignore
+    }
+
+    if (!currentUser || !currentUser.id) {
+      return res.status(401).json({ error: "Authentication required" });
+    }
+
+    if (USE_DB) {
+      // Check if user is admin
+      const user = await db.getUserById(currentUser.id);
+      const isAdmin = user && String(user.role_type || "").toLowerCase() === "administrator";
+
+      if (isAdmin) {
+        // Admin sees all users who have support
+        const [rows] = await db.pool.execute(`
+          SELECT DISTINCT
+            f.sender_id as contactId,
+            u.name as contactName,
+            MAX(f.created_at) as lastMessageTime,
+            (
+              SELECT content
+              FROM bms_support
+              WHERE (sender_id = f.sender_id AND receiver_id = 'admin') OR (sender_id = 'admin' AND receiver_id = f.sender_id)
+              ORDER BY created_at DESC
+              LIMIT 1
+            ) as lastMessageContent,
+            (
+              SELECT COUNT(*)
+              FROM bms_support
+              WHERE sender_id = f.sender_id AND receiver_id = 'admin' AND is_read = 0
+            ) as unreadCount
+          FROM bms_support f
+          JOIN users u ON f.sender_id = u.id
+          WHERE f.receiver_id = 'admin' AND f.sender_id != 'admin'
+          GROUP BY f.sender_id, u.name
+          ORDER BY CASE WHEN unreadCount > 0 THEN 0 ELSE 1 END, lastMessageTime DESC
+        `);
+
+        const conversations = rows.map(row => ({
+          contactId: row.contactId,
+          contactName: row.contactName || "Unknown User",
+          lastMessageTime: row.lastMessageTime,
+          lastMessageContent: row.lastMessageContent || "No messages yet",
+          unreadCount: row.unreadCount || 0,
+        }));
+
+        return res.json({ conversations });
+      } else {
+        // Regular user sees only "Admin" as contact
+        const [rows] = await db.pool.execute(`
+          SELECT
+            MAX(f.created_at) as lastMessageTime,
+            (
+              SELECT content
+              FROM bms_support
+              WHERE (sender_id = ? AND receiver_id = 'admin') OR (sender_id = 'admin' AND receiver_id = ?)
+              ORDER BY created_at DESC
+              LIMIT 1
+            ) as lastMessageContent,
+            (
+              SELECT COUNT(*)
+              FROM bms_support
+              WHERE sender_id = 'admin' AND receiver_id = ? AND is_read = 0
+            ) as unreadCount
+          FROM bms_support f
+          WHERE (f.sender_id = ? AND f.receiver_id = 'admin') OR (f.sender_id = 'admin' AND f.receiver_id = ?)
+        `, [currentUser.id, currentUser.id, currentUser.id, currentUser.id, currentUser.id]);
+
+        const conversations = [{
+          contactId: "admin",
+          contactName: "support Team",
+          lastMessageTime: rows[0]?.lastMessageTime || null,
+          lastMessageContent: rows[0]?.lastMessageContent || "No messages yet",
+          unreadCount: rows[0]?.unreadCount || 0,
+        }];
+
+        return res.json({ conversations });
+      }
+    }
+  } catch (err) {
+    console.error("Get support conversations error:", err);
+    return res.status(500).json({ error: "Internal server error" });
+  }
+});
+
+// Get support messages for a conversation
+app.get("/api/support/messages", async (req, res) => {
+  try {
+    // Get current user
+    let currentUser = null;
+    try {
+      const s = (req.headers['x-current-user'] || "").toString().trim();
+      if (s) currentUser = JSON.parse(s);
+    } catch {
+      // ignore
+    }
+
+    if (!currentUser || !currentUser.id) {
+      return res.status(401).json({ error: "Authentication required" });
+    }
+
+    if (USE_DB) {
+      // Check if user is admin
+      const user = await db.getUserById(currentUser.id);
+      const isAdmin = user && String(user.role_type || "").toLowerCase() === "administrator";
+
+      // For admin, get all messages involving 'admin' as sender or receiver
+      // For regular users, get messages between them and 'admin'
+      let query, params;
+
+      if (isAdmin) {
+        query = `
+          SELECT
+            f.id,
+            f.sender_id as senderId,
+            f.receiver_id as receiverId,
+            f.content,
+            f.created_at as createdAt,
+            f.is_read as isRead,
+            CASE WHEN f.sender_id = 'admin' THEN 1 ELSE 0 END as isSentByMe,
+            u.name as senderName
+          FROM bms_support f
+          LEFT JOIN users u ON f.sender_id = u.id
+          WHERE f.sender_id = 'admin' OR f.receiver_id = 'admin'
+          ORDER BY f.created_at ASC
+        `;
+        params = [];
+      } else {
+        query = `
+          SELECT
+            f.id,
+            f.sender_id as senderId,
+            f.receiver_id as receiverId,
+            f.content,
+            f.created_at as createdAt,
+            f.is_read as isRead,
+            CASE WHEN f.sender_id = ? THEN 1 ELSE 0 END as isSentByMe,
+            u.name as senderName
+          FROM bms_support f
+          LEFT JOIN users u ON f.sender_id = u.id
+          WHERE (f.sender_id = ? AND f.receiver_id = 'admin') OR (f.sender_id = 'admin' AND f.receiver_id = ?)
+          ORDER BY f.created_at ASC
+        `;
+        params = [currentUser.id, currentUser.id, currentUser.id];
+      }
+
+      const [rows] = await db.pool.execute(query, params);
+
+      const messages = rows.map(row => ({
+        id: row.id,
+        sender: {
+          id: row.senderId,
+          name: row.senderName || (row.senderId === 'admin' ? 'Feedback Team' : 'Unknown'),
+        },
+        receiver: {
+          id: row.receiverId,
+        },
+        content: row.content,
+        createdAt: row.createdAt,
+        isRead: row.isRead === 1,
+        isSentByMe: row.isSentByMe === 1,
+      }));
+
+      return res.json({ messages });
+    }
+  } catch (err) {
+    console.error("Get support messages error:", err);
+    return res.status(500).json({ error: "Internal server error" });
+  }
+});
+
+// Get unread support count
+app.get("/api/support/unread-count", async (req, res) => {
   try {
     // Get current user
     let currentUser = null;
@@ -3247,13 +3708,50 @@ app.get("/api/feedback/unread-count", async (req, res) => {
       const receiverId = isAdmin ? 'admin' : currentUser.id;
 
       const [rows] = await db.pool.execute(`
-        SELECT COUNT(*) as unread_count FROM bms_feedback WHERE receiver_id = ? AND is_read = 0
+        SELECT COUNT(*) as unread_count FROM bms_support WHERE receiver_id = ? AND is_read = 0
       `, [receiverId]);
 
       return res.json({ unreadCount: rows[0].unread_count || 0 });
     }
   } catch (err) {
-    console.error("Get unread feedback count error:", err);
+    console.error("Get unread support count error:", err);
+    return res.status(500).json({ error: "Internal server error" });
+  }
+});
+
+// Get unread support count
+app.get("/api/support/unread-count", async (req, res) => {
+  try {
+    // Get current user
+    let currentUser = null;
+    try {
+      const s = (req.headers['x-current-user'] || "").toString().trim();
+      if (s) currentUser = JSON.parse(s);
+    } catch {
+      // ignore
+    }
+
+    if (!currentUser || !currentUser.id) {
+      return res.status(401).json({ error: "Authentication required" });
+    }
+
+    if (USE_DB) {
+      // Check if user is admin
+      const user = await db.getUserById(currentUser.id);
+      const isAdmin = user && String(user.role_type || "").toLowerCase() === "administrator";
+
+      // For admin, count messages where receiver_id = 'admin'
+      // For regular users, count messages where receiver_id = user.id
+      const receiverId = isAdmin ? 'admin' : currentUser.id;
+
+      const [rows] = await db.pool.execute(`
+        SELECT COUNT(*) as unread_count FROM bms_support WHERE receiver_id = ? AND is_read = 0
+      `, [receiverId]);
+
+      return res.json({ unreadCount: rows[0].unread_count || 0 });
+    }
+  } catch (err) {
+    console.error("Get unread support count error:", err);
     return res.status(500).json({ error: "Internal server error" });
   }
 });
@@ -3524,6 +4022,308 @@ app.put("/api/admin/reactivation-requests/:id", async (req, res) => {
     });
   } catch (err) {
     console.error("Update reactivation request error:", err);
+    return res.status(500).json({ error: "Internal server error" });
+  }
+});
+
+// Feedback conversation endpoints (like messages but for feedback)
+// Get feedback conversations for current user
+app.get("/api/feedback/conversations", async (req, res) => {
+  try {
+    // Get current user
+    let currentUser = null;
+    try {
+      const s = (req.headers['x-current-user'] || "").toString().trim();
+      if (s) currentUser = JSON.parse(s);
+    } catch {
+      // ignore
+    }
+
+    if (!currentUser || !currentUser.id) {
+      return res.status(401).json({ error: "Authentication required" });
+    }
+
+    if (USE_DB) {
+      // Check if user is admin
+      const user = await db.getUserById(currentUser.id);
+      const isAdmin = user && String(user.role_type || "").toLowerCase() === "administrator";
+
+      if (isAdmin) {
+        // Admin sees all users who have feedback
+        const [rows] = await db.pool.execute(`
+          SELECT DISTINCT
+            f.sender_id as contactId,
+            u.name as contactName,
+            MAX(f.created_at) as lastMessageTime,
+            (
+              SELECT content
+              FROM bms_feedback
+              WHERE (sender_id = f.sender_id AND receiver_id = 'admin') OR (sender_id = 'admin' AND receiver_id = f.sender_id)
+              ORDER BY created_at DESC
+              LIMIT 1
+            ) as lastMessageContent,
+            (
+              SELECT COUNT(*)
+              FROM bms_feedback
+              WHERE sender_id = f.sender_id AND receiver_id = 'admin' AND is_read = 0
+            ) as unreadCount
+          FROM bms_feedback f
+          JOIN users u ON f.sender_id = u.id
+          WHERE f.receiver_id = 'admin' AND f.sender_id != 'admin'
+          GROUP BY f.sender_id, u.name
+          ORDER BY CASE WHEN unreadCount > 0 THEN 0 ELSE 1 END, lastMessageTime DESC
+        `);
+
+        const conversations = rows.map(row => ({
+          contactId: row.contactId,
+          contactName: row.contactName || "Unknown User",
+          lastMessageTime: row.lastMessageTime,
+          lastMessageContent: row.lastMessageContent || "No messages yet",
+          unreadCount: row.unreadCount || 0,
+        }));
+
+        return res.json({ conversations });
+      } else {
+        // Regular user sees only "Admin" as contact
+        const [rows] = await db.pool.execute(`
+          SELECT
+            MAX(f.created_at) as lastMessageTime,
+            (
+              SELECT content
+              FROM bms_feedback
+              WHERE (sender_id = ? AND receiver_id = 'admin') OR (sender_id = 'admin' AND receiver_id = ?)
+              ORDER BY created_at DESC
+              LIMIT 1
+            ) as lastMessageContent,
+            (
+              SELECT COUNT(*)
+              FROM bms_feedback
+              WHERE sender_id = 'admin' AND receiver_id = ? AND is_read = 0
+            ) as unreadCount
+          FROM bms_feedback f
+          WHERE (f.sender_id = ? AND f.receiver_id = 'admin') OR (f.sender_id = 'admin' AND f.receiver_id = ?)
+        `, [currentUser.id, currentUser.id, currentUser.id, currentUser.id, currentUser.id]);
+
+        const conversations = [{
+          contactId: "admin",
+          contactName: "Feedback Team",
+          lastMessageTime: rows[0]?.lastMessageTime || null,
+          lastMessageContent: rows[0]?.lastMessageContent || "No messages yet",
+          unreadCount: rows[0]?.unreadCount || 0,
+        }];
+
+        return res.json({ conversations });
+      }
+    }
+  } catch (err) {
+    console.error("Get feedback conversations error:", err);
+    return res.status(500).json({ error: "Internal server error" });
+  }
+});
+
+// Get feedback messages for a conversation
+app.get("/api/feedback/messages", async (req, res) => {
+  try {
+    // Get current user
+    let currentUser = null;
+    try {
+      const s = (req.headers['x-current-user'] || "").toString().trim();
+      if (s) currentUser = JSON.parse(s);
+    } catch {
+      // ignore
+    }
+
+    if (!currentUser || !currentUser.id) {
+      return res.status(401).json({ error: "Authentication required" });
+    }
+
+    if (USE_DB) {
+      // Check if user is admin
+      const user = await db.getUserById(currentUser.id);
+      const isAdmin = user && String(user.role_type || "").toLowerCase() === "administrator";
+
+      // For admin, get all messages involving 'admin' as sender or receiver
+      // For regular users, get messages between them and 'admin'
+      let query, params;
+
+      if (isAdmin) {
+        query = `
+          SELECT
+            f.id,
+            f.sender_id as senderId,
+            f.receiver_id as receiverId,
+            f.content,
+            f.created_at as createdAt,
+            f.is_read as isRead,
+            CASE WHEN f.sender_id = 'admin' THEN 1 ELSE 0 END as isSentByMe,
+            u.name as senderName
+          FROM bms_feedback f
+          LEFT JOIN users u ON f.sender_id = u.id
+          WHERE f.sender_id = 'admin' OR f.receiver_id = 'admin'
+          ORDER BY f.created_at ASC
+        `;
+        params = [];
+      } else {
+        query = `
+          SELECT
+            f.id,
+            f.sender_id as senderId,
+            f.receiver_id as receiverId,
+            f.content,
+            f.created_at as createdAt,
+            f.is_read as isRead,
+            CASE WHEN f.sender_id = ? THEN 1 ELSE 0 END as isSentByMe,
+            u.name as senderName
+          FROM bms_feedback f
+          LEFT JOIN users u ON f.sender_id = u.id
+          WHERE (f.sender_id = ? AND f.receiver_id = 'admin') OR (f.sender_id = 'admin' AND f.receiver_id = ?)
+          ORDER BY f.created_at ASC
+        `;
+        params = [currentUser.id, currentUser.id, currentUser.id];
+      }
+
+      const [rows] = await db.pool.execute(query, params);
+
+      const messages = rows.map(row => ({
+        id: row.id,
+        sender: {
+          id: row.senderId,
+          name: row.senderName || (row.senderId === 'admin' ? 'Feedback Team' : 'Unknown'),
+        },
+        receiver: {
+          id: row.receiverId,
+        },
+        content: row.content,
+        createdAt: row.createdAt,
+        isRead: row.isRead === 1,
+        isSentByMe: row.isSentByMe === 1,
+      }));
+
+      return res.json({ messages });
+    }
+  } catch (err) {
+    console.error("Get feedback messages error:", err);
+    return res.status(500).json({ error: "Internal server error" });
+  }
+});
+
+// Send feedback message
+app.post("/api/feedback", async (req, res) => {
+  try {
+    const { receiverId, content } = req.body || {};
+    if (!receiverId || !content || !content.trim()) {
+      return res.status(400).json({ error: "receiverId and content are required" });
+    }
+
+    // Get current user
+    let currentUser = null;
+    try {
+      const s = (req.headers['x-current-user'] || "").toString().trim();
+      if (s) currentUser = JSON.parse(s);
+    } catch {
+      // ignore
+    }
+
+    if (!currentUser || !currentUser.id) {
+      return res.status(401).json({ error: "Authentication required" });
+    }
+
+    if (USE_DB) {
+      // For users, receiverId should be 'admin'
+      // For admin, receiverId should be the user ID
+      const actualReceiverId = currentUser.roleType === 'administrator' ? receiverId : 'admin';
+      const actualSenderId = currentUser.roleType === 'administrator' ? 'admin' : currentUser.id;
+
+      const [result] = await db.pool.execute(`
+        INSERT INTO bms_feedback (sender_id, receiver_id, content, created_at, is_read)
+        VALUES (?, ?, ?, NOW(), 0)
+      `, [actualSenderId, actualReceiverId, content.trim()]);
+
+      return res.status(201).json({
+        messageId: result.insertId,
+        message: "feedback sent successfully"
+      });
+    }
+  } catch (err) {
+    console.error("Send feedback error:", err);
+    return res.status(500).json({ error: "Internal server error" });
+  }
+});
+
+// Mark feedback message as read
+app.put("/api/feedback/:messageId/read", async (req, res) => {
+  try {
+    const { messageId } = req.params || {};
+
+    // Get current user
+    let currentUser = null;
+    try {
+      const s = (req.headers['x-current-user'] || "").toString().trim();
+      if (s) currentUser = JSON.parse(s);
+    } catch {
+      // ignore
+    }
+
+    if (!currentUser || !currentUser.id) {
+      return res.status(401).json({ error: "Authentication required" });
+    }
+
+    if (USE_DB) {
+      // Check if user is admin
+      const user = await db.getUserById(currentUser.id);
+      const isAdmin = user && String(user.role_type || "").toLowerCase() === "administrator";
+
+      // For admin, messages are sent to 'admin', not to admin's user ID
+      // For regular users, messages are sent to their user ID
+      const receiverId = isAdmin ? 'admin' : currentUser.id;
+
+      await db.pool.execute(`
+        UPDATE bms_feedback
+        SET is_read = 1
+        WHERE id = ? AND receiver_id = ?
+      `, [messageId, receiverId]);
+
+      return res.json({ message: "Message marked as read" });
+    }
+  } catch (err) {
+    console.error("Mark feedback read error:", err);
+    return res.status(500).json({ error: "Internal server error" });
+  }
+});
+
+// Get unread feedback count
+app.get("/api/feedback/unread-count", async (req, res) => {
+  try {
+    // Get current user
+    let currentUser = null;
+    try {
+      const s = (req.headers['x-current-user'] || "").toString().trim();
+      if (s) currentUser = JSON.parse(s);
+    } catch {
+      // ignore
+    }
+
+    if (!currentUser || !currentUser.id) {
+      return res.status(401).json({ error: "Authentication required" });
+    }
+
+    if (USE_DB) {
+      // Check if user is admin
+      const user = await db.getUserById(currentUser.id);
+      const isAdmin = user && String(user.role_type || "").toLowerCase() === "administrator";
+
+      // For admin, count messages where receiver_id = 'admin'
+      // For regular users, count messages where receiver_id = user.id
+      const receiverId = isAdmin ? 'admin' : currentUser.id;
+
+      const [rows] = await db.pool.execute(`
+        SELECT COUNT(*) as unread_count FROM bms_feedback WHERE receiver_id = ? AND is_read = 0
+      `, [receiverId]);
+
+      return res.json({ unreadCount: rows[0].unread_count || 0 });
+    }
+  } catch (err) {
+    console.error("Get unread feedback count error:", err);
     return res.status(500).json({ error: "Internal server error" });
   }
 });

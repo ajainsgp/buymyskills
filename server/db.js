@@ -225,6 +225,19 @@ async function initSchema() {
       INDEX idx_feedback_read (is_read)
     ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;`);
 
+    await conn.query(`CREATE TABLE IF NOT EXISTS bms_support (
+      id INT AUTO_INCREMENT PRIMARY KEY,
+      sender_id VARCHAR(64) NOT NULL,
+      receiver_id VARCHAR(64) NOT NULL,
+      content TEXT NOT NULL,
+      is_read TINYINT(1) NOT NULL DEFAULT 0,
+      created_at DATETIME NOT NULL,
+      INDEX idx_support_sender (sender_id),
+      INDEX idx_support_receiver (receiver_id),
+      INDEX idx_support_created (created_at),
+      INDEX idx_support_read (is_read)
+    ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;`);
+
     await conn.query(`CREATE TABLE IF NOT EXISTS reactivation_requests (
       id INT AUTO_INCREMENT PRIMARY KEY,
       user_id VARCHAR(64) NOT NULL,
@@ -541,12 +554,16 @@ async function listPublicUsersForBrowsing() {
   const [rows] = await pool.execute(
     `SELECT
        u.id, u.name, u.first_name, u.last_name, u.nick_name, u.gender,
+       ac.city,
+       c.name as country_name,
        u.country_code,
        u.summary, u.keyword_tags, u.work_preference, u.traveling, u.availability,
        u.category, u.show_in_dashboard, u.show_photo,
        u.allow_email_contact, u.allow_mobile_contact,
        (p.user_id IS NOT NULL) AS photo_present
      FROM users u
+     LEFT JOIN address_current ac ON ac.user_id = u.id
+     LEFT JOIN countries c ON u.country_code = c.code AND c.enabled = 1
      LEFT JOIN photos p ON p.user_id = u.id
      WHERE u.enabled = 1
        AND u.show_in_dashboard = 1

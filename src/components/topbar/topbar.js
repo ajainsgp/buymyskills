@@ -100,7 +100,7 @@ function Topbar() {
     }
 
     try {
-      const response = await fetch(`${API_BASE}/api/feedback/unread-count`, {
+      const response = await fetch(`${API_BASE}/api/support/unread-count`, {
         method: 'GET',
         headers: {
           'x-current-user': JSON.stringify(user),
@@ -223,7 +223,7 @@ function Topbar() {
             {currentUser && (
               <>
                 <li className="nav-item">
-                  <a className="nav-link text-dark" href="/feedback">
+                  <a className="nav-link text-dark" href="/support">
                     {t('nav.support')}
                     {unreadFeedbackCount > 0 && (
                       <span className="badge badge-danger ml-1" style={{ fontSize: '10px' }}>
@@ -336,8 +336,8 @@ function Topbar() {
                       <a className="dropdown-item" href="/admin/landing-page-cards" onClick={() => setDropdownOpen(false)}>
                         {t('admin.manageLandingPageCards')}
                       </a>
-                      <a className="dropdown-item" href="/admin/feedback" onClick={() => setDropdownOpen(false)}>
-                        {t('admin.manageFeedback')}
+                      <a className="dropdown-item" href="/admin/feedback-support" onClick={() => setDropdownOpen(false)}>
+                        {t('admin.manageSupport')}
                       </a>
                       <a className="dropdown-item" href="/admin/regions" onClick={() => setDropdownOpen(false)}>
                         {t('admin.manageRegions')}

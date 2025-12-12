@@ -315,8 +315,7 @@ function UserProfile({ userProfiles, showSensitive = false }) {
               </div>
               <div>
                 <strong>{t("userProfile.location")}</strong>{" "}
-                {profile.address?.city || "N/A"},{" "}
-                {profile.address?.country || "N/A"}
+                {profile.city || "N/A"}, {profile.country || "N/A"}
               </div>
               <div>
                 <strong>{t("userProfile.workPreference")}</strong>{" "}
@@ -447,13 +446,6 @@ function UserProfile({ userProfiles, showSensitive = false }) {
                   >
                     {t("userProfile.yes")}
                   </button>
-                  <button
-                    className="btn btn-secondary btn-sm"
-                    style={{ lineHeight: "0.75" }}
-                    onClick={(e) => handleEngagement(profile.id, false, e)}
-                  >
-                    {t("userProfile.no")}
-                  </button>
                 </div>
               </div>
             )}
@@ -544,8 +536,7 @@ function UserProfile({ userProfiles, showSensitive = false }) {
                 </div>
                 <div>
                   <strong>{t("userProfile.location")}:</strong>{" "}
-                  {profile.address?.city || "N/A"},{" "}
-                  {profile.address?.country || "N/A"}
+                  {profile.city || "N/A"}, {profile.country || "N/A"}
                 </div>
                 <div>
                   <strong>{t("userProfile.workPreference")}:</strong>{" "}

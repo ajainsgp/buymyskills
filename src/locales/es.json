@@ -18,6 +18,7 @@
     "manageCountries": "Administrar Países",
     "manageLandingPageCards": "Administrar Tarjetas de Página de Inicio",
     "manageFeedback": "Administrar Comentarios",
+    "manageSupport": "Administrar Soporte Comentarios",
     "manageRegions": "Administrar Regiones",
     "readMe": "Léeme"
   },
@@ -155,7 +156,8 @@
     "commentLabel": "Comentario (hasta 100 palabras):",
     "cancel": "Cancelar",
     "submit": "Enviar",
-    "submitting": "Enviando..."
+    "submitting": "Enviando...",
+    "feedback": "Comentarios"
   },
   "common": {
     "loading": "Cargando...",
@@ -375,7 +377,7 @@
     "hourly": "Por Hora",
     "daily": "Diario",
     "negotiable": "Negociable",
-    "private": "Privado",
+    "private": "Mantener Privado",
     "loginToView": "Inicia sesión para ver",
     "contact": "Contactar",
     "himHer": "él/ella",
@@ -397,7 +399,7 @@
     "title": "Mensajes",
     "subtitle": "Chatea con otros usuarios",
     "loading": "Cargando tus mensajes...",
-    "unableToLoad": "No se pudieron cargar las conversaciones. Por favor inténtalo de nuevo más tarde.",
+    "unableToLoad": "Actualmente, no hay comentarios proporcionados por ti en este momento.",
     "failedToLoad": "Error al cargar las conversaciones. Por favor verifica tu conexión.",
     "unableToConnect": "No se puede conectar al servidor. Por favor verifica tu conexión a internet.",
     "conversations": "Conversaciones",
@@ -414,12 +416,18 @@
     "typeMessage": "Escribe tu mensaje...",
     "failedToSend": "Error al enviar mensaje",
     "supportChat": "Chat de Soporte",
-    "repliedTo": "respondió a"
+    "supportChatHistory": "Historial de chat de soporte",
+    "feedbackChatHistory": "Historial de chat de comentarios",
+    "repliedTo": "respondió a",
+    "feedbackTeam": "Equipo de Comentarios"
+  },
+  "support": {
+    "loading": "Cargando tus mensajes de soporte..."
   },
   "feedback": {
-    "title": "Soporte y Comentarios",
+    "title": "Soporte",
     "subtitle": "Chatea con nuestro equipo de soporte para asistencia",
-    "loading": "Cargando tus comentarios...",
+    "loading": "Cargando tus mensajes de comentarios...",
     "unableToLoad": "No se pudieron cargar las conversaciones. Por favor inténtalo de nuevo más tarde.",
     "failedToLoad": "Error al cargar las conversaciones. Por favor verifica tu conexión.",
     "unableToConnect": "No se puede conectar al servidor. Por favor verifica tu conexión a internet.",
@@ -437,6 +445,8 @@
     "typeMessage": "Escribe tu mensaje...",
     "failedToSend": "Error al enviar mensaje",
     "supportChat": "Chat de Soporte",
+    "supportChatHistory": "Historial de chat de soporte",
+    "feedbackChatHistory": "Historial de chat de comentarios",
     "repliedTo": "respondió a"
   },
   "engagedList": {
