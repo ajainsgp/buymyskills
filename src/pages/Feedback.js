@@ -1,7 +1,7 @@
 import React, { useState, useEffect, useRef } from "react";
 import { useTranslation } from "react-i18next";
 import API_BASE from "../utils/apiBase";
-import "./Feedback.css";
+import "./Support.css";
 
 function Feedback() {
   const { t } = useTranslation();
@@ -13,6 +13,7 @@ function Feedback() {
   const [currentUser, setCurrentUser] = useState(null);
   const [newMessage, setNewMessage] = useState("");
   const [sendingMessage, setSendingMessage] = useState(false);
+  const [showConversation, setShowConversation] = useState(false);
   const messagesEndRef = useRef(null);
 
   useEffect(() => {
@@ -43,6 +44,15 @@ function Feedback() {
     setCurrentUser(user);
     loadConversations(user);
   }, []);
+
+  useEffect(() => {
+    // If user has conversations, automatically show the conversation view
+    if (conversations.length > 0) {
+      setShowConversation(true);
+      setSelectedContactId("admin");
+      loadMessages("admin");
+    }
+  }, [conversations]);
 
   const loadConversations = async (user) => {
     try {
@@ -210,6 +220,13 @@ function Feedback() {
     }
   };
 
+  const handleSendFeedbackClick = () => {
+    setShowConversation(true);
+    // Auto-select admin as the contact
+    setSelectedContactId("admin");
+    loadMessages("admin");
+  };
+
   const formatDate = (dateString) => {
     const date = new Date(dateString);
     const today = new Date();
@@ -280,7 +297,7 @@ function Feedback() {
     }
   }, [messages]);
 
-  if (loading) {
+  if (loading && !showConversation) {
     return (
       <div className="container-fluid" style={{ padding: "2rem" }}>
         <div className="text-center">
@@ -300,8 +317,8 @@ function Feedback() {
           {/* Header */}
           <div className="d-flex justify-content-between align-items-center mb-3">
             <div>
-              <h1 className="h3 mb-0 text-gray-800">{t("feedback.title")}</h1>
-              <p className="text-muted mb-0">{t("feedback.subtitle")}</p>
+              <h1 className="h3 mb-0 text-gray-800">Feedback</h1>
+              <p className="text-muted mb-0">Share your feedback with us</p>
             </div>
           </div>
 
@@ -312,199 +329,224 @@ function Feedback() {
             </div>
           )}
 
-          <div className="row feedback-row">
-            {/* Contacts Sidebar */}
-            <div className="col-md-4 col-lg-3 contacts-sidebar">
-              <div className="card shadow contacts-card">
-                <div className="card-header contacts-header">
-                  <h6 className="mb-0">
-                    <i className="fa fa-comments mr-2"></i>
-                    {t("feedback.conversations")} ({conversations.length})
-                  </h6>
-                </div>
-                <div className="card-body contacts-body">
-                  {conversations.length === 0 ? (
-                    <div className="empty-sidebar">
-                      <i className="fa fa-comments empty-sidebar-icon"></i>
-                      <p className="empty-sidebar-title">
-                        {t("feedback.noConversationsYet")}
-                      </p>
-                      <small className="empty-sidebar-text">
-                        {t("feedback.startChatting")}
-                      </small>
-                    </div>
-                  ) : (
-                    conversations.map((conversation) => (
-                      <div
-                        key={conversation.contactId}
-                        className={`contact-item ${
-                          selectedContactId === conversation.contactId
-                            ? "selected"
-                            : ""
-                        }`}
-                        onClick={() =>
-                          handleContactClick(conversation.contactId)
-                        }
-                      >
-                        <div className="d-flex justify-content-between align-items-start">
-                          <div className="flex-grow-1">
-                            <div className="d-flex align-items-center mb-1">
-                              <strong className="contact-name">
-                                {conversation.contactName}
-                              </strong>
-                              {conversation.unreadCount > 0 && (
-                                <span className="badge badge-danger unread-badge">
-                                  {conversation.unreadCount}
-                                </span>
-                              )}
-                            </div>
-                          </div>
-                          <small className="contact-time">
-                            {formatDate(conversation.lastMessageTime)}
-                          </small>
-                        </div>
-                      </div>
-                    ))
-                  )}
+          {!showConversation ? (
+            <div className="row">
+              <div className="col-12">
+                <div className="card shadow">
+                  <div className="card-body text-center py-5">
+                    <h4 className="mb-4">
+                      We&apos;d love to hear your feedback!
+                    </h4>
+                    <p className="mb-4">
+                      Your feedback helps us improve our platform and provide
+                      better service to all users.
+                    </p>
+                    <button
+                      className="btn btn-primary btn-lg"
+                      onClick={handleSendFeedbackClick}
+                    >
+                      Send Feedback
+                    </button>
+                  </div>
                 </div>
               </div>
             </div>
-
-            {/* Chat Area */}
-            <div className="col-md-8 col-lg-9 chat-area">
-              {selectedContactId ? (
-                <div className="card shadow chat-card">
-                  {/* Chat Header */}
-                  <div className="card-header chat-header">
+          ) : (
+            <div className="row feedback-row">
+              {/* Contacts Sidebar */}
+              <div className="col-md-4 col-lg-3 contacts-sidebar">
+                <div className="card shadow contacts-card">
+                  <div className="card-header contacts-header">
                     <h6 className="mb-0">
-                      <i className="fa fa-user mr-2"></i>
-                      {selectedConversation?.contactName ||
-                        t("feedback.supportChat")}
+                      <i className="fa fa-comments mr-2"></i>
+                      {t("feedback.conversations")} ({conversations.length})
                     </h6>
                   </div>
-
-                  {/* Messages Area */}
-                  <div className="card-body chat-messages">
-                    {Object.keys(groupedMessages).length === 0 ? (
-                      <div className="empty-chat">
-                        <i className="fa fa-comments empty-chat-icon"></i>
-                        <p className="empty-chat-title">
-                          {t("feedback.noMessagesYet")}
+                  <div className="card-body contacts-body">
+                    {conversations.length === 0 ? (
+                      <div className="empty-sidebar">
+                        <i className="fa fa-comments empty-sidebar-icon"></i>
+                        <p className="empty-sidebar-title">
+                          {t("feedback.noConversationsYet")}
                         </p>
-                        <small className="empty-chat-text">
-                          {t("feedback.startConversation")}
+                        <small className="empty-sidebar-text">
+                          {t("feedback.startChatting")}
                         </small>
                       </div>
                     ) : (
-                      Object.entries(groupedMessages).map(
-                        ([date, dateMessages]) => (
-                          <div key={date}>
-                            {/* Date Separator */}
-                            <div className="date-separator">
-                              <span className="date-badge">
-                                {new Date(date).toDateString() ===
-                                new Date().toDateString()
-                                  ? t("feedback.today")
-                                  : new Date(date).toDateString() ===
-                                      new Date(
-                                        Date.now() - 86400000,
-                                      ).toDateString()
-                                    ? t("feedback.yesterday")
-                                    : new Date(date).toLocaleDateString()}
-                              </span>
-                            </div>
-
-                            {/* Messages */}
-                            {dateMessages.map((message) => (
-                              <div
-                                key={message.id}
-                                className="message-container"
-                              >
-                                {message.isSentByMe && (
-                                  <div className="message-sender-label">
-                                    <small>{t("feedback.you")}</small>
-                                  </div>
+                      conversations.map((conversation) => (
+                        <div
+                          key={conversation.contactId}
+                          className={`contact-item ${
+                            selectedContactId === conversation.contactId
+                              ? "selected"
+                              : ""
+                          }`}
+                          onClick={() =>
+                            handleContactClick(conversation.contactId)
+                          }
+                        >
+                          <div className="d-flex justify-content-between align-items-start">
+                            <div className="flex-grow-1">
+                              <div className="d-flex align-items-center mb-1">
+                                <strong className="contact-name">
+                                  {conversation.contactName}
+                                </strong>
+                                {conversation.unreadCount > 0 && (
+                                  <span className="badge badge-danger unread-badge">
+                                    {conversation.unreadCount}
+                                  </span>
                                 )}
+                              </div>
+                            </div>
+                            <small className="contact-time">
+                              {formatDate(conversation.lastMessageTime)}
+                            </small>
+                          </div>
+                        </div>
+                      ))
+                    )}
+                  </div>
+                </div>
+              </div>
+
+              {/* Chat Area */}
+              <div className="col-md-8 col-lg-9 chat-area">
+                {selectedContactId ? (
+                  <div className="card shadow chat-card">
+                    {/* Chat Header */}
+                    <div className="card-header chat-header">
+                      <h6 className="mb-0">
+                        <i className="fa fa-user mr-2"></i>
+                        {t("feedback.feedbackChatHistory")}
+                      </h6>
+                    </div>
+
+                    {/* Messages Area */}
+                    <div className="card-body chat-messages">
+                      {Object.keys(groupedMessages).length === 0 ? (
+                        <div className="empty-chat">
+                          <i className="fa fa-comments empty-chat-icon"></i>
+                          <p className="empty-chat-title">
+                            {t("feedback.noMessagesYet")}
+                          </p>
+                          <small className="empty-chat-text">
+                            {t("feedback.startConversation")}
+                          </small>
+                        </div>
+                      ) : (
+                        Object.entries(groupedMessages).map(
+                          ([date, dateMessages]) => (
+                            <div key={date}>
+                              {/* Date Separator */}
+                              <div className="date-separator">
+                                <span className="date-badge">
+                                  {new Date(date).toDateString() ===
+                                  new Date().toDateString()
+                                    ? t("feedback.today")
+                                    : new Date(date).toDateString() ===
+                                        new Date(
+                                          Date.now() - 86400000,
+                                        ).toDateString()
+                                      ? t("feedback.yesterday")
+                                      : new Date(date).toLocaleDateString()}
+                                </span>
+                              </div>
+
+                              {/* Messages */}
+                              {dateMessages.map((message) => (
                                 <div
-                                  className={`message-bubble ${
-                                    message.isSentByMe ? "sent" : "received"
-                                  }`}
+                                  key={message.id}
+                                  className="message-container"
                                 >
-                                  <div className="message-content">
-                                    <div className="message-text">
-                                      {message.content}
+                                  {message.isSentByMe && (
+                                    <div className="message-sender-label">
+                                      <small>{t("feedback.you")}</small>
                                     </div>
-                                    <div className="message-time">
-                                      {formatMessageDate(message.createdAt)}
+                                  )}
+                                  <div
+                                    className={`message-bubble ${
+                                      message.isSentByMe ? "sent" : "received"
+                                    }`}
+                                  >
+                                    <div className="message-content">
+                                      <div className="message-text">
+                                        {message.content}
+                                      </div>
+                                      <div className="message-time">
+                                        {formatMessageDate(message.createdAt)}
+                                      </div>
+                                      {isAdmin &&
+                                        message.isSentByMe &&
+                                        selectedContactId && (
+                                          <div className="admin-reply-note">
+                                            <small>
+                                              <em>
+                                                {t("feedback.repliedTo")}{" "}
+                                                {selectedConversation?.contactName ||
+                                                  "user"}
+                                              </em>
+                                            </small>
+                                          </div>
+                                        )}
                                     </div>
-                                    {isAdmin &&
-                                      message.isSentByMe &&
-                                      selectedContactId && (
-                                        <div className="admin-reply-note">
-                                          <small>
-                                            <em>
-                                              {t("feedback.repliedTo")}{" "}
-                                              {selectedConversation?.contactName ||
-                                                "user"}
-                                            </em>
-                                          </small>
-                                        </div>
-                                      )}
                                   </div>
                                 </div>
-                              </div>
-                            ))}
-                          </div>
-                        ),
-                      )
-                    )}
-                    <div ref={messagesEndRef} />
-                  </div>
+                              ))}
+                            </div>
+                          ),
+                        )
+                      )}
+                      <div ref={messagesEndRef} />
+                    </div>
 
-                  {/* Message Input */}
-                  <div className="message-input-area">
-                    <div className="message-input-group">
-                      <textarea
-                        className="form-control message-textarea"
-                        placeholder={t("feedback.typeMessage")}
-                        value={newMessage}
-                        onChange={(e) => setNewMessage(e.target.value)}
-                        onKeyPress={(e) => {
-                          if (e.key === "Enter" && !e.shiftKey) {
-                            e.preventDefault();
-                            handleSendMessage();
-                          }
-                        }}
-                        rows="2"
-                      />
-                      <button
-                        className="btn message-send-btn"
-                        type="button"
-                        onClick={handleSendMessage}
-                        disabled={!newMessage.trim() || sendingMessage}
-                      >
-                        {sendingMessage ? (
-                          <i className="fa fa-spinner fa-spin"></i>
-                        ) : (
-                          <i className="fa fa-paper-plane"></i>
-                        )}
-                      </button>
+                    {/* Message Input */}
+                    <div className="message-input-area">
+                      <div className="message-input-group">
+                        <textarea
+                          className="form-control message-textarea"
+                          placeholder={t("feedback.typeMessage")}
+                          value={newMessage}
+                          onChange={(e) => setNewMessage(e.target.value)}
+                          onKeyPress={(e) => {
+                            if (e.key === "Enter" && !e.shiftKey) {
+                              e.preventDefault();
+                              handleSendMessage();
+                            }
+                          }}
+                          rows="2"
+                        />
+                        <button
+                          className="btn message-send-btn"
+                          type="button"
+                          onClick={handleSendMessage}
+                          disabled={!newMessage.trim() || sendingMessage}
+                        >
+                          {sendingMessage ? (
+                            <i className="fa fa-spinner fa-spin"></i>
+                          ) : (
+                            <i className="fa fa-paper-plane"></i>
+                          )}
+                        </button>
+                      </div>
                     </div>
                   </div>
-                </div>
-              ) : (
-                <div className="card shadow h-100 d-flex align-items-center justify-content-center">
-                  <div className="text-center">
-                    <i className="fa fa-comments fa-4x text-muted mb-4"></i>
-                    <h4 className="text-muted">
-                      {t("feedback.selectConversation")}
-                    </h4>
-                    <p className="text-muted">{t("feedback.chooseContact")}</p>
+                ) : (
+                  <div className="card shadow h-100 d-flex align-items-center justify-content-center">
+                    <div className="text-center">
+                      <i className="fa fa-comments fa-4x text-muted mb-4"></i>
+                      <h4 className="text-muted">
+                        {t("feedback.selectConversation")}
+                      </h4>
+                      <p className="text-muted">
+                        {t("feedback.chooseContact")}
+                      </p>
+                    </div>
                   </div>
-                </div>
-              )}
+                )}
+              </div>
             </div>
-          </div>
+          )}
         </div>
       </div>
     </div>

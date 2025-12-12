@@ -345,12 +345,12 @@ function BrowsePage() {
     const countryOk =
       !countryFilter ||
       !u.countryCode ||
-      (u.countryCode || "").toLowerCase() === countryFilter.toLowerCase();
+      String(u.countryCode || "").toLowerCase() === countryFilter.toLowerCase();
 
     const cityOk =
       !cityFilter.trim() ||
-      !u.address?.city ||
-      (u.address.city || "").toLowerCase().includes(cityFilter.toLowerCase().trim());
+      !u.city ||
+      (u.city || "").toLowerCase().includes(cityFilter.toLowerCase().trim());
 
     return kwOk && categoryOk && countryOk && cityOk;
   });

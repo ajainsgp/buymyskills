@@ -11,8 +11,9 @@ import AdminCountries from "./pages/AdminCountries";
 import AdminLandingPageCards from "./pages/AdminLandingPageCards";
 import ReadMe from "./pages/ReadMe";
 import HowItWorks from "./pages/HowItWorks";
+import Support from "./pages/Support";
 import Feedback from "./pages/Feedback";
-import AdminFeedback from "./pages/AdminFeedback";
+import AdminFeedbackSupport from "./pages/AdminFeedbackSupport";
 import AdminRegions from "./pages/AdminRegions";
 import Users from "./pages/Users";
 import Messages from "./pages/Messages";
@@ -286,13 +287,13 @@ function App() {
           }
         />
         <Route
-          path="/admin/feedback"
+          path="/admin/feedback-support"
           element={
             <Layout>
               <div id="wrapper">
                 <div id="content-wrapper" className="d-flex flex-column">
                   <div id="content">
-                    <AdminFeedback />
+                    <AdminFeedbackSupport />
                   </div>
                 </div>
               </div>
@@ -328,13 +329,13 @@ function App() {
           }
         />
         <Route
-          path="/messages"
+          path="/support"
           element={
             <Layout>
               <div id="wrapper">
                 <div id="content-wrapper" className="d-flex flex-column">
                   <div id="content">
-                    <Messages />
+                    <Support />
                   </div>
                 </div>
               </div>
@@ -349,6 +350,20 @@ function App() {
                 <div id="content-wrapper" className="d-flex flex-column">
                   <div id="content">
                     <Feedback />
+                  </div>
+                </div>
+              </div>
+            </Layout>
+          }
+        />
+        <Route
+          path="/messages"
+          element={
+            <Layout>
+              <div id="wrapper">
+                <div id="content-wrapper" className="d-flex flex-column">
+                  <div id="content">
+                    <Messages />
                   </div>
                 </div>
               </div>

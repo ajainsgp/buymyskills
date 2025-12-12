@@ -375,7 +375,7 @@
     "hourly": "प्रति घंटा",
     "daily": "दैनिक",
     "negotiable": "परक्राम्य",
-    "private": "निजी",
+    "private": "निजी रखें",
     "loginToView": "देखने के लिए लॉगिन करें",
     "contact": "संपर्क करें",
     "himHer": "उसे",
@@ -414,6 +414,8 @@
     "typeMessage": "अपना संदेश टाइप करें...",
     "failedToSend": "संदेश भेजने में विफल",
     "supportChat": "सहायता चैट",
+    "supportChatHistory": "सहायता चैट इतिहास",
+    "feedbackChatHistory": "प्रतिक्रिया चैट इतिहास",
     "repliedTo": "ने जवाब दिया"
   },
   "feedback": {

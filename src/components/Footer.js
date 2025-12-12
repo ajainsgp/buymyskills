@@ -136,16 +136,22 @@ function Footer() {
                 </>
               )}
               {isLoggedIn && (
-                <a
-                  href="#"
-                  onClick={(e) => {
-                    e.preventDefault();
-                    setShowModal(true);
-                  }}
-                  className="text-white"
-                >
-                  {t("footer.rateThisApp")}
-                </a>
+                <>
+                  <a href="/feedback" className="text-white mr-2">
+                    {t("footer.feedback")}
+                  </a>
+                  {" | "}
+                  <a
+                    href="#"
+                    onClick={(e) => {
+                      e.preventDefault();
+                      setShowModal(true);
+                    }}
+                    className="text-white"
+                  >
+                    {t("footer.rateThisApp")}
+                  </a>
+                </>
               )}
             </p>
             <p>{t("footer.copyright")}</p>

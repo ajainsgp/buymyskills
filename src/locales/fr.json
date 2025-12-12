@@ -375,7 +375,7 @@
     "hourly": "Horaire",
     "daily": "Journalier",
     "negotiable": "Négociable",
-    "private": "Privé",
+    "private": "Garder Privé",
     "loginToView": "Connectez-vous pour voir",
     "contact": "Contacter",
     "himHer": "lui",
@@ -414,6 +414,8 @@
     "typeMessage": "Tapez votre message...",
     "failedToSend": "Échec de l'envoi du message",
     "supportChat": "Discussion d'Assistance",
+    "supportChatHistory": "Historique du chat d'assistance",
+    "feedbackChatHistory": "Historique du chat de commentaires",
     "repliedTo": "a répondu à"
   },
   "feedback": {
