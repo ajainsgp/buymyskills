@@ -2125,7 +2125,7 @@ app.get("/api/users/public", async (req, res) => {
 
         // Add basic location information for filtering and display (not full address for privacy)
         baseUser.city = r.city || "";
-        baseUser.country = r.country_name || "";
+        baseUser.country = r.country || "";
         baseUser.countryCode = r.country_code || "";
 
         return baseUser;
