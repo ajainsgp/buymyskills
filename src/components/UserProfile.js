@@ -222,12 +222,17 @@ function UserProfile({ userProfiles, showSensitive = false }) {
     return (
       <div
         className="rating-stars"
-        style={{ display: "flex", alignItems: "center", gap: "2px" }}
+        style={{
+          display: "flex",
+          alignItems: "center",
+          gap: "2px",
+          color: "#ffd700",
+        }}
       >
         {[1, 2, 3, 4, 5].map((star) => (
           <i
             key={star}
-            className={`fa fa-star ${star <= rating.averageRating ? "text-warning" : "text-muted"}`}
+            className="fa fa-star text-warning"
             style={{ fontSize: "14px" }}
           ></i>
         ))}
@@ -241,11 +246,6 @@ function UserProfile({ userProfiles, showSensitive = false }) {
   };
 
   return userProfiles.map((profile, index) => {
-    const borderColor =
-      profile.availability === "Immediate"
-        ? "border-success"
-        : "border-warning";
-
     return (
       <div
         key={index}
@@ -262,268 +262,50 @@ function UserProfile({ userProfiles, showSensitive = false }) {
         }
         style={{ cursor: showSensitive ? "pointer" : "default" }}
       >
-        <div className={`front ${borderColor}`}>
-          <div className="card-body header-front">
-            <div className="headerContent">
-              <div>
-                <h5 className="card-title">{profile.name}</h5>
-                <h6 className="card-subtitle mb-2 text-muted">
-                  {profile.nickName || profile.firstName}
-                </h6>
-                <h6 className="card-subtitle mb-2">{profile.category}</h6>
-              </div>
-              <div>
-                <img
-                  src={
-                    photos[profile.id] ||
-                    "http://ssl.gstatic.com/accounts/ui/avatar_2x.png"
-                  }
-                  className="avatar img-circle img-thumbnail"
-                  alt="avatar"
-                  style={{ borderRadius: "60%" }}
-                />
-              </div>
+        {/* Front of Card */}
+        <div className="front">
+          {/* Header Section */}
+          <div className="header-front">
+            <div className="header-right">
+              <h5 className="card-title">{profile.name}</h5>
+              <p className="card-subtitle">
+                {profile.nickName || profile.firstName}
+              </p>
+              <span className="category-badge">{profile.category}</span>
+            </div>
+            <div className="header-left">
+              <img
+                src={
+                  photos[profile.id] ||
+                  "http://ssl.gstatic.com/accounts/ui/avatar_2x.png"
+                }
+                className="avatar"
+                alt="avatar"
+              />
             </div>
           </div>
-          <div className="card-body body-front">
+
+          {/* Body Section */}
+          <div className="body-front">
             <div className="user-profile-skills-rating-row">
-              <div className="skill-bubble">
-                <strong>{t("userProfile.skills")}</strong>
-              </div>
+              <div className="skill-bubble">{t("userProfile.skills")}</div>
               {ratings[profile.id] && (
                 <div className="rating-bubble">
                   {renderStars(ratings[profile.id])}
                 </div>
               )}
             </div>
+
             <p className="card-text">{profile.keywordTags}</p>
             <p className="card-text">{profile.summary || "-"}</p>
           </div>
-          <div className="card-footer bg-transparent">
+
+          {/* Footer Section */}
+          <div className="card-footer">
             <div className="card-footer-grid">
               <div>
-                <strong>{t("userProfile.availability")}</strong>{" "}
-                {profile.availability === "0"
-                  ? t("userProfile.immediate")
-                  : profile.availability === "1"
-                    ? t("userProfile.in1Month")
-                    : profile.availability === "2"
-                      ? t("userProfile.in2Months")
-                      : profile.availability === "3"
-                        ? t("userProfile.in3Months")
-                        : profile.availability}
-              </div>
-              <div>
-                <strong>{t("userProfile.location")}</strong>{" "}
-                {profile.city || "N/A"}, {profile.country || "N/A"}
-              </div>
-              <div>
-                <strong>{t("userProfile.workPreference")}</strong>{" "}
-                {profile.workPreference === "R"
-                  ? t("userProfile.remote")
-                  : profile.workPreference === "OS"
-                    ? t("userProfile.onSite")
-                    : profile.workPreference === "H"
-                      ? t("userProfile.hybrid")
-                      : profile.workPreference}
-              </div>
-            </div>
-            {!showSensitive && (
-              <div className="text-muted" style={{ fontSize: "0.9em" }}>
-                {t("userProfile.pleaseLoginToConnect")}{" "}
-                <a href="/login">{t("userProfile.login")}</a>
-              </div>
-            )}
-          </div>
-        </div>
-
-        <div className={`back ${borderColor}`}>
-          <div className="card-body header-back">
-            <h5 className="card-title">{t("userProfile.contactDetails")}</h5>
-          </div>
-          <div className="card-body body-back">
-            <p style={{ marginBottom: 0 }}>
-              {t("userProfile.email")}{" "}
-              {showSensitive
-                ? profile.allowEmailContact
-                  ? profile.emailId
-                  : t("userProfile.private")
-                : t("userProfile.loginToView")}
-            </p>
-            <p style={{ marginBottom: 0 }}>
-              {t("userProfile.mobile")}{" "}
-              {showSensitive ? (
-                profile.allowMobileContact ? (
-                  showMobile[profile.id] ? (
-                    profile.mobile || "N/A"
-                  ) : (
-                    <button
-                      className="btn btn-link p-0"
-                      onClick={(e) => handleContactClick(profile.id, e)}
-                      style={{ textDecoration: "none", color: "#007bff" }}
-                    >
-                      {t("userProfile.contact")}{" "}
-                      {profile.firstName ||
-                        profile.name?.split(" ")[0] ||
-                        t("userProfile.himHer")}
-                    </button>
-                  )
-                ) : (
-                  t("userProfile.private")
-                )
-              ) : (
-                t("userProfile.loginToView")
-              )}
-            </p>
-            {profile.facebookUrl && (
-              <p style={{ marginBottom: 0 }}>
-                {t("userProfile.facebook")}{" "}
-                <a
-                  href={profile.facebookUrl}
-                  target="_blank"
-                  rel="noopener noreferrer"
-                  style={{ color: "#007bff" }}
-                  onClick={(e) => e.stopPropagation()}
-                >
-                  {profile.facebookUrl}
-                </a>
-              </p>
-            )}
-            {profile.linkedinUrl && (
-              <p style={{ marginBottom: 0 }}>
-                {t("userProfile.linkedin")}{" "}
-                <a
-                  href={profile.linkedinUrl}
-                  target="_blank"
-                  rel="noopener noreferrer"
-                  style={{ color: "#007bff" }}
-                  onClick={(e) => e.stopPropagation()}
-                >
-                  {profile.linkedinUrl}
-                </a>
-              </p>
-            )}
-            {(profile.startingPrice || profile.negotiable) && (
-              <p style={{ marginBottom: 0 }}>
-                <strong>{t("userProfile.price")}</strong>{" "}
-                {profile.startingPrice && profile.currencyCode
-                  ? `${profile.currencyCode} ${parseFloat(profile.startingPrice).toFixed(2)}`
-                  : ""}
-                {profile.rateType && (
-                  <span
-                    style={{ marginLeft: profile.startingPrice ? "5px" : "0" }}
-                  >
-                    (
-                    {profile.rateType === "H"
-                      ? t("userProfile.hourly")
-                      : t("userProfile.daily")}
-                    )
-                  </span>
-                )}
-                {profile.negotiable && (
-                  <span
-                    style={{
-                      marginLeft:
-                        profile.startingPrice || profile.rateType ? "5px" : "0",
-                    }}
-                  >
-                    ({t("userProfile.negotiable")})
-                  </span>
-                )}
-              </p>
-            )}
-            {showSensitive && currentUser && currentUser.id !== profile.id && (
-              <div className="d-flex align-items-center">
-                <strong style={{ fontSize: "14px" }}>
-                  {t("userProfile.didYouHire")}{" "}
-                  {getGenderPronoun(profile.gender)}?
-                </strong>
-                <div className="btn-group btn-group-sm ml-2">
-                  <button
-                    className="btn btn-success btn-sm"
-                    style={{ lineHeight: "0.75" }}
-                    onClick={(e) => handleEngagement(profile.id, true, e)}
-                  >
-                    {t("userProfile.yes")}
-                  </button>
-                </div>
-              </div>
-            )}
-            {showSensitive && currentUser && currentUser.id !== profile.id && (
-              <div>
-                <button
-                  className="mt-1 btn btn-primary btn-sm mr-2"
-                  onClick={(e) => {
-                    e.stopPropagation();
-                    setShowMessageForm(
-                      showMessageForm === profile.id ? null : profile.id,
-                    );
-                  }}
-                  style={{ fontSize: "12px", padding: "4px 8px" }}
-                >
-                  <i className="fa fa-envelope mr-1"></i>
-                  {t("userProfile.sendMessage")}
-                </button>
-              </div>
-            )}
-            {showMessageForm === profile.id && (
-              <div className="mt-2" onClick={(e) => e.stopPropagation()}>
-                <div
-                  className="border rounded p-2"
-                  style={{ backgroundColor: "#f8f9fa" }}
-                >
-                  <div className="form-group mb-2">
-                    <input
-                      type="text"
-                      className="form-control form-control-sm"
-                      placeholder={t("userProfile.subject")}
-                      value={messageSubject}
-                      onChange={(e) => setMessageSubject(e.target.value)}
-                    />
-                  </div>
-                  <div className="form-group mb-2">
-                    <textarea
-                      className="form-control form-control-sm"
-                      rows="3"
-                      placeholder={t("userProfile.yourMessage")}
-                      value={messageContent}
-                      onChange={(e) => setMessageContent(e.target.value)}
-                    ></textarea>
-                  </div>
-                  <div className="text-right">
-                    <button
-                      className="btn btn-secondary btn-sm mr-1"
-                      onClick={() => {
-                        setShowMessageForm(null);
-                        setMessageSubject("");
-                        setMessageContent("");
-                      }}
-                    >
-                      {t("userProfile.cancel")}
-                    </button>
-                    <button
-                      className="btn btn-primary btn-sm"
-                      onClick={() => handleSendMessage(profile.id)}
-                      disabled={
-                        !messageSubject.trim() ||
-                        !messageContent.trim() ||
-                        sendingMessage
-                      }
-                    >
-                      {sendingMessage
-                        ? t("userProfile.sending")
-                        : t("userProfile.send")}
-                    </button>
-                  </div>
-                </div>
-              </div>
-            )}
-          </div>
-          {showMessageForm !== profile.id && (
-            <div className="card-footer bg-transparent">
-              <div className="card-footer-grid">
-                <div>
-                  <strong>{t("userProfile.availability")}:</strong>{" "}
+                <strong>{t("userProfile.availability")}</strong>
+                <span>
                   {profile.availability === "0"
                     ? t("userProfile.immediate")
                     : profile.availability === "1"
@@ -533,13 +315,11 @@ function UserProfile({ userProfiles, showSensitive = false }) {
                         : profile.availability === "3"
                           ? t("userProfile.in3Months")
                           : profile.availability}
-                </div>
-                <div>
-                  <strong>{t("userProfile.location")}:</strong>{" "}
-                  {profile.city || "N/A"}, {profile.country || "N/A"}
-                </div>
-                <div>
-                  <strong>{t("userProfile.workPreference")}:</strong>{" "}
+                </span>
+              </div>
+              <div>
+                <strong>{t("userProfile.workPreference")}</strong>
+                <span>
                   {profile.workPreference === "R"
                     ? t("userProfile.remote")
                     : profile.workPreference === "OS"
@@ -547,10 +327,261 @@ function UserProfile({ userProfiles, showSensitive = false }) {
                       : profile.workPreference === "H"
                         ? t("userProfile.hybrid")
                         : profile.workPreference}
-                </div>
+                </span>
+              </div>
+              <div className="location-row">
+                <strong>{t("userProfile.location")}</strong>
+                <span>
+                  {profile.city || "N/A"}, {profile.country || "N/A"}
+                </span>
               </div>
             </div>
-          )}
+            {!showSensitive && (
+              <div className="text-center mt-2">
+                <small className="text-white-50">
+                  {t("userProfile.pleaseLoginToConnect")}{" "}
+                  <a
+                    href="/login"
+                    className="text-white"
+                    style={{ textDecoration: "underline" }}
+                  >
+                    {t("userProfile.login")}
+                  </a>
+                </small>
+              </div>
+            )}
+          </div>
+        </div>
+
+        <div className="back">
+          <div
+            style={{
+              transform: "scaleX(-1)",
+              height: "100%",
+              display: "flex",
+              flexDirection: "column",
+            }}
+          >
+            <div className="card-body header-back">
+              <h5 className="card-title">{t("userProfile.contactDetails")}</h5>
+              <p style={{ marginBottom: 0 }}>
+                {t("userProfile.email")}{" "}
+                {showSensitive
+                  ? profile.allowEmailContact
+                    ? profile.emailId
+                    : t("userProfile.private")
+                  : t("userProfile.loginToView")}
+              </p>
+              <p style={{ marginBottom: 0 }}>
+                {t("userProfile.mobile")}{" "}
+                {showSensitive ? (
+                  profile.allowMobileContact ? (
+                    showMobile[profile.id] ? (
+                      profile.mobile || "N/A"
+                    ) : (
+                      <button
+                        className="btn btn-link p-0"
+                        onClick={(e) => handleContactClick(profile.id, e)}
+                        style={{ textDecoration: "none", color: "#007bff" }}
+                      >
+                        {t("userProfile.contact")}{" "}
+                        {profile.firstName ||
+                          profile.name?.split(" ")[0] ||
+                          t("userProfile.himHer")}
+                      </button>
+                    )
+                  ) : (
+                    t("userProfile.private")
+                  )
+                ) : (
+                  t("userProfile.loginToView")
+                )}
+              </p>
+              {profile.facebookUrl && (
+                <p style={{ marginBottom: 0 }}>
+                  {t("userProfile.facebook")}{" "}
+                  <a
+                    href={profile.facebookUrl}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    style={{ color: "#007bff" }}
+                    onClick={(e) => e.stopPropagation()}
+                  >
+                    {profile.facebookUrl}
+                  </a>
+                </p>
+              )}
+              {profile.linkedinUrl && (
+                <p style={{ marginBottom: 0 }}>
+                  {t("userProfile.linkedin")}{" "}
+                  <a
+                    href={profile.linkedinUrl}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    style={{ color: "#007bff" }}
+                    onClick={(e) => e.stopPropagation()}
+                  >
+                    {profile.linkedinUrl}
+                  </a>
+                </p>
+              )}
+              {(profile.startingPrice || profile.negotiable) && (
+                <p style={{ marginBottom: 0 }}>
+                  <strong>{t("userProfile.price")}</strong>{" "}
+                  {profile.startingPrice && profile.currencyCode
+                    ? `${profile.currencyCode} ${parseFloat(profile.startingPrice).toFixed(2)}`
+                    : ""}
+                  {profile.rateType && (
+                    <span
+                      style={{
+                        marginLeft: profile.startingPrice ? "5px" : "0",
+                      }}
+                    >
+                      (
+                      {profile.rateType === "H"
+                        ? t("userProfile.hourly")
+                        : t("userProfile.daily")}
+                      )
+                    </span>
+                  )}
+                  {profile.negotiable && (
+                    <span
+                      style={{
+                        marginLeft:
+                          profile.startingPrice || profile.rateType
+                            ? "5px"
+                            : "0",
+                      }}
+                    >
+                      ({t("userProfile.negotiable")})
+                    </span>
+                  )}
+                </p>
+              )}
+              {showSensitive &&
+                currentUser &&
+                currentUser.id !== profile.id && (
+                  <div className="d-flex align-items-center mb-2">
+                    <strong style={{ fontSize: "14px" }}>
+                      {t("userProfile.didYouHire")}{" "}
+                      {getGenderPronoun(profile.gender)}?
+                    </strong>
+                    <div className="btn-group btn-group-sm ml-2">
+                      <button
+                        className="btn btn-success btn-sm"
+                        style={{ lineHeight: "0.75" }}
+                        onClick={(e) => handleEngagement(profile.id, true, e)}
+                      >
+                        {t("userProfile.yes")}
+                      </button>
+                    </div>
+                  </div>
+                )}
+              {showSensitive &&
+                currentUser &&
+                currentUser.id !== profile.id && (
+                  <div>
+                    <button
+                      className="btn btn-primary btn-sm"
+                      onClick={(e) => {
+                        e.stopPropagation();
+                        setShowMessageForm(
+                          showMessageForm === profile.id ? null : profile.id,
+                        );
+                      }}
+                      style={{ fontSize: "12px", padding: "4px 8px" }}
+                    >
+                      <i className="fa fa-envelope mr-1"></i>
+                      {t("userProfile.sendMessage")}
+                    </button>
+                  </div>
+                )}
+              {showMessageForm === profile.id && (
+                <div className="mt-2" onClick={(e) => e.stopPropagation()}>
+                  <div
+                    className="border rounded p-2"
+                    style={{ backgroundColor: "#f8f9fa" }}
+                  >
+                    <div className="form-group mb-2">
+                      <input
+                        type="text"
+                        className="form-control form-control-sm"
+                        placeholder={t("userProfile.subject")}
+                        value={messageSubject}
+                        onChange={(e) => setMessageSubject(e.target.value)}
+                      />
+                    </div>
+                    <div className="form-group mb-2">
+                      <textarea
+                        className="form-control form-control-sm"
+                        rows="3"
+                        placeholder={t("userProfile.yourMessage")}
+                        value={messageContent}
+                        onChange={(e) => setMessageContent(e.target.value)}
+                      ></textarea>
+                    </div>
+                    <div className="text-right">
+                      <button
+                        className="btn btn-secondary btn-sm mr-1"
+                        onClick={() => {
+                          setShowMessageForm(null);
+                          setMessageSubject("");
+                          setMessageContent("");
+                        }}
+                      >
+                        {t("userProfile.cancel")}
+                      </button>
+                      <button
+                        className="btn btn-primary btn-sm"
+                        onClick={() => handleSendMessage(profile.id)}
+                        disabled={
+                          !messageSubject.trim() ||
+                          !messageContent.trim() ||
+                          sendingMessage
+                        }
+                      >
+                        {sendingMessage
+                          ? t("userProfile.sending")
+                          : t("userProfile.send")}
+                      </button>
+                    </div>
+                  </div>
+                </div>
+              )}
+            </div>
+            {showMessageForm !== profile.id && (
+              <div className="card-footer bg-transparent">
+                <div className="card-footer-grid">
+                  <div>
+                    <strong>{t("userProfile.availability")}:</strong>{" "}
+                    {profile.availability === "0"
+                      ? t("userProfile.immediate")
+                      : profile.availability === "1"
+                        ? t("userProfile.in1Month")
+                        : profile.availability === "2"
+                          ? t("userProfile.in2Months")
+                          : profile.availability === "3"
+                            ? t("userProfile.in3Months")
+                            : profile.availability}
+                  </div>
+                  <div>
+                    <strong>{t("userProfile.location")}:</strong>{" "}
+                    {profile.city || "N/A"}, {profile.country || "N/A"}
+                  </div>
+                  <div>
+                    <strong>{t("userProfile.workPreference")}:</strong>{" "}
+                    {profile.workPreference === "R"
+                      ? t("userProfile.remote")
+                      : profile.workPreference === "OS"
+                        ? t("userProfile.onSite")
+                        : profile.workPreference === "H"
+                          ? t("userProfile.hybrid")
+                          : profile.workPreference}
+                  </div>
+                </div>
+              </div>
+            )}
+          </div>
         </div>
       </div>
     );

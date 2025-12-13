@@ -6,7 +6,7 @@
     margin: 1rem;
 }
 .form-container .left-content{
-    background-color: hsl(219 93% 24%);
+    background: linear-gradient(135deg, #06465D 0%, #032050 100%);
     font-family: 'Oswald', sans-serif;
     width: 45%;
     padding: 66px 50px;
