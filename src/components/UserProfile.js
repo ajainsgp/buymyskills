@@ -1,10 +1,12 @@
 import React, { useEffect, useState } from "react";
 import { useTranslation } from "react-i18next";
+import { useNavigate } from "react-router-dom";
 import "./UserProfile.css";
 import API_BASE from "../utils/apiBase";
 
 function UserProfile({ userProfiles, showSensitive = false }) {
   const { t } = useTranslation();
+  const navigate = useNavigate();
   const [flips, setFlips] = useState(Array(userProfiles.length).fill(false));
   const [photos, setPhotos] = useState({});
   const [ratings, setRatings] = useState({});
@@ -226,15 +228,11 @@ function UserProfile({ userProfiles, showSensitive = false }) {
           display: "flex",
           alignItems: "center",
           gap: "2px",
-          color: "#ffd700",
+          color: "#ffd700 !important",
         }}
       >
         {[1, 2, 3, 4, 5].map((star) => (
-          <i
-            key={star}
-            className="fa fa-star text-warning"
-            style={{ fontSize: "14px" }}
-          ></i>
+          <i key={star} className="fa fa-star" style={{ fontSize: "14px" }}></i>
         ))}
         <span
           style={{ fontSize: "12px", marginLeft: "4px", color: "#eff2f5ff" }}
@@ -246,15 +244,11 @@ function UserProfile({ userProfiles, showSensitive = false }) {
   };
 
   return userProfiles.map((profile, index) => {
-    return (
+    const cardContent = (
       <div
         key={index}
         className={`card ${flips[index] ? "flip" : ""}`}
-        onClick={() => {
-          if (showSensitive) {
-            flipCard(index);
-          }
-        }}
+        onClick={showSensitive ? () => flipCard(index) : undefined}
         title={
           showSensitive
             ? t("userProfile.clickToFlip")
@@ -264,6 +258,32 @@ function UserProfile({ userProfiles, showSensitive = false }) {
       >
         {/* Front of Card */}
         <div className="front">
+          {!showSensitive && (
+            <div
+              style={{
+                position: "absolute",
+                top: "10px",
+                right: "10px",
+                zIndex: 10,
+              }}
+            >
+              <span
+                style={{
+                  textDecoration: "underline",
+                  cursor: "pointer",
+                  color: "#fff",
+                  fontSize: "12px",
+                  fontWeight: "bold",
+                }}
+                onClick={(e) => {
+                  e.stopPropagation();
+                  navigate("/login");
+                }}
+              >
+                Login
+              </span>
+            </div>
+          )}
           {/* Header Section */}
           <div className="header-front">
             <div className="header-right">
@@ -336,20 +356,6 @@ function UserProfile({ userProfiles, showSensitive = false }) {
                 </span>
               </div>
             </div>
-            {!showSensitive && (
-              <div className="text-center mt-2">
-                <small className="text-white-50">
-                  {t("userProfile.pleaseLoginToConnect")}{" "}
-                  <a
-                    href="/login"
-                    className="text-white"
-                    style={{ textDecoration: "underline" }}
-                  >
-                    {t("userProfile.login")}
-                  </a>
-                </small>
-              </div>
-            )}
           </div>
         </div>
 
@@ -584,6 +590,18 @@ function UserProfile({ userProfiles, showSensitive = false }) {
           </div>
         </div>
       </div>
+    );
+
+    return showSensitive ? (
+      cardContent
+    ) : (
+      <a
+        key={index}
+        href="/login"
+        style={{ display: "block", textDecoration: "none" }}
+      >
+        {cardContent}
+      </a>
     );
   });
 }

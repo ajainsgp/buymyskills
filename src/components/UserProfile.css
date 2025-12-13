@@ -180,6 +180,10 @@
     border: 1px solid rgba(255, 255, 255, 0.3);
   }
 
+  .card .rating-stars {
+    color: #ffd700 !important;
+  }
+
   /* Content Text */
   .card-text {
     color: rgba(255, 255, 255, 0.9);
@@ -298,6 +302,10 @@
   .btn-success:hover {
     background: #28a745;
     transform: translateY(-1px);
+  }
+
+  .login-link {
+    cursor: pointer !important;
   }
 
   /* Responsive Design */

@@ -1,32 +1,68 @@
+/* Modern Register Page Styling */
 .img-circle {
   border-radius: 50%;
 }
 
+/* Page Header */
+.register-header {
+  background: linear-gradient(135deg, #06465D 0%, #032050 100%);
+  color: white;
+  padding: 2rem 0;
+  margin-bottom: 2rem;
+  box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+}
+
+.register-header h1 {
+  color: white;
+  font-weight: 600;
+  text-shadow: 0 2px 4px rgba(0, 0, 0, 0.3);
+}
+
+/* Panel Styling */
 .panel {
-    border: 1px solid transparent;
-    border-radius: 4px;
+  border: none;
+  border-radius: 12px;
+  box-shadow: 0 4px 6px rgba(0, 0, 0, 0.07);
+  margin-bottom: 1.5rem;
+  overflow: hidden;
 }
 
 .panel-body {
-  background-color: aliceblue;
-  border-color: #3d7be9;
-  margin-bottom: 1rem;
+  background: linear-gradient(135deg, #e3e6e6 0%, #f8f9fa 100%);
+  border: 1px solid rgba(0, 0, 0, 0.05);
+  padding: 1.5rem;
 }
 
-/* .panel-info {
-    border-color: #BCE8EB;
-} */
-
 .panel-heading {
-    color: #042c76;
-    /* background-color: #d9edf7;
-    border-color: #bce8f1; */
+  background: linear-gradient(135deg, #06465D 0%, #032050 100%);
+  color: white;
+  padding: 1rem 1.8rem;
+  margin: 0 -1.5rem 1.5rem -1.5rem;
+  font-weight: 600;
+  border: none;
+  display: flex;
+  align-items: center;
+  min-height: 3rem;
+  border-radius: 0;
 }
 
 .panel-title {
-    background-color: #042c76;
-    color: aliceblue;
-    margin-bottom: 0.5rem;
+  background: linear-gradient(135deg, #06465D 0%, #032050 100%);
+  color: white;
+  margin: 0 -1.5rem 1.5rem -1.5rem;
+  padding: 1rem 1.8rem;
+  font-weight: 600;
+  border: none;
+  display: flex;
+  align-items: center;
+  min-height: 3rem;
+  border-radius: 0;
+}
+
+.panel-title h3 {
+  margin: 0;
+  color: white;
+  font-size: 1.25rem;
 }
 
 .no-left-right-padding {
@@ -36,6 +72,7 @@
 
 .set-padding-top {
   padding-top: .75rem;
+  padding-bottom: 0rem;
 }
 
 .set-margin-bottom {
