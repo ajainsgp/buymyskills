@@ -409,7 +409,7 @@ function RegisterUser() {
     <div className="container-fluid">
       <div style={{ paddingBottom: "1.5rem" }}>
         {/* Page Heading */}
-        <div className="bg-primary text-white py-3 mb-4">
+        <div className="register-header">
           <div className="container">
             <h1 className="h3 mb-0 text-center">
               {t("auth.register.pageTitle")}
@@ -1484,7 +1484,10 @@ function RegisterUser() {
                   )}
 
                   <div className="panel no-left-right-padding">
-                    <div className="alert alert-info">
+                    <div
+                      className="alert alert-info"
+                      style={{ marginBottom: "0rem" }}
+                    >
                       <strong>{t("auth.register.privacyNotice")}:</strong>{" "}
                       {t("auth.register.privacyText")}
                     </div>

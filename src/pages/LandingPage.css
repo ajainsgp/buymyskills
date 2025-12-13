@@ -24,8 +24,8 @@
 
 /* Homepage Cards Gradient */
 .card {
-  background: linear-gradient(135deg, #06465D 0%, #032050 100%) !important;
-  color: white !important;
+    background: linear-gradient(135deg, #06465D 0%, #032050 100%) !important;
+    color: white;
 }
 
 .card .card-title,
@@ -38,6 +38,6 @@
   color: rgba(255, 255, 255, 0.8) !important;
 }
 
-.card i {
-  color: white !important;
-}
+/* .card i {
+  color: white;
+} */
