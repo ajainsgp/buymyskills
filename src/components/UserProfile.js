@@ -592,17 +592,7 @@ function UserProfile({ userProfiles, showSensitive = false }) {
       </div>
     );
 
-    return showSensitive ? (
-      cardContent
-    ) : (
-      <a
-        key={index}
-        href="/login"
-        style={{ display: "block", textDecoration: "none" }}
-      >
-        {cardContent}
-      </a>
-    );
+    return cardContent;
   });
 }
 

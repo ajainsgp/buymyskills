@@ -37,7 +37,7 @@
   background: linear-gradient(135deg, #06465D 0%, #032050 100%);
   color: white;
   padding: 1rem 1.8rem;
-  margin: 0 -1.5rem 1.5rem -1.5rem;
+  margin: auto;
   font-weight: 600;
   border: none;
   display: flex;
@@ -135,4 +135,12 @@
   display: flex !important;
   align-items: center;
   margin-right: 1rem;
+}
+
+.left-right-padding {
+  padding: 0rem 0.75rem;
+}
+
+.left-right-margin {
+  margin: 0rem 0.75rem;
 }

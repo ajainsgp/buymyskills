@@ -719,7 +719,7 @@ function RegisterUser() {
                               {fieldErrors.emailId}
                             </small>
                           )}
-                          <small className="form-text text-muted">
+                          <small className="form-text text-muted left-right-padding">
                             {t("auth.register.emailHelp")}
                           </small>
                         </div>
@@ -738,7 +738,7 @@ function RegisterUser() {
                             value={form.secondaryEmail}
                             onChange={onChange}
                           />
-                          <small className="form-text text-muted">
+                          <small className="form-text text-muted left-right-padding">
                             {t("auth.register.secondaryEmailHelp")}
                           </small>
                         </div>
@@ -790,7 +790,7 @@ function RegisterUser() {
                             </small>
                           )}
                           <div className="mt-2">
-                            <div className="form-check">
+                            <div className="form-check left-right-margin">
                               <input
                                 className="form-check-input"
                                 type="checkbox"
@@ -822,7 +822,7 @@ function RegisterUser() {
                                   {fieldErrors.whatsappNumber}
                                 </small>
                               )}
-                              <small className="form-text text-muted">
+                              <small className="form-text text-muted left-right-padding">
                                 {t("auth.register.whatsappHelp")}
                               </small>
                             </div>
@@ -837,7 +837,7 @@ function RegisterUser() {
                           <div className="panel-heading">
                             {t("auth.register.contactPreferences")}
                           </div>
-                          <div className="form-check">
+                          <div className="form-check left-right-margin">
                             <input
                               className="form-check-input"
                               type="checkbox"
@@ -860,7 +860,7 @@ function RegisterUser() {
                           <div className="panel-heading">
                             {t("auth.register.contactPreferences")}
                           </div>
-                          <div className="form-check">
+                          <div className="form-check left-right-margin">
                             <input
                               className="form-check-input"
                               type="checkbox"
@@ -908,7 +908,7 @@ function RegisterUser() {
                             value={form.password}
                             onChange={onChange}
                           />
-                          <small className="form-text text-muted">
+                          <small className="form-text text-muted left-right-padding">
                             {t("auth.register.passwordHelp")}
                           </small>
                         </div>
@@ -1063,7 +1063,7 @@ function RegisterUser() {
                               maxLength={150}
                               rows={3}
                             />
-                            <small className="form-text text-muted">
+                            <small className="form-text text-muted left-right-padding">
                               {form.summary.length}/150 characters
                             </small>
                             {fieldErrors.summary && (
@@ -1089,7 +1089,7 @@ function RegisterUser() {
                               value={form.facebookUrl}
                               onChange={onChange}
                             />
-                            <small className="form-text text-muted">
+                            <small className="form-text text-muted left-right-padding">
                               {t("auth.register.facebookHelp")}
                             </small>
                           </div>
@@ -1107,7 +1107,7 @@ function RegisterUser() {
                               value={form.linkedinUrl}
                               onChange={onChange}
                             />
-                            <small className="form-text text-muted">
+                            <small className="form-text text-muted left-right-padding">
                               {t("auth.register.linkedinHelp")}
                             </small>
                           </div>
@@ -1214,7 +1214,7 @@ function RegisterUser() {
                                 </div>
                               </div>
                             </div>
-                            {/* <small className="form-text text-muted">
+                            {/* <small className="form-text text-muted left-right-padding">
                             Your minimum hourly/daily rate
                           </small> */}
                             {/* Price Range Display */}
@@ -1306,7 +1306,7 @@ function RegisterUser() {
                               {t("auth.register.negotiable")}
                             </div>
                             <div className="mt-2">
-                              <div className="form-check">
+                              <div className="form-check left-right-margin">
                                 <input
                                   className="form-check-input"
                                   type="checkbox"
@@ -1322,7 +1322,7 @@ function RegisterUser() {
                                   {t("auth.register.priceNegotiable")}
                                 </label>
                               </div>
-                              <small className="form-text text-muted">
+                              <small className="form-text text-muted left-right-padding">
                                 {t("auth.register.negotiableHelp")}
                               </small>
                             </div>
