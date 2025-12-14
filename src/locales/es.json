@@ -139,7 +139,8 @@
     "haveAccount": "¿Ya tienes una cuenta?",
     "signIn": "Iniciar Sesión",
     "agreeToTerms": "Acepto los Términos y Condiciones",
-    "createAccount": "Crear Cuenta"
+    "createAccount": "Crear Cuenta",
+    "noDataAvailable": "No hay datos disponibles para esta categoría por ahora."
   }
 },
   "footer": {

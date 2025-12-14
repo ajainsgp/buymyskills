@@ -138,7 +138,8 @@
       "haveAccount": "पहले से खाता है?",
       "signIn": "साइन इन करें",
       "agreeToTerms": "मैं नियम और शर्तों से सहमत हूं",
-      "createAccount": "खाता बनाएं"
+      "createAccount": "खाता बनाएं",
+    "noDataAvailable": "इस श्रेणी के लिए अभी कोई डेटा उपलब्ध नहीं है।"
     }
   },
   "footer": {
