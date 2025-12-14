@@ -18,7 +18,6 @@
     "manageCountries": "Manage Countries",
     "manageLandingPageCards": "Manage Landing Page Cards",
     "manageFeedback": "Manage Feedback",
-    "manageSupport": "Manage Support Feedback",
     "manageRegions": "Manage Regions",
     "readMe": "Read Me"
   },
@@ -142,7 +141,8 @@
     "haveAccount": "Already have an account?",
     "signIn": "Sign In",
     "agreeToTerms": "I agree to the Terms and Conditions",
-    "createAccount": "Create Account"
+    "createAccount": "Create Account",
+    "noDataAvailable": "No data available for this category for now."
   }
 },
   "footer": {
@@ -159,8 +159,7 @@
     "commentLabel": "Comment (up to 100 words):",
     "cancel": "Cancel",
     "submit": "Submit",
-    "submitting": "Submitting...",
-    "feedback": "Feedback"
+    "submitting": "Submitting..."
   },
   "common": {
     "loading": "Loading...",
@@ -380,7 +379,7 @@
     "hourly": "Hourly",
     "daily": "Daily",
     "negotiable": "Negotiable",
-    "private": "Keep Private",
+    "private": "Private",
     "loginToView": "Login to view",
     "contact": "Contact",
     "himHer": "him/her",
@@ -402,7 +401,7 @@
     "title": "Messages",
     "subtitle": "Chat with other users",
     "loading": "Loading your messages...",
-    "unableToLoad": "Currently, there are no feedback provided by you at the moment.",
+    "unableToLoad": "Unable to load conversations. Please try again later.",
     "failedToLoad": "Failed to load conversations. Please check your connection.",
     "unableToConnect": "Unable to connect to the server. Please check your internet connection.",
     "conversations": "Conversations",
@@ -420,10 +419,10 @@
     "failedToSend": "Failed to send message"
   },
   "feedback": {
-    "title": "Support",
+    "title": "Support & Feedback",
     "subtitle": "Chat with our support team for assistance",
-    "loading": "Loading your feedback messages...",
-    "unableToLoad": "Currently, there are no feedback provided by you at the moment.",
+    "loading": "Loading your feedback...",
+    "unableToLoad": "Unable to load conversations. Please try again later.",
     "failedToLoad": "Failed to load conversations. Please check your connection.",
     "unableToConnect": "Unable to connect to the server. Please check your internet connection.",
     "conversations": "Conversations",
@@ -439,14 +438,8 @@
     "chooseContact": "Choose a contact from the sidebar to start chatting",
     "typeMessage": "Type your message...",
     "failedToSend": "Failed to send message",
-    "supportChat": "Support Team",
-    "feedbackTeam": "Feedback Team",
-    "supportChatHistory": "Support chat history",
-    "feedbackChatHistory": "Feedback chat history",
+    "supportChat": "Support Chat",
     "repliedTo": "replied to"
-  },
-  "support": {
-    "loading": "Loading your support messages..."
   },
   "engagedList": {
     "title": "My Hired List",

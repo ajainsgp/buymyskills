@@ -1278,7 +1278,7 @@ function RegisterUser() {
                                         marginTop: "2px",
                                       }}
                                     >
-                                      Limited data available for this category
+                                      {t("auth.register.noDataAvailable")}
                                     </div>
                                   )}
                                 </div>
@@ -1496,10 +1496,14 @@ function RegisterUser() {
                   <div className="panel panel-body no-left-right-padding">
                     <div
                       className="form-group"
-                      style={{ padding: "10px", marginBottom: 0 }}
+                      style={{
+                        padding: "10px",
+                        marginBottom: 0,
+                        color: "navy",
+                      }}
                     >
                       <div className="checkbox">
-                        <label>
+                        <label style={{ marginBottom: 0 }}>
                           <input
                             type="checkbox"
                             name="confirmInfo"
@@ -1513,12 +1517,16 @@ function RegisterUser() {
                     </div>
                   </div>
 
-                  <div className="panel panel-body no-left-right-padding set-padding-top">
+                  <div className="panel panel-body set-padding-top">
                     <div className="form-group panel-body">
                       <button
                         className="btn btn-default"
                         onClick={handleCancel}
                         disabled={submitting}
+                        style={{
+                          border: "1px solid #abaeb2ff",
+                          marginRight: "10px",
+                        }}
                       >
                         <i className="fa fa-fw fa-times" aria-hidden="true"></i>{" "}
                         {t("auth.register.cancel")}

@@ -138,7 +138,8 @@
     "haveAccount": "Vous avez déjà un compte ?",
     "signIn": "Se Connecter",
     "agreeToTerms": "J'accepte les Termes et Conditions",
-    "createAccount": "Créer un Compte"
+    "createAccount": "Créer un Compte",
+    "noDataAvailable": "Aucune donnée disponible pour cette catégorie pour le moment."
   }
 },
   "footer": {
